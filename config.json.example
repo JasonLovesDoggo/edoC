@@ -1,0 +1,17 @@
+{
+  "token": "insert_discord_token",
+  "open_weather_map_api_key": "insert_open_weather_map_api_key",
+  "join_message": "Welcome! ?",
+  "owners": [
+    put your userid here
+  ],
+  "prefix": [
+    "~"
+  ],
+  "activity": "Devopment in action!! (prefix ~)",
+  "activity_type": "competing",
+  "status_type": "dnd",
+  "teamup_api_key": "insert_api_key_for_this_too",
+  "alexflipnote_api": "insert_the_token_for_this",
+  "version": "2.0.2"
+}

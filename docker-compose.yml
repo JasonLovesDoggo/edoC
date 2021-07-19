@@ -1,0 +1,8 @@
+version: "3"
+
+services:
+  bot:
+    container_name: "edoC"
+    build: .
+    volumes:
+      - ./config.json:/discord_bot/config.json
