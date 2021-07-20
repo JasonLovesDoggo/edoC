@@ -5,16 +5,16 @@ import os
 
 from datetime import datetime
 from discord.ext import commands
-from edoC.utils.vars import *
-from edoC.utils import default
-from edoC.utils.data import get_prefix
+from utils.vars import *
+from utils import default
+from utils.data import get_prefix
+from cogs.events import owner_commands, normal_commands
 
 class Information(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.config = default.config()
-        self.process = psutil.Process(os.getpid())
-        self.config = default.config()
+        self.PADDING = 9
 
     @commands.command()
     async def ping(self, ctx):
@@ -29,13 +29,7 @@ class Information(commands.Cog):
     async def invite(self, ctx):
         """Sends you the bot invite link."""
         perms = discord.Permissions.none()
-        perms.read_messages = True
-        perms.send_messages = True
-        perms.manage_messages = True
-        perms.embed_links = True
-        perms.read_message_history = True
-        perms.attach_files = True
-        perms.add_reactions = True
+        perms.administrator = True
         await ctx.send(
             f"**{ctx.author.name}**, use this URL to invite me\n<{discord.utils.oauth_url(self.bot.user.id, perms)}>")
 
@@ -85,7 +79,7 @@ class Information(commands.Cog):
         embed.set_thumbnail(url=ctx.bot.user.avatar_url)
         embed.add_field(name="Last boot", value=default.timeago(datetime.now() - self.bot.uptime), inline=True)
         embed.add_field(
-            name=f"Developer{'' if len(self.config['owners']) == 1 else 's'}",
+            name=f"Developer (bio)[https://bio.link/edoc]",
             value=", ".join([str(self.bot.get_user(x)) for x in self.config["owners"]]),
             inline=True
         )
@@ -94,7 +88,7 @@ class Information(commands.Cog):
         embed.add_field(name="Servers", value=f"{len(ctx.bot.guilds)} ( avg: {avgmembers:,.2f} users/server )",
                         inline=True)
         embed.add_field(name="Commands Loaded", value=len([x.name for x in self.bot.commands]), inline=True)
-        embed.add_field(name="Commands Ran By Owners", value=self.bot.owner_commands)
+        embed.add_field(name="Commands Ran By Owners", value=owner_commands)
         embed.add_field(name="RAM", value=f"{ramUsage:.2f} MB", inline=True)
         embed.set_footer(text=embedfooter)
         await ctx.send(content=f"ℹ About **{ctx.bot.user}** | **{self.config['version']}**", embed=embed)
@@ -112,16 +106,35 @@ class Information(commands.Cog):
         info = {}
         info["Discord.py version"] = discord.__version__
         info["Cool variable y"] = 7
-        info["commands since restart"] = self.bot.normal_commands
-        info["Cmds ran by owners"] = self.bot.owner_commands
+        info["commands ran since restart"] = normal_commands
+        info["Commands ran by owners"] = owner_commands
         info["Bot owners"] = len(self.config["owners"])
-        info["Prefix in this server"] = get_prefix(bot=self.bot, message=ctx.message)
-        PADDING = 9
+        info["Prefix in this server"] = "e"
+        info["Total members"] = totalmembers
+        info["Avg members"] = avgmembers
+        info["Ram usage"] = ramUsage
+        info["Developer"] = "https://bio.link/edoC"
+
         for k, v in info.items():
-            pad = ' ' * (PADDING - len(str(v)))
+            pad = ' ' * (self.PADDING - len(str(v)))
             em.description += f"`{pad}{v}`: **{k}**\n"
         em.set_footer(text="bot owners are excluded from command stats")
         await ctx.send(content=f"About **{ctx.bot.user}** | **{self.config['version']}**", embed=em)
+
+
+    @commands.command()
+    async def developer(self, ctx):
+        emb = discord.Embed(title="Jason",
+                            color=blue,
+                            timestamp=ctx.message.created_at
+                            )
+        devinfo = {}
+        devinfo["yes"] = "no"
+        for k, v in devinfo.items():
+            pad = ' ' * (self.PADDING - len(str(v)))
+            emb.description += f"`{pad}{v}`: **{k}**\n"
+
+        emb.set_footer(text="Please consider donating")
 
     @commands.guild_only()
     @commands.command()

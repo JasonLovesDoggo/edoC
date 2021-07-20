@@ -107,4 +107,7 @@ log.log
 config.json
 
 #database
-.db
+database.db
+
+#other
+todo.txt

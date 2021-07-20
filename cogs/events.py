@@ -1,16 +1,22 @@
-import os
-from datetime import datetime
-import logging
-import psutil
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+import discord
+from discord.utils import find
 from discord.ext import commands
 from discord.ext.commands import errors
-from edoC.utils import default
-from edoC.lib.db import db
-import discord
+
+from cogs.mod import BannedUsers, BannedU
+from utils import default
+from lib.db import db
+
+import os
+import psutil
+import logging
+from datetime import datetime
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
 
 owners = default.config()["owners"]
-
+normal_commands = 0
+owner_commands = 0
 
 class Events(commands.Cog):
     def __init__(self, bot):
@@ -19,24 +25,15 @@ class Events(commands.Cog):
         self.config = default.config()
         self.process = psutil.Process(os.getpid())
         self.scheduler = AsyncIOScheduler()
-        self.bot.normal_commands = 0
-        self.bot.owner_commands = 0
-
+        self.normal_commands = normal_commands
+        self.owner_commands = owner_commands
 
     def update_db(self):
         db.multiexec("INSERT OR IGNORE INTO guilds (GuildID) VALUES (?)",
                      ((guild.id,) for guild in self.guilds))
-
-        db.multiexec("INSERT OR IGNORE INTO exp (UserID) VALUES (?)",
-                     ((member.id,) for member in self.guild.members if not member.bot))
-        to_remove = []
-        stored_members = db.column("SELECT UserID FROM exp")
-        for id_ in stored_members:
-            if not self.guild.get_member(id_):
-                to_remove.append(id_)
-
-        db.multiexec("DELETE FROM exp WHERE UserID = ?",
-                     ((id_,) for id_ in to_remove))
+        for guilds in self.bot.guilds:
+            for users in guilds:
+                db.execute("INSERT OR IGNORE INTO users (UserID) VALUES (?)", users.id)
 
         db.commit()
         print("updated db")
@@ -69,20 +66,34 @@ class Events(commands.Cog):
 
         elif isinstance(err, errors.CommandNotFound):
             pass
+    @commands.Cog.listener()
+    async def on_message_delete(self):
+        pass
 
     @commands.Cog.listener()
-    async def on_guild_join(self, ctx, user):
+    async def on_guild_join(self, ctx, guild):
         emb = discord.Embed(title=f"d",
                             color=0x04A4EC,
                             timestamp=ctx.message.created_at, )
-
         await ctx.send("Thank you for inviting me to the server")
         await ctx.send("Please do ~help to get started")
-        guildid = ctx.guild.id
-        changecmd = f'''INSERT INTO guilds (GuildId, Prefix, GuildName) values ('{guildid}', '{self.config["default_prefix"]}', '{ctx.guild.name}')'''
-        #insert into products (name, price) values ('sprite', 9)
-        db.execute(changecmd)
-        annoy = user
+
+        general = find(lambda x: x.name == 'general' or 'General', guild.text_channels)
+        if general and general.permissions_for(guild.me).send_messages:
+            wlcmchannel = general
+        else:
+            wlcmchannel = None
+
+        logs = find(lambda x: x.name == 'logs', guild.text_channels)
+        if logs and logs.permissions_for(guild.me).send_messages:
+            logschannel = logs
+        else:
+            logschannel = None
+        admins = {}
+        for members in guild:
+            if members.has_permission(administrator=True):
+                admins += members
+        db.execute("INSERT INTO guilds VALUES (?, ?, ?, ?, ?, ?, ?, ?);", (ctx.guild.id, self.config["default_prefix"], ctx.guild.name, logschannel, None, admins, None, wlcmchannel))
 
     @commands.Cog.listener()
     async def on_guild_remove(self, ctx, guild):
@@ -105,11 +116,17 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command(self, ctx):
-        self.bot.normal_commands + 1
+        self.bot.check(BannedU)
+        self.normal_commands + 1
         if ctx.message.author.id in self.config[f"owners"]:
-            self.bot.owner_commands + 1
+            self.owner_commands + 1
+        if ctx.author.id in BannedUsers:
+            blocked = True
+        else:
+            blocked = False
         try:
-            print(f"{ctx.guild.name} > {ctx.author} > {ctx.message.clean_content}")
+            print(
+                f"{ctx.guild.name} > {ctx.author} > {ctx.message.clean_content} > Blocked {blocked}")
             logging.basicConfig(filename="log.log",
                                 format='%(asctime)s %(message)s',
                                 datefmt='%m/%d/%Y %I:%M:%S %p',
@@ -117,7 +134,7 @@ class Events(commands.Cog):
                                 filemode='w+')
             logging.info(f'{ctx.guild.name} > ')  # {ctx.author} > {ctx.message.clean_content}
         except AttributeError:
-            print(f"Private message > {ctx.author} > {ctx.message.clean_content}")
+            print(f"Private message > {ctx.author} > {ctx.message.clean_content} > Blocked {blocked}")
             logging.info(f'Private message > ')
             # {ctx.author} > {ctx.message.clean_content}
 
@@ -169,7 +186,7 @@ class Events(commands.Cog):
                     verified: bool = True
                 else:
                     verified = False
-                print(f"{Server} ~ {Server.owner} ~ {Server.member_count} ~ {invite_link} ~ System broken rn")
+                print(f"{Server.id} ~ {Server} ~ {Server.owner} ~ {Server.member_count} ~ {invite_link} ~ System broken rn")
         else:
             print(f"{self.bot.user} Reconnected")
             logging.log("Bot reconnected")

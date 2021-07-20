@@ -2,9 +2,9 @@ import os
 import psutil
 import requests
 from discord.ext import commands
-from edoC.utils import default
+from utils import default
 import discord
-from edoC.utils.vars import *
+from utils.vars import *
 
 
 class Weather(commands.Cog):

@@ -1,9 +1,9 @@
 import discord
 
-from edoC.utils import permissions, default
+from utils import permissions, default
 from discord.ext.commands import AutoShardedBot, DefaultHelpCommand, when_mentioned_or
 from discord.ext import commands
-from edoC.lib.db import db
+from lib.db import db
 
 
 class Bot(AutoShardedBot):

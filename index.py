@@ -20,45 +20,31 @@ bot = Bot(
     )
 )
 
+
 async def process_commands(self, message):
-        ctx = await self.get_context(message, cls=Context)
+    ctx = await self.get_context(message, cls=Context)
 
-        if ctx.command is not None and ctx.guild is not None:
-            if message.author.id in self.banlist:
-                await ctx.send("You are banned from using commands.")
+    if ctx.command is not None and ctx.guild is not None:
+        if message.author.id in self.banlist:
+            await ctx.send("You are banned from using commands.")
 
-            elif not self.ready:
-                await ctx.send("I'm not ready to receive commands. Please wait a few seconds.")
+        elif not self.ready:
+            await ctx.send("I'm not ready to receive commands. Please wait a few seconds.")
 
-            else:
-                await self.invoke(ctx)
+        else:
+            await self.invoke(ctx)
+
+
 scheduler = AsyncIOScheduler()
 db.autosave(scheduler)
-
-
-def update_db(self):
-    db.multiexec("INSERT OR IGNORE INTO guilds (GuildID) VALUES (?)",
-                 ((guild.id,) for guild in self.guilds))
-
-    db.multiexec("INSERT OR IGNORE INTO exp (UserID) VALUES (?)",
-                 ((member.id,) for member in self.guild.members if not member.bot))
-
-    to_remove = []
-    stored_members = db.column("SELECT UserID FROM exp")
-    for id_ in stored_members:
-        if not self.guild.get_member(id_):
-            to_remove.append(id_)
-
-    db.multiexec("DELETE FROM exp WHERE UserID = ?",
-                 ((id_,) for id_ in to_remove))
-    db.commit()
-
-
-bot.load_extension("jishaku")
-for file in os.listdir("cogs"):
-    if file.endswith(".py"):
-        name = file[:-3]
-        bot.load_extension(f"cogs.{name}")
+try:
+    bot.load_extension("jishaku")
+    for file in os.listdir("cogs"):
+        if file.endswith(".py"):
+            name = file[:-3]
+            bot.load_extension(f"cogs.{name}")
+except Exception:
+    raise ChildProcessError("Problem with one of the cogs/utils")
 
 logging.basicConfig(
     filename=f"log.log",

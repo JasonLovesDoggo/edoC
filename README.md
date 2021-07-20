@@ -1,4 +1,10 @@
+
 ## Do you need more help? Visit my server here: **https://discord.gg/76xZwyRBmC** 🍺
+
+.. image:: https://discord.com/api/guilds/819282410213605406/embed.png
+   :target: https://discord.gg/6EFAqm5aSG
+   :alt: Discord server invite
+..
 
 ## Requirements
 - Python 3.6 and up - https://www.python.org/downloads/

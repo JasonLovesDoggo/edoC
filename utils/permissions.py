@@ -31,7 +31,6 @@ def has_permissions(*, check=all, **perms):
         return await check_permissions(ctx, perms, check=check)
     return commands.check(pred)
 
-
 async def check_priv(ctx, member):
     """ Custom (weird) way to check permissions when handling moderation commands """
     try:

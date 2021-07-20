@@ -8,9 +8,11 @@ import asyncio
 
 from discord.ext import commands
 from discord.ext.commands import converter, Converter, BadArgument
-from edoC.utils import permissions, default
-from edoC.utils.data import get_prefix
+from utils import permissions, default
+from utils.data import get_prefix
+from lib.db import db
 
+BannedUsers = {}
 class BannedUser(Converter):
     async def convert(self, ctx, arg):
         if ctx.guild.me.guild_permissions.ban_members:
@@ -50,12 +52,50 @@ class ActionReason(commands.Converter):
             raise commands.BadArgument(f"reason is too long ({len(argument)}/{reason_max})")
         return ret
 
+async def Get_Banned_Users():
+    bans = db.field("SELECT UserID FROM users WHERE Banned = ?", "True")
+    for UserID in bans:
+        BannedUsers + UserID
+
+
+async def BannedU():
+    async def pred(ctx):
+        if ctx.author in BannedUsers:
+            return ctx.send("You are banned from using commands")
+            print("Command blocked")
+    return pred
+
+async def BanUser(ctx, userid: MemberID, reason):
+    await BannedUsers + userid
+    db.execute("INSERT INTO users (?, ?)", userid, reason)
+    #db.execute("INSERT INTO users (Reason)", reason)
+    db.commit()
+    return await ctx.send(userid + " Was banned from using the bot")
 
 class Moderator(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.config = default.config()
         self.prefix = get_prefix
+
+    @commands.command()
+    @commands.guild_only()
+    @permissions.has_permissions(manage_emojis=True)
+    async def emoji(self, ctx, emoji: discord.PartialEmoji, *roles: discord.Role):
+        """This clones a specified emoji that only specified roles
+        are allowed to use.
+        """
+        # fetch the emoji asset and read it as bytes.
+        emoji_bytes = await emoji.read()
+
+        # the key parameter here is `roles`, which controls
+        # what roles are able to use the emoji.
+        await ctx.guild.create_custom_emoji(
+            name=emoji.name,
+            image=emoji_bytes,
+            roles=roles,
+            reason='Very secret business.'
+        )
 
     @commands.command()
     @commands.guild_only()
@@ -266,7 +306,7 @@ class Moderator(commands.Cog):
 
     @commands.group()
     @commands.guild_only()
-    @permissions.has_permissions(ban_members=True)
+    @permissions.has_permissions(manage_users=True)
     async def find(self, ctx):
         """ Finds a user within your search term """
         if ctx.invoked_subcommand is None:
@@ -316,8 +356,13 @@ class Moderator(commands.Cog):
         await default.prettyResults(
             ctx, "discriminator", f"Found **{len(loop)}** on your search for **{search}**", loop
         )
+    @commands.command()
+    @commands.has_permissions(manage_messages=True)
+    async def cls(self, ctx, amount: int):
+        amount + 1
+        await ctx.channel.purge(limit=amount)
 
-    @commands.group()
+    @commands.group(aliases=["purge", "clr", "clear"])
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.guild)
     @permissions.has_permissions(manage_messages=True)
@@ -325,7 +370,6 @@ class Moderator(commands.Cog):
         """ Removes messages from the current server. """
         if ctx.invoked_subcommand is None:
             await ctx.send_help(str(ctx.command))
-
 
     async def do_removal(self, ctx, limit, predicate, *, before=None, after=None, message=True):
         if limit > 2000:
@@ -348,7 +392,8 @@ class Moderator(commands.Cog):
 
         deleted = len(deleted)
         if message is True:
-            await ctx.send(f"🚮 Successfully removed {deleted} message{'' if deleted == 1 else 's'}.")
+            await ctx.send(f"🚮 Successfully removed {deleted} message{'' if deleted == 1 else 's'}.", delete_after=1.0)
+            await ctx.message.delete()
 
     @prune.command()
     async def embeds(self, ctx, search=100):

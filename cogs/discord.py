@@ -1,9 +1,9 @@
 import discord
 
 from io import BytesIO
-from edoC.utils import default
+from utils import default
 from discord.ext import commands
-from edoC.utils.vars import embedfooter
+from utils.vars import embedfooter
 
 class Discord_Info(commands.Cog):
     def __init__(self, bot):

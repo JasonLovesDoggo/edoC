@@ -8,8 +8,9 @@ import os
 import sys
 import json
 from discord.ext import commands
-from edoC.utils import permissions, default, http
+from utils import permissions, default, http
 from io import BytesIO
+from cogs.mod import BanUser, MemberID
 
 on = False
 
@@ -67,7 +68,9 @@ class Admin(commands.Cog):
     async def say(self, ctx, *, what_to_say: str):
         """ says text """  # todo add a thing that deletes the message that the ~say'er sent prob with ctx.message smth
         await ctx.send(f'{what_to_say}')
-
+    
+    @commands.command()
+    @permissions.has_permissions(Manage_Server=True)
     async def prefix(self, ctx, next_prefix: str):
         """
          Create a new project into the projects table
@@ -91,12 +94,6 @@ class Admin(commands.Cog):
             await ctx.send(content)
             await asyncio.sleep(1.0)
 
-    @commands.command(aliases=["purge", "clr", "cls"])
-    @commands.check(permissions.is_owner or permissions.is_mod)
-    async def clear(self, ctx, amount: int):
-        amount + 1
-        await ctx.channel.purge(limit=amount)
-
     @commands.group()
     @commands.check(permissions.is_owner)
     async def file(self, ctx):
@@ -109,7 +106,7 @@ class Admin(commands.Cog):
         """ Reads the file specified and sends it"""
         await ctx.send(f'Why you madman why dare try to open {filename}')
         await asyncio.sleep(1.0)
-        file = open(f"C:/Users/Jason/Desktop/Rando stuff/code/general bot/edoC/cogs/Texts/{filename}.txt", "r")
+        file = open(f"C:/Users/Jason/edoC/cogs/Texts/{filename}.txt", "r")
         for word in file:
             await ctx.send(word)
             await asyncio.sleep(1.2)
@@ -119,12 +116,18 @@ class Admin(commands.Cog):
     async def file_write(self, ctx, filename: str, *, everythin_else):
         """ Writes a file from discord to the pc/server """
         message = await ctx.send('starting...')
-        file = open(f"C:/Users/Jason/Desktop/Rando stuff/code/general bot/edoC/cogs/Texts/{filename}.txt",
+        file = open(f"C:/Users/Jason/edoC/cogs/Texts/{filename}.txt",
                     "w+")
         for line in everythin_else:
             file.writelines(f"\n{str(line)}")
         file.close()
         await message.edit(content="Done!")
+
+    @commands.command(aliases=["bban"])
+    @commands.check(permissions.is_owner or permissions.is_mod)
+    async def botban(self, ctx, userid: MemberID, *, reason: str):
+        BanUser()
+
 
     @commands.command()
     @commands.check(permissions.is_owner)
@@ -217,7 +220,7 @@ class Admin(commands.Cog):
         await ctx.send(f'Dumping "***{message}*** " Into {todofile.name}')
         todofile.close
 
-    @commands.command()
+    @commands.command(hidden=True)
     @commands.guild_only()
     @commands.check(permissions.is_owner or permissions.is_mod)
     async def nuke(self, ctx):
