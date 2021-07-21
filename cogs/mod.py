@@ -13,6 +13,8 @@ from utils.data import get_prefix
 from lib.db import db
 
 BannedUsers = {}
+
+
 class BannedUser(Converter):
     async def convert(self, ctx, arg):
         if ctx.guild.me.guild_permissions.ban_members:
@@ -52,25 +54,31 @@ class ActionReason(commands.Converter):
             raise commands.BadArgument(f"reason is too long ({len(argument)}/{reason_max})")
         return ret
 
+
 async def Get_Banned_Users():
     bans = db.field("SELECT UserID FROM users WHERE Banned = ?", "True")
     for UserID in bans:
         BannedUsers + UserID
 
 
-async def BannedU():
+async def BannedU(fix):
+    yes = fix
+
     async def pred(ctx):
         if ctx.author in BannedUsers:
             return ctx.send("You are banned from using commands")
             print("Command blocked")
+
     return pred
+
 
 async def BanUser(ctx, userid: MemberID, reason):
     await BannedUsers + userid
     db.execute("INSERT INTO users (?, ?)", userid, reason)
-    #db.execute("INSERT INTO users (Reason)", reason)
+    # db.execute("INSERT INTO users (Reason)", reason)
     db.commit()
     return await ctx.send(userid + " Was banned from using the bot")
+
 
 class Moderator(commands.Cog):
     def __init__(self, bot):
@@ -151,14 +159,17 @@ class Moderator(commands.Cog):
             if await permissions.check_priv(ctx, member):
                 return
             else:
-                try:
-                    await member.edit(nick=name, reason=default.responsible(ctx.author, "Changed by command"))
-                    message = f"Changed **{member.name}'s** nickname to **{name}**"
-                    if name is None:
-                        message = f"Reset **{member.name}'s** nickname"
-                    await ctx.send(message)
-                except Exception as e:
-                    await ctx.send(e)
+                if member.id == 845186772698923029 or 511724576674414600:
+                    return
+                else:
+                    try:
+                        await member.edit(nick=name, reason=default.responsible(ctx.author, "Changed by command"))
+                        message = f"Changed **{member.name}'s** nickname to **{name}**"
+                        if name is None:
+                            message = f"Reset **{member.name}'s** nickname"
+                        await ctx.send(message)
+                    except Exception as e:
+                        await ctx.send(e)
 
     @commands.command()
     @commands.guild_only()
@@ -356,6 +367,7 @@ class Moderator(commands.Cog):
         await default.prettyResults(
             ctx, "discriminator", f"Found **{len(loop)}** on your search for **{search}**", loop
         )
+
     @commands.command()
     @commands.has_permissions(manage_messages=True)
     async def cls(self, ctx, amount: int):

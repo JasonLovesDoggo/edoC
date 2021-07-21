@@ -12,7 +12,6 @@ class Calender(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.config = default.config()
-        self.process = psutil.Process(os.getpid())
 
 
 def setup(bot):

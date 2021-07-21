@@ -19,11 +19,17 @@ class Bot(AutoShardedBot):
 
 
 def get_prefix(bot, message):
-    prefix = db.field("SELECT Prefix FROM guilds WHERE GuildID = ?", message.guild.id)
-    if prefix:
-        return when_mentioned_or(prefix)(bot, message)
-    else:
-        return default.config["prefix"]
+    try:
+        if not message.guild:
+            pass
+        else:
+            prefix = db.field("SELECT Prefix FROM guilds WHERE GuildID = ?", message.guild.id)
+            if prefix:
+                return when_mentioned_or(prefix)(bot, message)
+            else:
+                return default.config["default_prefix"]
+    except AttributeError:
+            return default.config["default_prefix"]
 
 
 

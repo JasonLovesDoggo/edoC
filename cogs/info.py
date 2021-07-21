@@ -1,20 +1,26 @@
-import time
-import discord
-import psutil
 import os
-
+import platform
+import sys
+import time
+import psutil
+import discord
 from datetime import datetime
 from discord.ext import commands
 from utils.vars import *
 from utils import default
 from utils.data import get_prefix
-from cogs.events import owner_commands, normal_commands
+from lib.db import db
+
 
 class Information(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.config = default.config()
         self.PADDING = 9
+        self.process = psutil.Process(os.getpid())
+        self.event = self.bot.get_cog("Events")
+        if not hasattr(self.bot, "uptime"):
+            self.bot.uptime = datetime.utcnow()
 
     @commands.command()
     async def ping(self, ctx):
@@ -46,12 +52,12 @@ class Information(commands.Cog):
                         Type ~help command for more info on a command.
                         You can also type ~help category for more info on a category.""")
 
-    @commands.command()
+    @commands.command(aliases=["code"])
     async def source(self, ctx):
         """ Check out my source code <3 """
         # Do not remove this command, this has to stay due to the GitHub LICENSE.
         # TL:DR, you have to disclose source according to MIT.
-        await ctx.send(f"**{ctx.bot.user}** is powered by this source code:\nhttps://github.com/JakeWasChosen/Cardinal")
+        await ctx.send(f"**{ctx.bot.user}** is powered by this source code:\nhttps://github.com/JakeWasChosen/edoC")
 
     @commands.command()
     async def todo(self, ctx):
@@ -59,7 +65,7 @@ class Information(commands.Cog):
         file = open("todo.txt", "r")
         the_thing = file.read()
         await ctx.send(the_thing)
-        file.close
+        file.close()
 
     @commands.command(aliases=["supportserver", "feedbackserver"])
     async def botserver(self, ctx):
@@ -88,7 +94,7 @@ class Information(commands.Cog):
         embed.add_field(name="Servers", value=f"{len(ctx.bot.guilds)} ( avg: {avgmembers:,.2f} users/server )",
                         inline=True)
         embed.add_field(name="Commands Loaded", value=len([x.name for x in self.bot.commands]), inline=True)
-        embed.add_field(name="Commands Ran By Owners", value=owner_commands)
+        embed.add_field(name="Commands Ran By Owners", value=None)
         embed.add_field(name="RAM", value=f"{ramUsage:.2f} MB", inline=True)
         embed.set_footer(text=embedfooter)
         await ctx.send(content=f"ℹ About **{ctx.bot.user}** | **{self.config['version']}**", embed=embed)
@@ -105,22 +111,25 @@ class Information(commands.Cog):
                            description="")
         info = {}
         info["Discord.py version"] = discord.__version__
-        info["Cool variable y"] = 7
-        info["commands ran since restart"] = normal_commands
-        info["Commands ran by owners"] = owner_commands
+        info["Python Version"] = f"{platform.python_version()}"
+        info["Avg users/server"] = f"{avgmembers:,.2f}"
+        info["commands ran since restart"] = self.event.normal_commands
+        info["Commands ran by owners"] = self.event.owner_commands
         info["Bot owners"] = len(self.config["owners"])
-        info["Prefix in this server"] = "e"
+        info["Bot mods"] = len(self.config["mods"])
+        info["Prefix in this server"] = db.field("SELECT Prefix FROM guilds WHERE GuildID = ?",
+                                                 ctx.guild.id)  # get_prefix(self.bot, ctx)
         info["Total members"] = totalmembers
-        info["Avg members"] = avgmembers
-        info["Ram usage"] = ramUsage
-        info["Developer"] = "https://bio.link/edoC"
+        info["blank"] = None
+        info["Ram usage"] = f"{ramUsage:.2f} MB"
+        info["Developer"] = "Jake CEO of annoyance#1904"
 
         for k, v in info.items():
             pad = ' ' * (self.PADDING - len(str(v)))
             em.description += f"`{pad}{v}`: **{k}**\n"
         em.set_footer(text="bot owners are excluded from command stats")
         await ctx.send(content=f"About **{ctx.bot.user}** | **{self.config['version']}**", embed=em)
-
+        await ctx.send("||https://bio.link/edoC||")
 
     @commands.command()
     async def developer(self, ctx):

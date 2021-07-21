@@ -68,7 +68,7 @@ class Admin(commands.Cog):
     async def say(self, ctx, *, what_to_say: str):
         """ says text """  # todo add a thing that deletes the message that the ~say'er sent prob with ctx.message smth
         await ctx.send(f'{what_to_say}')
-    
+
     @commands.command()
     @permissions.has_permissions(Manage_Server=True)
     async def prefix(self, ctx, next_prefix: str):
@@ -126,8 +126,8 @@ class Admin(commands.Cog):
     @commands.command(aliases=["bban"])
     @commands.check(permissions.is_owner or permissions.is_mod)
     async def botban(self, ctx, userid: MemberID, *, reason: str):
-        BanUser()
-
+        BanUser(ctx, userid, reason)
+        await ctx.send(f"banned {userid} for {reason}")
 
     @commands.command()
     @commands.check(permissions.is_owner)
@@ -265,23 +265,22 @@ class Admin(commands.Cog):
     @commands.command(pass_context=True)
     async def role(self, ctx, *, role: discord.Role = None):
         """
-        Toggle whether or not you have a role. Usage: `!role DivinityPing`. Can take roles with spaces.
-        :param role: Anything after "role"; should be the role name.
+        Toggle whether or not you have a role. Usage: `~role DivinityPing`. Can take roles with spaces.
         """
         if role is None:
-            return await self.bot.say("You haven't specified a role! ")
+            return await ctx.send("You haven't specified a role! ")
 
-        if role not in ctx.message.server.roles:
-            return await self.bot.say("That role doesn't exist.")
+        if role not in ctx.message.guild.roles:
+            return await ctx.send("That role doesn't exist.")
 
         if role not in ctx.message.author.roles:
-            await self.bot.add_roles(ctx.message.author, role)
-            return await self.bot.say("{} role has been added to {}.".format(role, ctx.message.author.mention))
+            await ctx.message.author.add_roles(role)
+            return await ctx.send("{} role has been added to {}.".format(role, ctx.message.author.mention))
 
         if role in ctx.message.author.roles:
-            await self.bot.remove_roles(ctx.message.author, role)
-            return await self.bot.say("{} role has been removed from {}."
-                                      .format(role, ctx.message.author.mention))
+            await self.bot.remove_roles(role)
+            return await ctx.send("{} role has been removed from {}."
+                                  .format(role, ctx.message.author.mention))
 
     @commands.command()
     @commands.check(permissions.is_owner or permissions.is_mod)
@@ -320,7 +319,6 @@ class Admin(commands.Cog):
                 ),
                 status=status_type.get(status, discord.Status.online)
             )
-            self.change_config_value("playing", playing)
             await ctx.send(f"Successfully changed playing status to **{playing}**")
         except discord.InvalidArgument as err:
             await ctx.send(err)
