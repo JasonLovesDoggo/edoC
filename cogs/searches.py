@@ -1,26 +1,13 @@
+import requests
+from discord.ext.commands import CommandInvokeError
+
 import discord
 
 from discord.ext import commands
-from utils import  default
-
+from utils import default
+from utils.vars import *
 # todo add a fuckton of elif's for the search commands so it just changes strings that the embed sends based off the cmd
 
-# COLORS
-green = 0x2CCC74  # SUCCESS
-
-blue = 0x04A4EC  # NORMAL?
-
-purple = 0x9B40D2  # TWITCH OUTPUT / IDK?
-
-orange = 0xDA8115  # NOTE / SMALL ERROR / LOGS?
-
-magenta = 0xE81354  # ERROR
-
-red = 0xFF0000  # LARGE ERROR / YOUTUBE OUTPUT
-
-dark_blue = 0x142434  # Looks nice
-
-white = 0xFFFFFF  # white
 def urlamazon(ctx):
     if ctx.invoked_with == "amazonCA":
         urlloco = ".ca"
@@ -233,7 +220,6 @@ class Search(commands.Cog):
 #       craigslist.org
 
 # pinterest https://www.pinterest.ca/search/pins/?q=
-
 
 def setup(bot):
     bot.add_cog(Search(bot))

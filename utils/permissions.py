@@ -1,31 +1,70 @@
 import discord
-
 from utils import default
 from discord.ext import commands
+from discord.ext.commands import (
+    bot_has_permissions,
+    has_permissions,
+    is_owner,
+)
+from utils import default
 
 owners = default.config()["owners"]
-mods = default.config()["mods"]
-
 
 def is_owner(ctx):
     """ Checks if the author is one of the owners """
     return ctx.author.id in owners
-def is_mod(ctx):
-    """ Checks if the author is one of the mods """
-    return ctx.author.id in mods
+"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+def is_mod():
+    """Is the user a moderator ?"""
+
+    async def pred(ctx):
+        if await ctx.bot.is_owner(ctx.author):
+            return True
+        permissions: discord.Permissions = ctx.channel.permissions_for(
+            ctx.author
+        )
+        return permissions.manage_messages
+
+    return commands.check(pred)
+
+
+def is_admin():
+    """Is the user Admin ? as @check"""
+
+    async def pred(ctx):
+        if await ctx.bot.is_owner(ctx.author):
+            return True
+        permissions: discord.Permissions = ctx.channel.permissions_for(
+            ctx.author
+        )
+        return permissions.administrator
+
+    return commands.check(pred)
+
+
+async def is_user_admin(ctx):
+    """Is the user Admin ? as function"""
+
+    if await ctx.bot.is_owner(ctx.author):
+        return True
+
+    permissions: discord.Permissions = ctx.channel.permissions_for(ctx.author)
+
+    return permissions.administrator
+
+
+"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 
 async def check_permissions(ctx, perms, *, check=all):
     """ Checks if author has permissions to a permission """
     if ctx.author.id in owners:
-        return True
-    if ctx.author.id in mods:
         return True
 
     resolved = ctx.channel.permissions_for(ctx.author)
     return check(getattr(resolved, name, None) == value for name, value in perms.items())
 
 
-def has_permissions(*, check=all, **perms):
+def Has_permissions(*, check=all, **perms):
     """ discord.Commands method to check if author has permissions """
     async def pred(ctx):
         return await check_permissions(ctx, perms, check=check)

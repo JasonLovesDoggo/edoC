@@ -1,3 +1,5 @@
+import random
+
 import discord
 
 from utils import permissions, default
@@ -16,7 +18,6 @@ class Bot(AutoShardedBot):
             return
 
         await self.process_commands(msg)
-
 
 def get_prefix(bot, message):
     try:

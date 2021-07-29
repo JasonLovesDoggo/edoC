@@ -5,7 +5,7 @@ ballresponse = [
     "Yes", "No", "Take a wild guess...", "Very doubtful",
     "Sure", "Without a doubt", "Most likely", "Might be possible",
     "You'll be the judge", "no... (╯°□°）╯︵ ┻━┻", "no... baka",
-    "senpai, pls no ;-;", "Ask again later"
+    "senpai, pls no ;-;", "Reply hazy try again.", ""
 ]
 CoolColorResponse = [
     "0x2CCC74", "0x04A4EC", "0x142434", "0xFFFFFF"
@@ -28,8 +28,23 @@ dark_blue = 0x142434  # Looks nice lol
 
 white = 0xFFFFFF  # white
 
+colors = {
+    "green": green,
+    "blue": blue,
+    "purple": purple,
+    "orange": orange,
+    "magenta": magenta,
+    "red": red,
+    "dark_blue": dark_blue,
+    "white": white,
+}
+
 embedfooter = "https://www.buymeacoffee.com/edoC Creating edoC is a tough task, if you would like me to continue with it, please consider donating!"
 
+version_info = {
+        "info": "Updates and fixes",
+        "version": 0.86,
+    }
 
 def ErrorEmbed(ctx, error):
     emb = discord.Embed(title=f"Error with your command",

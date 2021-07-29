@@ -4,11 +4,9 @@ from discord.ext.commands.context import Context
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from utils import default
 from utils.data import Bot, MyNewHelp, get_prefix
-import logging
 from lib.db import db
 
 config = default.config()
-
 bot = Bot(
     command_prefix=get_prefix, prefix=get_prefix,
     owner_ids=config["owners"], case_insensitive=True, command_attrs=dict(hidden=True), help_command=MyNewHelp(),
@@ -46,14 +44,6 @@ try:
 except Exception:
     raise ChildProcessError("Problem with one of the cogs/utils")
 
-logging.basicConfig(
-    filename=f"log.log",
-    filemode="w",
-    datefmt="%d-%b-%y %H:%M:%S",
-    format="[{asctime}] {levelname:<10} | {name:<10}: {message}",
-    style="{",
-    level=logging.WARNING,
-)
 
 try:
     bot.run(config["token"], reconnect=True)

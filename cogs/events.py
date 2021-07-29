@@ -5,12 +5,12 @@ from discord.ext.commands import errors
 from cogs.mod import BannedUsers, BannedU
 from utils import default
 from lib.db import db
-
 import os
 import psutil
 import logging
 from datetime import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from utils.vars import *
 
 owners = default.config()["owners"]
 
@@ -24,19 +24,48 @@ class Events(commands.Cog):
         self.scheduler = AsyncIOScheduler()
         self.owner_commands = 0
         self.normal_commands = 0
+        self.logs_channel = self.bot.get_channel(self.config["edoc_logs"])
+        self.update_db()
+
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild, member):
+        """guild thingos """
+        general = find(lambda x: x.name == 'general' or 'General', guild.text_channels)
+        if general and general.permissions_for(guild.me).send_messages:
+            wlcmchannel = general
+        else:
+            wlcmchannel = None
+        channel = self.bot.get_channel(wlcmchannel.id)
+        await channel.send("Thank you for inviting me to the server")
+        await channel.send("Please do ~help to get started")
+        annoy = member
 
     def update_db(self):
-        db.multiexec("INSERT OR IGNORE INTO guilds (GuildID) VALUES (?)",
-                     ((guild.id,) for guild in self.bot.guilds))
-        for guilds in self.bot.guilds:
-            for users in guilds:
-                db.execute("INSERT OR IGNORE INTO users (UserID) VALUES (?)", users.id)
-
+        members = self.bot.get_all_members()
+        for member in members:
+            db.execute("INSERT OR IGNORE INTO User (UserID) VALUES (?)", member.id)
+        for server in self.bot.guilds:
+            admins = None  # {}
+            #for member in guild.members:
+            #    if
+            #            admins += members
+            inthings = [server.id, self.config["default_prefix"], server.name, admins]
+            db.execute("INSERT OR IGNORE INTO guilds (GuildID, Prefix, GuildName, GuildAdmins) VALUES (?, ?, ?, ?);", (tuple(inthings)))
         db.commit()
         print("updated db")
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, err):
+        if isinstance(err, commands.CommandNotFound):
+            embed = discord.Embed(
+                title='**Error!**',
+                description=f'The command you have requested is not found. \nPlease make sure you typed it out right',
+                color=colors["red"],
+                timestamp=ctx.message.created_at
+            )
+            embed.set_author(name='edoC')
+            await ctx.send(embed=embed)
+
         if isinstance(err, errors.MissingRequiredArgument) or isinstance(err, errors.BadArgument):
             helper = str(ctx.invoked_subcommand) if ctx.invoked_subcommand else str(ctx.command)
             await ctx.send_help(helper)
@@ -65,64 +94,32 @@ class Events(commands.Cog):
             pass
 
     @commands.Cog.listener()
-    async def on_guild_join(self, guild):
-        """guild thingos """
-        general = find(lambda x: x.name == 'general' or 'General', guild.text_channels)
-        if general and general.permissions_for(guild.me).send_messages:
-            wlcmchannel = general
-        else:
-            wlcmchannel = None
-        channel = self.bot.get_channel(wlcmchannel.id)
-        await channel.send("Thank you for inviting me to the server")
-        await channel.send("Please do ~help to get started")
-        logs = find(lambda x: x.name == 'logs', guild.text_channels)
-        if logs and logs.permissions_for(guild.me).send_messages:
-            logschannel = logs
-        else:
-            logschannel = None
-        admins = {}
-        for members in guild.members:
-            if members.has_permission(administrator=True):
-                admins += members
-        db.execute(
-            "INSERT INTO guilds VALUES (GuildID, Prefix, GuildName, LogChannel, GuildMods, GuildAdmins, WelcomeMessage, WelcomeChannel);",
-            (
-                guild.id,
-                self.config["default_prefix"],
-                guild.name,
-                logschannel,
-                None,
-                admins,
-                None,
-                wlcmchannel))
-
-    @commands.Cog.listener()
     async def on_guild_remove(self, guild):
-        print(f"edoc has left {guild.name} it had {len(guild.members)}")
+        print(f"edoc has left {guild.name} it had {len(guild.members)} members")
         # todo add a thing to remove said guild from the database after an hour
 
     @commands.Cog.listener()
     async def on_member_join(self, guild, member):
         channel = guild.sys
-        #if not self.config[f"join_message"]:
+        # if not self.config[f"join_message"]:
         #    return
         #
-        #try:
+        # try:
         #    to_send = sorted([chan for chan in guild.channels if
         #                      chan.permissions_for(guild.me).send_messages and isinstance(chan, discord.TextChannel)],
         #                     key=lambda x: x.position)[0]
-        #except IndexError:
+        # except IndexError:
         #    pass
-        #else:
+        # else:
         #    join_msg = self.config[f"join_message"]
         #    await to_send.send(f"{join_msg} {user.mention}")
 
     @commands.Cog.listener()
     async def on_command(self, ctx):
         self.bot.check(BannedU)
-        self.normal_commands += 1
+        self.normal_commands + 1
         if ctx.message.author.id in self.config[f"owners"]:
-            self.owner_commands += 1
+            self.owner_commands + 1
         if ctx.author.id in BannedUsers:
             blocked = True
         else:
@@ -133,7 +130,7 @@ class Events(commands.Cog):
             logging.basicConfig(filename="log.log",
                                 format='%(asctime)s %(message)s',
                                 datefmt='%m/%d/%Y %I:%M:%S %p',
-                                level=logging.DEBUG,
+                                level=logging.INFO,
                                 filemode='w+')
             logging.info(f'{ctx.guild.name} > ')  # {ctx.author} > {ctx.message.clean_content}
         except AttributeError:
@@ -147,7 +144,6 @@ class Events(commands.Cog):
         if not self.ready:
             self.ready = True
             self.scheduler.start()
-            self.update_db()
 
             if not hasattr(self.bot, "uptime"):
                 self.bot.uptime = datetime.utcnow()
@@ -171,16 +167,12 @@ class Events(commands.Cog):
             print(
                 f"Ready: {self.bot.user} | Total members {totalmembers} | Guild count: {len(self.bot.guilds)} | Guilds")
             guilds = {}
-            for x in self.bot.guilds:
-                field = db.field("SELECT GuildId FROM 'guilds'")
-                field2 = db.field("SELECT GuildName FROM 'guilds'")
-                guilds[field2] = field
             for Server in self.bot.guilds:
                 try:
                     to_send = sorted([chan for chan in Server.channels if
                                       chan.permissions_for(Server.me).send_messages and isinstance(chan,
                                                                                                    discord.TextChannel)],
-                                     key=lambda x: x.position)[0]
+                                     key=lambda z: z.position)[0]
                 except IndexError:
                     pass
                 else:
@@ -188,9 +180,10 @@ class Events(commands.Cog):
                 if Server.id in guilds:
                     verified: bool = True
                 else:
-                    verified = False
+                    verified: bool = False
+                gprefix = db.field('SELECT Prefix FROM guilds WHERE GuildID = ?', Server.id)
                 print(
-                    f"{Server.id} ~ {Server} ~ {Server.owner} ~ {Server.member_count} ~ {invite_link} ~ System broken rn")
+                    f"{Server.id} ~ {Server} ~ {Server.owner} ~ {Server.member_count} ~ {invite_link} ~ Prefix {gprefix}")
         else:
             print(f"{self.bot.user} Reconnected")
             logging.log("Bot reconnected")
@@ -211,7 +204,6 @@ class Events(commands.Cog):
     async def premium_guild_subscription(self, ctx):
         await ctx.send(f"{ctx.auther} just boosted the server :party:")
 
+
 def setup(bot):
     bot.add_cog(Events(bot))
-
-

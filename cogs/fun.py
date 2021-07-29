@@ -9,7 +9,7 @@ from discord.ext import commands
 from utils import vars, permissions, http, default
 
 
-class Fun_Commands(commands.Cog):
+class Fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.config = default.config()
@@ -85,6 +85,11 @@ class Fun_Commands(commands.Cog):
         answer = num1 * num2
         await ctx.send(answer)
 
+    @math.command(name="division", aliases=["divide"])
+    async def math_divide(self, ctx, num1: int, num2: int):
+        answer = num1 // num2
+        await ctx.send(answer)
+
     @commands.command()
     async def f(self, ctx, *, text: commands.clean_content = None):
         """ Press F to pay respect """
@@ -94,8 +99,15 @@ class Fun_Commands(commands.Cog):
 
     @commands.command()
     async def pick(self, ctx, one: str, two: str):
+        """ picks between 2 things"""
         answer = random.choice([one, two])
         await ctx.send(f"**{answer}**")
+
+    @commands.command()
+    async def answer(self, ctx, *, thing: str):
+        """ purely just says yes or no randomly """
+        ans = random.choice(["yes", "no"])
+        await ctx.send(ans)
 
     @commands.command()
     async def test(self, ctx):
@@ -130,7 +142,7 @@ class Fun_Commands(commands.Cog):
 
     @commands.command()
     async def reverse(self, ctx, *, text: str):
-        """ !poow ,ffuts esreveR
+        """ ~poow ,ffuts esreveR
         Everything you type after reverse will of course, be reversed
         """
         t_rev = text[::-1].replace("@", "@\u200B").replace("&", "&\u200B")
@@ -154,6 +166,14 @@ class Fun_Commands(commands.Cog):
         """ Rates what you desire """
         rate_amount = random.uniform(0.0, 100.0)
         await ctx.send(f"I'd rate `{thing}` a **{round(rate_amount, 4)} / 100**")
+
+    @commands.command()
+    async def ship(self, ctx, person1: commands.clean_content, person2: commands.clean_content):
+        """ Rates what you desire """
+        ship_amount = random.uniform(0.0, 100.0)
+        if "jake" or "jason" or "edoc" or "edoC" in person1 or person2 :
+            ship_amount = 69.42000
+        await ctx.send(f"`{person1}` and `{person2}` are **{round(ship_amount, 4)} compatible **")
 
     @commands.command()
     async def beer(self, ctx, user: discord.Member = None, *, reason: commands.clean_content = ""):
@@ -246,4 +266,4 @@ class Fun_Commands(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(Fun_Commands(bot))
+    bot.add_cog(Fun(bot))

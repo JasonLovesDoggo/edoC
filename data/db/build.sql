@@ -15,8 +15,7 @@ CREATE TABLE IF NOT EXISTS User (
 	WantsFooterOrTag text DEFAULT "True",
 	Level integer DEFAULT 0,
 	XPLock TEXT DEFAULT CURRENT_TIMESTAMP,
-	Banned text DEFAULT "False"
-);
+``);
 
 CREATE TABLE IF NOT EXISTS warns (
 	UserID integer PRIMARY KEY,
@@ -42,7 +41,19 @@ CREATE TABLE IF NOT EXISTS todo (
 );
 
 CREATE TABLE IF NOT EXISTS tag (
-	TagName TEXT     PRIMARY KEY,
+	TagName TEXT PRIMARY KEY,
 	TagText TEXT,
-	TagCreator TEXT
+	TagCreator TEXT,
+	TagUses integer
+);
+
+CREATE TABLE IF NOT EXISTS giveaway (
+    GiveawayID integer PRIMARY KEY,
+    GiveawayName TEXT
+
+);
+
+CREATE TABLE IF NOT EXISTS giveawayusers (
+    GiveawayID integer PRIMARY KEY,
+    GiveawayUserID integer
 )

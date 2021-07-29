@@ -20,8 +20,9 @@ class HTTPSession(aiohttp.ClientSession):
 
         This would be perfect if discord.py had this as well. :thinking:
         """
-        if not self.closed:
-            self.close()
+        #if not self.closed:
+        #    self.close()
+        pass
 
 
 session = HTTPSession()

@@ -2,6 +2,9 @@ import asyncio
 import logging
 import time
 import aiohttp
+from discord.ext.commands import ExtensionNotLoaded
+from jishaku.models import copy_context_with
+
 import discord
 import importlib
 import os
@@ -11,15 +14,32 @@ from discord.ext import commands
 from utils import permissions, default, http
 from io import BytesIO
 from cogs.mod import BanUser, MemberID
-
 on = False
-
 
 class Admin(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.config = default.config()
         self._last_result = None
+
+    @commands.command()
+    @commands.check(permissions.is_owner)
+    async def update(self, ctx):
+        sh = "jsk sh"
+
+        git = f"{sh} git pull"
+        update = f"{sh} make update"
+
+        git_command_ctx = await copy_context_with(
+            ctx, content=ctx.prefix + git
+        )
+        update_command_ctx = await copy_context_with(
+            ctx, content=ctx.prefix + update
+        )
+
+        await git_command_ctx.command.invoke(git_command_ctx)
+        await update_command_ctx.command.invoke(update_command_ctx)
+        await self.shutdown()
 
     @commands.command()
     @commands.check(permissions.is_owner)
@@ -57,6 +77,13 @@ class Admin(commands.Cog):
         data = BytesIO(allusers.encode("utf-8"))
         await ctx.send(content=f"Users", file=discord.File(data, filename=f"{default.timetext('Users')}"))
 
+    @users.error
+    async def users_error(self, ctx: commands.Context, error: commands.CommandError):
+        # if the conversion above fails for any reason, it will raise `commands.BadArgument`
+        # so we handle this in this error handler:
+        if isinstance(error, commands.BadArgument):
+            return await ctx.send("Couldn\'t find that user.")
+
     @commands.command()  # idk i wanted this
     @commands.check(permissions.is_owner)
     async def print(self, what_they_said: str):
@@ -70,13 +97,12 @@ class Admin(commands.Cog):
         await ctx.send(f'{what_to_say}')
 
     @commands.command()
-    @permissions.has_permissions(Manage_Server=True)
+    @permissions.has_permissions(manage_guild=True)
     async def prefix(self, ctx, next_prefix: str):
+        await ctx.send("this command currently does not exist its just a placeholder")
         """
-         Create a new project into the projects table
-         :param conn:
-         :param project:
-         :return: project id
+         Change the value of prefix for the guild and insert it into the guilds table
+         @param next_prefix:
          """
         """guildid = ctx.guild.id
         prefixchange = ''' INSERT INTO guilds(name,begin_date,end_date)
@@ -126,7 +152,7 @@ class Admin(commands.Cog):
     @commands.command(aliases=["bban"])
     @commands.check(permissions.is_owner or permissions.is_mod)
     async def botban(self, ctx, userid: MemberID, *, reason: str):
-        BanUser(ctx, userid, reason)
+        await BanUser(ctx, userid, reason)
         await ctx.send(f"banned {userid} for {reason}")
 
     @commands.command()
@@ -159,7 +185,7 @@ class Admin(commands.Cog):
             return await ctx.send(default.traceback_maker(e))
         await ctx.send(f"Reloaded extension **{name}.py**")
 
-    @commands.command()
+    @commands.command(aliases=["ra"])
     @commands.check(permissions.is_owner)
     async def reloadall(self, ctx):
         """ Reloads all extensions. """
@@ -183,7 +209,7 @@ class Admin(commands.Cog):
 
         await ctx.send("Successfully reloaded all extensions")
 
-    @commands.command()
+    @commands.command(aliases=["ru"])
     @commands.check(permissions.is_owner)
     async def reloadutils(self, ctx, name: str):
         """ Reloads a utils module. """
@@ -209,7 +235,7 @@ class Admin(commands.Cog):
                             filemode='w+')
         logging.warning('Shutting down now')
         await asyncio.sleep(2)
-        sys.exit(0)
+        sys.exit("Bot shut down")
 
     @commands.command()
     @commands.check(permissions.is_owner)
@@ -217,8 +243,8 @@ class Admin(commands.Cog):
         """Dumps the message into todo.txt"""
         todofile = open("todo.txt", "a")
         todofile.write(f"\n \n **{message}** \n~ {ctx.author} ~ {ctx.message.created_at}")
-        await ctx.send(f'Dumping "***{message}*** " Into {todofile.name}')
-        todofile.close
+        await ctx.send(f'Dumping "**{message}** " Into {todofile.name}')
+        todofile.close()
 
     @commands.command(hidden=True)
     @commands.guild_only()
@@ -275,11 +301,11 @@ class Admin(commands.Cog):
 
         if role not in ctx.message.author.roles:
             await ctx.message.author.add_roles(role)
-            return await ctx.send("{} role has been added to {}.".format(role, ctx.message.author.mention))
+            return await ctx.send("**{}** role has been added to {}.".format(role, ctx.message.author.mention))
 
         if role in ctx.message.author.roles:
             await self.bot.remove_roles(role)
-            return await ctx.send("{} role has been removed from {}."
+            return await ctx.send("**{}** role has been removed from {}."
                                   .format(role, ctx.message.author.mention))
 
     @commands.command()
@@ -365,12 +391,11 @@ class Admin(commands.Cog):
         except aiohttp.InvalidURL:
             await ctx.send("The URL is invalid...")
         except discord.InvalidArgument:
-            await ctx.send("This URL does not contain a useable image")
+            await ctx.send("This URL does not contain a usable image")
         except discord.HTTPException as err:
             await ctx.send(err)
         except TypeError:
             await ctx.send("You need to either provide an image URL or upload one with the command")
-
 
 def setup(bot):
     bot.add_cog(Admin(bot))

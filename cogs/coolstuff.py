@@ -3,6 +3,7 @@ from utils.permissions import is_owner, is_mod
 from utils import default
 import psutil
 import os
+#import dsc
 
 class CoolStuff(commands.Cog):
     def __init__(self, bot):

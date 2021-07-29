@@ -12,8 +12,6 @@ from utils import permissions, default
 from utils.data import get_prefix
 from lib.db import db
 
-BannedUsers = {}
-
 
 class BannedUser(Converter):
     async def convert(self, ctx, arg):
@@ -55,20 +53,22 @@ class ActionReason(commands.Converter):
         return ret
 
 
+BannedUsers = {}
+
+
 async def Get_Banned_Users():
     bans = db.field("SELECT UserID FROM users WHERE Banned = ?", "True")
     for UserID in bans:
         BannedUsers + UserID
 
 
-async def BannedU(fix):
-    yes = fix
+async def BannedU(ctx):
+    if ctx.author in BannedUsers:
+        print(f"Command by {ctx.author} blocked!")
 
     async def pred(ctx):
         if ctx.author in BannedUsers:
             return ctx.send("You are banned from using commands")
-            print("Command blocked")
-
     return pred
 
 
@@ -160,7 +160,7 @@ class Moderator(commands.Cog):
                 return
             else:
                 if member.id == 845186772698923029 or 511724576674414600:
-                    return
+                    continue
                 else:
                     try:
                         await member.edit(nick=name, reason=default.responsible(ctx.author, "Changed by command"))
@@ -317,7 +317,7 @@ class Moderator(commands.Cog):
 
     @commands.group()
     @commands.guild_only()
-    @permissions.has_permissions(manage_users=True)
+    @permissions.has_permissions(manage_messages=True)
     async def find(self, ctx):
         """ Finds a user within your search term """
         if ctx.invoked_subcommand is None:

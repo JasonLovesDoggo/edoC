@@ -1,15 +1,19 @@
 import os
 import platform
-import sys
+import random
 import time
+
+import humanize
 import psutil
 import discord
 from datetime import datetime
 from discord.ext import commands
+
+from utils.info import fetch_info
 from utils.vars import *
 from utils import default
-from utils.data import get_prefix
 from lib.db import db
+import pathlib
 
 
 class Information(commands.Cog):
@@ -22,6 +26,103 @@ class Information(commands.Cog):
         if not hasattr(self.bot, "uptime"):
             self.bot.uptime = datetime.utcnow()
 
+    # ~~~~~~~~~~~~~~~~~~~~~~~~
+    @commands.command(name="in")
+    async def _info(self, ctx):
+        proc = psutil.Process()
+        infos = fetch_info()
+
+        with proc.oneshot():
+            mem = proc.memory_full_info()
+            cpu = proc.cpu_percent() / psutil.cpu_count()
+
+            e = discord.Embed(
+                title="Information about edoC",
+                color=0x89C4F9,
+            )
+
+            e.add_field(
+                name=(
+                    "__:busts_in_silhouette: Development__"
+                ),
+                value="**Jake CEO of annoyance#1904:** [GitHub](https://github.com/JakeWasChosen)\n",
+                inline=True,
+            )
+            e.add_field(
+                name="__<:python:868285625877557379> Python__",
+                value=f"**python** `{platform.python_version()}`\n"
+                      f"**discord.py** `{discord.__version__}`",
+                inline=True,
+            )
+
+            pmem = humanize.naturalsize(mem.rss)
+            vmem = humanize.naturalsize(mem.vms)
+
+            e.add_field(
+                name="__:gear: Usage__",
+                value=
+                f"**{pmem}** physical memory\n"
+                f"**{vmem}** virtual memory\n"
+                f"**{cpu:.2f}**% CPU",
+                inline=True)
+
+            e.add_field(
+                name="__Servers count__",
+                value=str(len(self.bot.guilds)),
+                inline=True,
+            )
+            e.add_field(
+                name="__Channels count__",
+                value=str(len(list(self.bot.get_all_channels()))),
+                inline=True,
+            )
+            e.add_field(
+                name="__Members count__",
+                value=str(len(list(self.bot.get_all_members()))),
+                inline=True,
+            )
+
+            e.add_field(
+                name="__:file_folder: Files__",
+                value=f"{infos.get('file_amount')} "
+                      f"*({infos.get('python_file_amount')}"
+                      f" <:python:868285625877557379>)*",
+                inline=True,
+            )
+            e.add_field(  # (class, functions, coroutines, comments)
+                name="__¶ Lines__",
+                value=f"{infos.get('total_lines')} "
+                      f" *({infos.get('total_python_class')} class"
+                      + ","
+                        f" {infos.get('total_python_functions')} functions"
+                      + ","
+                        f" {infos.get('total_python_coroutines')} coroutines"
+                      + ","
+                        f" {infos.get('total_python_comments')} comments"
+                      + ")*",
+                inline=True,
+            )
+
+            e.add_field(
+                name="__Latest changes__",
+                value=version_info["info"],
+                inline=False,
+            )
+
+            e.add_field(
+                name="__:link: Links__",
+                value="[edoC](https://dsc.gg/edoc) "
+                      "| [dev links](https://bio.link/edoC) "
+                      "| [invite](https://discordapp.com/oauth2/authorize?client_id=845186772698923029&scope=bot&permissions=8) ",
+                inline=False,
+            )
+            prefix = db.field("SELECT Prefix FROM guilds WHERE GuildID = ?",
+                              ctx.guild.id)
+            e.set_footer(text=f"version: {version_info['version']} • prefix: {prefix}\n {embedfooter}")
+
+        await ctx.send(embed=e)
+
+    # ~~~
     @commands.command()
     async def ping(self, ctx):
         """ Pong! """
@@ -30,6 +131,43 @@ class Information(commands.Cog):
         message = await ctx.send("🏓 Pong")
         ping = (time.monotonic() - before) * 1000
         await message.edit(content=f"🏓 WS: {before_ws}ms  |  REST: {int(ping)}ms")
+#pick = random.choice["ahk", "apache", "prolog"]
+
+    @commands.command()
+    async def lines(self, ctx):
+        """ gets all lines"""
+        global color
+        p = pathlib.Path('./')
+        cm = cr = fn = cl = ls = fc = 0
+        for f in p.rglob('*.py'):
+            if str(f).startswith("venv"):
+                continue
+            fc += 1
+            with open(f, 'rb') as of:
+                for l in of.read().decode().splitlines():
+                    l = l.strip()
+                    if l.startswith('class'):
+                        cl += 1
+                    if l.startswith('def'):
+                        fn += 1
+                    if l.startswith('async def'):
+                        cr += 1
+                    if '#' in l:
+                        cm += 1
+                    ls += 1
+        lang = random.choice(["ahk", "apache", "prolog"])
+        if lang == "apache":
+            color = orange
+        elif lang == "ahk":
+            color = blue
+        elif lang == "prolog":
+            color = 0x7e2225
+        e = discord.Embed(title="Lines",
+                          color=color,
+                          timestamp=ctx.message.created_at)
+        e.description = f"```{lang}\nFiles: {fc}\nLines: {ls:,}\nClasses: {cl}\nFunctions: {fn}\nCoroutines: {cr}\nComments: {cm:,}\n ```"
+        e.set_footer(text=f"Requested by {ctx.author.name}\n{embedfooter}")
+        await ctx.send(embed=e)
 
     @commands.command(aliases=["joinme", "join", "botinvite"])
     async def invite(self, ctx):
@@ -97,7 +235,7 @@ class Information(commands.Cog):
         embed.add_field(name="Commands Ran By Owners", value=None)
         embed.add_field(name="RAM", value=f"{ramUsage:.2f} MB", inline=True)
         embed.set_footer(text=embedfooter)
-        await ctx.send(content=f"ℹ About **{ctx.bot.user}** | **{self.config['version']}**", embed=embed)
+        await ctx.send(content=f"ℹ About **{ctx.bot.user}** | **{version_info['version']}**", embed=embed)
 
     @commands.command(aliases=["bs"])
     async def botstats(self, ctx):
@@ -116,11 +254,9 @@ class Information(commands.Cog):
         info["commands ran since restart"] = self.event.normal_commands
         info["Commands ran by owners"] = self.event.owner_commands
         info["Bot owners"] = len(self.config["owners"])
-        info["Bot mods"] = len(self.config["mods"])
         info["Prefix in this server"] = db.field("SELECT Prefix FROM guilds WHERE GuildID = ?",
                                                  ctx.guild.id)  # get_prefix(self.bot, ctx)
         info["Total members"] = totalmembers
-        info["blank"] = None
         info["Ram usage"] = f"{ramUsage:.2f} MB"
         info["Developer"] = "Jake CEO of annoyance#1904"
 
@@ -128,7 +264,7 @@ class Information(commands.Cog):
             pad = ' ' * (self.PADDING - len(str(v)))
             em.description += f"`{pad}{v}`: **{k}**\n"
         em.set_footer(text="bot owners are excluded from command stats")
-        await ctx.send(content=f"About **{ctx.bot.user}** | **{self.config['version']}**", embed=em)
+        await ctx.send(content=f"About **{ctx.bot.user}** | **{version_info['version']}**", embed=em)
         await ctx.send("||https://bio.link/edoC||")
 
     @commands.command()

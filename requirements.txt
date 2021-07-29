@@ -4,3 +4,6 @@ aiohttp~=3.6.3
 APScheduler~=3.7.0
 discord~=1.0.1
 requests~=2.25.1
+
+humanize~=3.9.0
+jishaku~=2.0.0
