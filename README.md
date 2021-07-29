@@ -1,5 +1,5 @@
 
-## Do you need more help? Visit my server here: **https://discord.gg/76xZwyRBmC** 🍺
+## Do you need more help? Visit my server here: **https://discord.gg/76xZwyRBmC**
 
 
 ## Requirements
