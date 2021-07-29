@@ -22,7 +22,7 @@ orange = 0xDA8115  # NOTE / SMALL ERROR / LOGS?
 
 magenta = 0xE81354  # ERROR
 
-red = 0xf00  # LARGE ERROR / YOUTUBE OUTPUT
+red = 0xff0000  # LARGE ERROR / YOUTUBE OUTPUT
 
 dark_blue = 0x142434  # Looks nice lol
 

@@ -27,6 +27,18 @@ class Events(commands.Cog):
         self.logs_channel = self.bot.get_channel(self.config["edoc_logs"])
         self.update_db()
 
+    async def erroremb(self, ctx, *, description: str):
+        """@summary creates a discord embed so i can send it with x details easier"""
+        embed = discord.Embed(
+            title='**Error!**',
+            description=description,
+            color=colors["red"],
+            timestamp=ctx.message.created_at,
+        )
+        embed.set_author(name='edoC', icon_url="https://cdn.discordapp.com/avatars/845186772698923029/079dae091e0df03cc189c40a386fdb12.webp?size=1024")
+        embed.set_footer(text=embedfooter)
+        await ctx.send(embed=embed)
+
     @commands.Cog.listener()
     async def on_guild_join(self, guild, member):
         """guild thingos """
@@ -40,7 +52,7 @@ class Events(commands.Cog):
         await channel.send("Please do ~help to get started")
         annoy = member
 
-    def update_db(self):
+    async def update_db(self):
         members = self.bot.get_all_members()
         for member in members:
             db.execute("INSERT OR IGNORE INTO User (UserID) VALUES (?)", member.id)
@@ -49,30 +61,24 @@ class Events(commands.Cog):
             #for member in guild.members:
             #    if
             #            admins += members
-            inthings = [server.id, self.config["default_prefix"], server.name, admins]
-            db.execute("INSERT OR IGNORE INTO guilds (GuildID, Prefix, GuildName, GuildAdmins) VALUES (?, ?, ?, ?);", (tuple(inthings)))
+            # inthings = [server.id, self.config["default_prefix"], server.name, admins] #
+            db.execute("INSERT OR IGNORE INTO guilds (GuildID, Prefix, GuildName, GuildAdmins) VALUES (?, ?, ?, ?);", (server.id, self.config["default_prefix"], server.name, admins))
         db.commit()
         print("updated db")
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, err):
         if isinstance(err, commands.CommandNotFound):
-            embed = discord.Embed(
-                title='**Error!**',
-                description=f'The command you have requested is not found. \nPlease make sure you typed it out right',
-                color=colors["red"],
-                timestamp=ctx.message.created_at
-            )
-            embed.set_author(name='edoC')
-            await ctx.send(embed=embed)
+            await self.erroremb(ctx, description=f'The command you have requested is not found. \nPlease make sure you typed it out right',)
 
-        if isinstance(err, errors.MissingRequiredArgument) or isinstance(err, errors.BadArgument):
+        elif isinstance(err, errors.BadArgument):
             helper = str(ctx.invoked_subcommand) if ctx.invoked_subcommand else str(ctx.command)
-            await ctx.send_help(helper)
+            await self.erroremb(ctx, description=helper)
 
+        elif isinstance(err, errors.MissingRequiredArgument):
+            await self.erroremb(ctx, description="Please make sure to fill out all the arguments")
         elif isinstance(err, errors.CommandInvokeError):
             error = default.traceback_maker(err.original)
-
             if "2000 or fewer" in str(err) and len(ctx.message.clean_content) > 1900:
                 return await ctx.send(
                     "You attempted to make the command display more than 2,000 characters...\n"
@@ -85,13 +91,15 @@ class Events(commands.Cog):
             pass
 
         elif isinstance(err, errors.MaxConcurrencyReached):
-            await ctx.send("You've reached max capacity of command usage at once, please finish the previous one...")
+            await self.erroremb(ctx=ctx, description="You've reached max capacity of command usage at once, please finish the previous one...")
 
         elif isinstance(err, errors.CommandOnCooldown):
-            await ctx.send(f"This command is on cooldown... try again in {err.retry_after:.2f} seconds.")
+            await self.erroremb(ctx=ctx, description="This command is on cooldown... try again in {err.retry_after:.2f} seconds.")
 
-        elif isinstance(err, errors.CommandNotFound):
-            pass
+        else:
+            print('Unknown error!')
+            await self.erroremb(ctx, description="Sorry but this is an unknown error the devs has been notified!")
+            await self.logs_channel.send(f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] made an error typing a command. The error is unknown!")
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild):

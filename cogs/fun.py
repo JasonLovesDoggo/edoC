@@ -6,8 +6,8 @@ import aiohttp
 
 from io import BytesIO
 from discord.ext import commands
-from utils import vars, permissions, http, default
-
+from utils import permissions, http, default
+from utils.vars import *
 
 class Fun(commands.Cog):
     def __init__(self, bot):
@@ -18,8 +18,8 @@ class Fun(commands.Cog):
     @commands.command(aliases=["8ball"])
     async def eightball(self, ctx, *, question: commands.clean_content):
         """ Consult 8ball to receive an answer """
-        answer = random.choice(vars.ballresponse)
-        color = random.choice(vars.CoolColorResponse)
+        answer = random.choice(ballresponse)
+        color = random.choice(CoolColorResponse)
         await ctx.send(f"🎱 **Question:** {question}\n**Answer:** {answer}")
 
     async def randomimageapi(self, ctx, url: str, endpoint: str, token: str = None):
@@ -58,11 +58,41 @@ class Fun(commands.Cog):
         """ Posts a random coffee """
         await self.randomimageapi(ctx, "https://coffee.alexflipnote.dev/random.json", "file")
 
+    @commands.command(aliases=["doggo"])
+    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
+    async def dog(self, ctx):
+        """ Posts a random dog """
+        await self.randomimageapi(ctx, "https://random.dog/woof.json", "url")
+
     @commands.command(aliases=["flip", "coin"])
     async def coinflip(self, ctx):
         """ Coinflip! """
         coinsides = ["Heads", "Tails"]
         await ctx.send(f"**{ctx.author.name}** flipped a coin and got **{random.choice(coinsides)}**!")
+
+    @commands.command(aliases=["ie"])
+    async def iseven(self, ctx, num: int):
+        """ checks if a number is even or not"""
+        async with aiohttp.ClientSession() as cs:
+            async with cs.get(f'https://api.isevenapi.xyz/api/iseven/{num}/') as api:
+                data = await api.json()
+        if data["iseven"]:
+            color = green
+            answer = "Yes"
+            answer2 = " "
+        else:
+            color = red
+            answer = "No"
+            answer2 = " not"
+
+        embed = discord.Embed(
+            title="**IsEven finder**",
+            description=f"{answer} {num} is{answer2} even",
+            color=color,
+            timestamp=ctx.message.created_at
+        )
+        embed.set_footer(text=data["ad"])
+        await ctx.send(embed=embed)
 
     @commands.group()
     @commands.check(permissions.is_owner)

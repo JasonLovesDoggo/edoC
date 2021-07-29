@@ -13,6 +13,7 @@ class Skyblock(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.config = default.config()
+        self.runecraftingCap = 75400
         self.lvl50 = 55172425
         self.lvl51 = 59472425
         self.lvl52 = 64072425
@@ -24,16 +25,19 @@ class Skyblock(commands.Cog):
         self.lvl58 = 97972425
         self.lvl59 = 104672425
         self.lvl60 = 111672425
-        self.runecraftingCap = 75400
         self.separator = '{:,}'
+        self.mcheads = 'https://mc-heads.net/head/'
+        self.skyapiurl = 'https://sky.shiiyu.moe/api/v2/profile/'
+        self.skystatsurl = 'https://sky.shiiyu.moe/stats/'
+        self.mojangapiurl = 'https://api.mojang.com/users/profiles/minecraft/'
 
     @commands.command()
     async def taming(self, ctx, name, pname=None):
-        nameApi = requests.get('https://api.mojang.com/users/profiles/minecraft/' + name).json()
+        nameApi = requests.get(self.mojangapiurl + name).json()
         target_profile = None
 
         async with aiohttp.ClientSession() as cs:
-            async with cs.get('https://sky.shiiyu.moe/api/v2/profile/' + name) as api:
+            async with cs.get(self.skyapiurl + name) as api:
                 data = await api.json()
 
                 for profile in data["profiles"].values():
@@ -69,14 +73,14 @@ class Skyblock(commands.Cog):
 
                 embed = discord.Embed(
                     title='Taming Level for ' + nameApi['name'] + ' On Profile ' + pname,
-                    url=f'https://sky.shiiyu.moe/stats/{name}/{pname}',
+                    url=f'{self.skystatsurl}{name}/{pname}',
                     description='**Total Taming EXP: ** ' + self.separator.format(round(int(xpForMax))),
                     color=discord.Colour.from_rgb(137, 207, 240)
                 )
 
                 # Contents of discord embed
                 embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
-                embed.set_thumbnail(url='https://mc-heads.net/head/' + name)
+                embed.set_thumbnail(url=self.mcheads + name)
                 embed.set_footer(text=embedfooter)
                 embed.timestamp = ctx.message.created_at
 
@@ -95,11 +99,11 @@ class Skyblock(commands.Cog):
     @commands.command()
     async def farming(self, ctx, name, pname=None):
         separator = '{:,}'
-        nameApi = requests.get('https://api.mojang.com/users/profiles/minecraft/' + name).json()
+        nameApi = requests.get(self.mojangapiurl + name).json()
         target_profile = None
 
         async with aiohttp.ClientSession() as cs:
-            async with cs.get('https://sky.shiiyu.moe/api/v2/profile/' + name) as api:
+            async with cs.get(self.skyapiurl + name) as api:
                 data = await api.json()
 
         for profile in data["profiles"].values():
@@ -144,8 +148,7 @@ class Skyblock(commands.Cog):
             f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] looked at {name}'s {pname} Farming stats.")
 
         xpForMax = target_profile['data']['levels']['farming']['xp']
-        farmingCap = 111672425
-        of = farmingCap - xpForMax
+        of = self.lvl60 - xpForMax
 
         if of <= 0:
             of = 0
@@ -162,14 +165,14 @@ class Skyblock(commands.Cog):
         # Start of the embed
         embed = discord.Embed(
             title='Farming Level for ' + nameApi['name'] + ' On Profile ' + pname,
-            url=f'https://sky.shiiyu.moe/stats/{name}/{pname}',
+            url=f'{self.skystatsurl}{name}/{pname}',
             description='**Total Farming EXP: ** ' + separator.format(round(int(xpForMax))),
-            color=discord.Colour.from_rgb(240, 240, 236)
+            color=orange
         )
 
         # Contents of discord embed
         embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
-        embed.set_thumbnail(url='https://mc-heads.net/head/' + name)
+        embed.set_thumbnail(url=self.mcheads + name)
         embed.set_footer(text=embedfooter)
         embed.timestamp = ctx.message.created_at
 
@@ -202,11 +205,11 @@ class Skyblock(commands.Cog):
 
     @commands.command()
     async def mining(self, ctx, name, pname=None):
-        nameApi = requests.get('https://api.mojang.com/users/profiles/minecraft/' + name).json()
+        nameApi = requests.get(self.mojangapiurl + name).json()
         target_profile = None
 
         async with aiohttp.ClientSession() as cs:
-            async with cs.get('https://sky.shiiyu.moe/api/v2/profile/' + name) as api:
+            async with cs.get(self.skystatsurl + name) as api:
                 data = await api.json()
 
         for profile in data["profiles"].values():
@@ -243,14 +246,14 @@ class Skyblock(commands.Cog):
         # Start of the embed
         embed = discord.Embed(
             title='Mining Level for ' + nameApi['name'] + ' On Profile ' + pname,
-            url=f'https://sky.shiiyu.moe/stats/{name}/{pname}',
+            url=f'{self.skystatsurl}{name}/{pname}',
             description='**Total Mining EXP: ** ' + self.separator.format(round(int(xpForMax))),
             color=green
         )
 
         # Contents of discord embed
         embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
-        embed.set_thumbnail(url='https://mc-heads.net/head/' + name)
+        embed.set_thumbnail(url=self.mcheads + name)
         embed.set_footer(text=embedfooter)
         embed.timestamp = ctx.message.created_at
 
@@ -268,11 +271,11 @@ class Skyblock(commands.Cog):
 
     @commands.command()
     async def combat(self, ctx, name, pname=None):
-        nameApi = requests.get('https://api.mojang.com/users/profiles/minecraft/' + name).json()
+        nameApi = requests.get(self.mojangapiurl + name).json()
         target_profile = None
 
         async with aiohttp.ClientSession() as cs:
-            async with cs.get('https://sky.shiiyu.moe/api/v2/profile/' + name) as api:
+            async with cs.get(self.skyapiurl + name) as api:
                 data = await api.json()
 
         for profile in data["profiles"].values():
@@ -298,7 +301,7 @@ class Skyblock(commands.Cog):
             of = 0
 
         xpForNext = target_profile['data']['levels']['combat']['xpForNext']
-        if xpForNext == None or xpForNext <= 0:
+        if xpForNext is None or xpForNext <= 0:
             xpForNext = 0
 
         xpNow = target_profile['data']['levels']['combat']['xpCurrent']
@@ -308,14 +311,14 @@ class Skyblock(commands.Cog):
 
         embed = discord.Embed(
             title='Combat Level for ' + nameApi['name'] + ' On Profile ' + pname,
-            url=f'https://sky.shiiyu.moe/stats/{name}/{pname}',
+            url=f'{self.skystatsurl}{name}/{pname}',
             description='**Total Combat EXP: ** ' + self.separator.format(round(int(xpForMax))),
             color=discord.Colour.from_rgb(212, 175, 55)
         )
 
         # Contents of discord embed
         embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
-        embed.set_thumbnail(url='https://mc-heads.net/head/' + name)
+        embed.set_thumbnail(url=self.mcheads + name)
         embed.set_footer(text=embedfooter)
         embed.timestamp = ctx.message.created_at
 
@@ -333,10 +336,10 @@ class Skyblock(commands.Cog):
 
     @commands.command(name='foraging')
     async def foraging(self, ctx, name, pname=None):
-        nameApi = requests.get('https://api.mojang.com/users/profiles/minecraft/' + name).json()
+        nameApi = requests.get(self.mojangapiurl + name).json()
         target_profile = None
         async with aiohttp.ClientSession() as cs:
-            async with cs.get('https://sky.shiiyu.moe/api/v2/profile/' + name) as api:
+            async with cs.get(self.skyapiurl + name) as api:
                 data = await api.json()
 
         for profile in data["profiles"].values():
@@ -362,7 +365,7 @@ class Skyblock(commands.Cog):
             of = 0
 
         xpForNext = target_profile['data']['levels']['foraging']['xpForNext']
-        if xpForNext == None or xpForNext <= 0:
+        if xpForNext is None or xpForNext <= 0:
             xpForNext = 0
 
         xpNow = target_profile['data']['levels']['foraging']['xpCurrent']
@@ -372,14 +375,14 @@ class Skyblock(commands.Cog):
 
         embed = discord.Embed(
             title='Foraging Level for ' + nameApi['name'] + ' On Profile ' + pname,
-            url=f'https://sky.shiiyu.moe/stats/{name}/{pname}',
+            url=f'{self.skystatsurl}{name}/{pname}',
             description='**Total Foraging EXP: ** ' + self.separator.format(round(int(xpForMax))),
             color=discord.Colour.from_rgb(0, 100, 0)
         )
 
         # Contents of discord embed
         embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
-        embed.set_thumbnail(url='https://mc-heads.net/head/' + name)
+        embed.set_thumbnail(url=self.mcheads + name)
         embed.set_footer(text=embedfooter)
         embed.timestamp = ctx.message.created_at
 
@@ -397,11 +400,11 @@ class Skyblock(commands.Cog):
 
     @commands.command()
     async def fishing(self, ctx, name, pname=None):
-        nameApi = requests.get('https://api.mojang.com/users/profiles/minecraft/' + name).json()
+        nameApi = requests.get(self.mojangapiurl + name).json()
         target_profile = None
 
         async with aiohttp.ClientSession() as cs:
-            async with cs.get('https://sky.shiiyu.moe/api/v2/profile/' + name) as api:
+            async with cs.get(self.skyapiurl + name) as api:
                 data = await api.json()
 
         for profile in data["profiles"].values():
@@ -437,14 +440,14 @@ class Skyblock(commands.Cog):
 
         embed = discord.Embed(
             title='Fishing Level for ' + nameApi['name'] + ' On Profile ' + pname,
-            url=f'https://sky.shiiyu.moe/stats/{name}/{pname}',
+            url=f'{self.skystatsurl}{name}/{pname}',
             description='**Total Fishing EXP: ** ' + self.separator.format(round(int(xpForMax))),
             color=discord.Colour.from_rgb(27, 149, 224)
         )
 
         # Contents of discord embed
         embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
-        embed.set_thumbnail(url='https://mc-heads.net/head/' + name)
+        embed.set_thumbnail(url=self.mcheads + name)
         embed.set_footer(text=embedfooter)
         embed.timestamp = ctx.message.created_at
 
@@ -462,11 +465,11 @@ class Skyblock(commands.Cog):
 
     @commands.command(name='enchanting')
     async def enchanting(self, ctx, name, pname=None):
-        nameApi = requests.get('https://api.mojang.com/users/profiles/minecraft/' + name).json()
+        nameApi = requests.get(self.mojangapiurl + name).json()
         target_profile = None
 
         async with aiohttp.ClientSession() as cs:
-            async with cs.get('https://sky.shiiyu.moe/api/v2/profile/' + name) as api:
+            async with cs.get(self.skyapiurl + name) as api:
                 data = await api.json()
 
         for profile in data["profiles"].values():
@@ -502,14 +505,14 @@ class Skyblock(commands.Cog):
 
         embed = discord.Embed(
             title='Enchanting Level for ' + nameApi['name'] + ' On Profile ' + pname,
-            url=f'https://sky.shiiyu.moe/stats/{name}/{pname}',
+            url=f'{self.skystatsurl}{name}/{pname}',
             description='**Total Enchanting EXP: ** ' + self.separator.format(round(int(xpForMax))),
             color=discord.Colour.from_rgb(175, 124, 172)
         )
 
         # Contents of discord embed
         embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
-        embed.set_thumbnail(url='https://mc-heads.net/head/' + name)
+        embed.set_thumbnail(url=self.mcheads + name)
         embed.set_footer(text=embedfooter)
         embed.timestamp = ctx.message.created_at
 
@@ -527,11 +530,11 @@ class Skyblock(commands.Cog):
 
     @commands.command(name='alchemy')
     async def alchemy(self, ctx, name, pname=None):
-        nameApi = requests.get('https://api.mojang.com/users/profiles/minecraft/' + name).json()
+        nameApi = requests.get(self.mojangapiurl + name).json()
         target_profile = None
 
         async with aiohttp.ClientSession() as cs:
-            async with cs.get('https://sky.shiiyu.moe/api/v2/profile/' + name) as api:
+            async with cs.get(self.skyapiurl + name) as api:
                 data = await api.json()
 
         for profile in data["profiles"].values():
@@ -567,14 +570,14 @@ class Skyblock(commands.Cog):
 
         embed = discord.Embed(
             title='Alchemy Level for ' + nameApi['name'] + ' On Profile ' + pname,
-            url=f'https://sky.shiiyu.moe/stats/{name}/{pname}',
+            url=f'{self.skystatsurl}{name}/{pname}',
             description='**Total Alchemy EXP: ** ' + self.separator.format(round(int(xpForMax))),
             color=discord.Colour.from_rgb(221, 20, 61)
         )
 
         # Contents of discord embed
         embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
-        embed.set_thumbnail(url='https://mc-heads.net/head/' + name)
+        embed.set_thumbnail(url=self.mcheads + name)
         embed.set_footer(text=embedfooter)
         embed.timestamp = ctx.message.created_at
 
@@ -592,11 +595,11 @@ class Skyblock(commands.Cog):
 
     @commands.command(name='carpentry')
     async def carpentry(self, ctx, name, pname=None):
-        nameApi = requests.get('https://api.mojang.com/users/profiles/minecraft/' + name).json()
+        nameApi = requests.get(self.mojangapiurl + name).json()
         target_profile = None
 
         async with aiohttp.ClientSession() as cs:
-            async with cs.get('https://sky.shiiyu.moe/api/v2/profile/' + name) as api:
+            async with cs.get(self.skyapiurl + name) as api:
                 data = await api.json()
 
         for profile in data["profiles"].values():
@@ -632,14 +635,14 @@ class Skyblock(commands.Cog):
 
         embed = discord.Embed(
             title='Carpentry Level for ' + nameApi['name'] + ' On Profile ' + pname,
-            url=f'https://sky.shiiyu.moe/stats/{name}/{pname}',
+            url=f'{self.skystatsurl}{name}/{pname}',
             description='**Total Carpentry EXP: ** ' + self.separator.format(round(int(xpForMax))),
             color=discord.Colour.from_rgb(198, 162, 126)
         )
 
         # Contents of discord embed
         embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
-        embed.set_thumbnail(url='https://mc-heads.net/head/' + name)
+        embed.set_thumbnail(url=self.mcheads + name)
         embed.set_footer(text=embedfooter)
         embed.timestamp = ctx.message.created_at
 
@@ -657,11 +660,11 @@ class Skyblock(commands.Cog):
 
     @commands.command(name='runecrafting')
     async def runecrafting(self, ctx, name, pname=None):
-        nameApi = requests.get('https://api.mojang.com/users/profiles/minecraft/' + name).json()
+        nameApi = requests.get(self.mojangapiurl + name).json()
         target_profile = None
 
         async with aiohttp.ClientSession() as cs:
-            async with cs.get('https://sky.shiiyu.moe/api/v2/profile/' + name) as api:
+            async with cs.get(self.skyapiurl + name) as api:
                 data = await api.json()
 
         for profile in data["profiles"].values():
@@ -697,14 +700,14 @@ class Skyblock(commands.Cog):
 
         embed = discord.Embed(
             title='Runecrafting Level for ' + nameApi['name'] + ' On Profile ' + pname,
-            url=f'https://sky.shiiyu.moe/stats/{name}/{pname}',
+            url=f'{self.skystatsurl}{name}/{pname}',
             description='**Total Runecrafting EXP: ** ' + self.separator.format(round(int(xpForMax))),
             color=discord.Colour.from_rgb(255, 182, 193)
         )
 
         # Contents of discord embed
         embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
-        embed.set_thumbnail(url='https://mc-heads.net/head/' + name)
+        embed.set_thumbnail(url=self.mcheads + name)
         embed.set_footer(text=embedfooter)
         embed.timestamp = ctx.message.created_at
 
@@ -722,11 +725,11 @@ class Skyblock(commands.Cog):
 
     @commands.command(name='dungeons', aliases=['dungeon', 'catacombs', 'cata'])
     async def dungeons(self, ctx, name, pname=None):
-        nameApi = requests.get('https://api.mojang.com/users/profiles/minecraft/' + name).json()
+        nameApi = requests.get(self.mojangapiurl + name).json()
         target_profile = None
 
         async with aiohttp.ClientSession() as cs:
-            async with cs.get('https://sky.shiiyu.moe/api/v2/profile/' + name) as api:
+            async with cs.get(self.skyapiurl + name) as api:
                 data = await api.json()
 
         for profile in data["profiles"].values():
@@ -747,13 +750,13 @@ class Skyblock(commands.Cog):
 
         embed = discord.Embed(
             title='Dungeon Stats For ' + nameApi['name'] + ' On Profile ' + pname,
-            url=f'https://sky.shiiyu.moe/stats/{name}/{pname}',
+            url=f'{self.skystatsurl}{name}/{pname}',
             description='**Total Dungeon EXP:** ' + (
                 str(round(target_profile['data']['dungeons']['catacombs']['level']['xp'], 2))),
 
         )
         embed.set_author(name='Made by StickyRunnerTR#9676')
-        embed.set_thumbnail(url='https://mc-heads.net/head/' + name)
+        embed.set_thumbnail(url=self.mcheads + name)
         embed.set_footer(text=f'Requested by {ctx.message.author}.')
         embed.timestamp = ctx.message.created_at
 
@@ -785,11 +788,11 @@ class Skyblock(commands.Cog):
 
     @commands.command(aliases=['slayer'])
     async def slayers(self, ctx, name, pname=None):
-        nameApi = requests.get('https://api.mojang.com/users/profiles/minecraft/' + name).json()
+        nameApi = requests.get(self.mojangapiurl + name).json()
         target_profile = None
 
         async with aiohttp.ClientSession() as cs:
-            async with cs.get('https://sky.shiiyu.moe/api/v2/profile/' + name) as api:
+            async with cs.get(self.skyapiurl + name) as api:
                 data = await api.json()
 
         for profile in data["profiles"].values():
@@ -856,7 +859,7 @@ class Skyblock(commands.Cog):
 
         embed = discord.Embed(
             title='Slayer Information for ' + nameApi['name'],
-            url=f'https://sky.shiiyu.moe/stats/{name}/{pname}',
+            url=f'{self.skystatsurl}{name}/{pname}',
             description='**Total Slayer EXP:** ' + self.separator.format(int(target_profile['data'][
                                                                                  'slayer_xp'])) + 'XP' + '\n ***Total Coins Spent on Slayers: ***' + self.separator.format(
                 int(target_profile['data']['slayer_coins_spent']['total'])) + ' coins',
@@ -865,7 +868,7 @@ class Skyblock(commands.Cog):
 
         # Contents of discord embed
         embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
-        embed.set_thumbnail(url='https://mc-heads.net/head/' + name)
+        embed.set_thumbnail(url=self.mcheads + name)
         embed.set_footer(text=embedfooter)
         embed.timestamp = ctx.message.created_at
 
@@ -916,65 +919,15 @@ class Skyblock(commands.Cog):
                             t3eman) + '\nT4: ' + str(t4eman) + '```', inline=False)
         await ctx.send(embed=embed)
 
-    @commands.command(name="helpme")
-    async def helpme(ctx):
+    @commands.command(aliases=["sbhelp", "sbcmdshelp", "skyblockhelp"])
+    async def helpme(self, ctx):
         embed = discord.Embed(
-            title="**How to Use:**",
-            description="req <desired skill> <player name> <profile name> (Proflie name is not required.)",
+            title="**How To Use Skyblock Commands:**",
+            description="~ <desired skill> <player name> <profile name> (Profile name is not required.)",
             color=discord.Colour.from_rgb(255, 255, 255)
         )
-        embed.set_footer(text='With the helps of VxnomRandom#6495, Cow#1336 and EzDzQzR#5493.')
+        embed.set_footer(text='With the help of StickyRunnerTR#9676')
 
         await ctx.send(embed=embed)
-
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx, error):
-        if isinstance(error, commands.CommandNotFound):
-            embed = discord.Embed(
-                title='**Error!**',
-                description=f'The command you have requested is not working. \nPlease use one of these skills right or make sure you have typed one of these:\ntaming, farming, mining, combat, foraging, fishing, enchanting, alchemy, carpentry, runecrafting, slayers, dungeons.',
-
-                color=discord.Colour.from_rgb(255, 0, 0)
-            )
-            embed.set_author(name='Made by StickyRunnerTR#9676')
-            embed.set_footer(text=f'Requested by {ctx.message.author}.')
-            embed.set_footer(text='With the helps of VxnomRandom#6495, Cow#1336 and EzDzQzR#5493.')
-            embed.timestamp = ctx.message.created_at
-
-            await ctx.send(embed=embed)
-
-        elif isinstance(error, commands.CommandInvokeError):
-            embed = discord.Embed(
-                title='**Error!**',
-                description=f'The command you have requested is not working. \nMake sure you have typed the player name right, or make sure your Skill API is on.',
-                color=discord.Colour.from_rgb(255, 0, 0)
-            )
-
-            embed.set_author(name='Made by StickyRunnerTR#9676')
-            embed.set_footer(text=f'Requested by {ctx.message.author}.')
-            embed.timestamp = ctx.message.created_at
-            embed.set_footer(text='With the helps of VxnomRandom#6495, Cow#1336 and EzDzQzR#5493.')
-
-            await ctx.send(embed=embed)
-
-        elif isinstance(error, commands.MissingRequiredArgument):
-            embed = discord.Embed(
-                title='**Error!**',
-                description=f'The command you have requested is not working. \nMake sure you have typed required arguments.',
-                color=discord.Colour.from_rgb(255, 0, 0)
-            )
-
-            embed.set_author(name='Made by StickyRunnerTR#9676')
-            embed.set_footer(text=f'Requested by {ctx.message.author}.')
-            embed.set_footer(text='With the helps of VxnomRandom#6495, Cow#1336 and EzDzQzR#5493.')
-            embed.timestamp = ctx.message.created_at
-            await ctx.send(embed=embed)
-
-        else:
-            print('Unknown error!')
-        print(
-            f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] made an error typing a command. The error is unknown!")
-
-
 def setup(bot):
     bot.add_cog(Skyblock(bot))
