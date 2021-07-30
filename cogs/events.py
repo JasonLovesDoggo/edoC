@@ -25,7 +25,9 @@ class Events(commands.Cog):
         self.owner_commands = 0
         self.normal_commands = 0
         self.logs_channel = self.bot.get_channel(self.config["edoc_logs"])
-        self.update_db()
+        loop = asyncio.get_event_loop()
+        task = loop.create_task(self.update_db(self))
+        loop.run_until_complete(task)
 
     async def erroremb(self, ctx, *, description: str):
         """@summary creates a discord embed so i can send it with x details easier"""
