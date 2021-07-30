@@ -113,6 +113,7 @@ class Information(commands.Cog):
                 name="__:link: Links__",
                 value="[edoC](https://dsc.gg/edoc) "
                       "| [dev links](https://bio.link/edoC) "
+                      "| [support me](https://www.buymeacoffee.com/edoC) "
                       "| [invite](https://discordapp.com/oauth2/authorize?client_id=845186772698923029&scope=bot&permissions=8) ",
                 inline=False,
             )
@@ -131,7 +132,6 @@ class Information(commands.Cog):
         message = await ctx.send("🏓 Pong")
         ping = (time.monotonic() - before) * 1000
         await message.edit(content=f"🏓 WS: {before_ws}ms  |  REST: {int(ping)}ms")
-#pick = random.choice["ahk", "apache", "prolog"]
 
     @commands.command()
     async def lines(self, ctx):

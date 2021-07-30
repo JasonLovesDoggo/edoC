@@ -31,6 +31,7 @@ class Skyblock(commands.Cog):
         self.skystatsurl = 'https://sky.shiiyu.moe/stats/'
         self.mojangapiurl = 'https://api.mojang.com/users/profiles/minecraft/'
 
+
     @commands.command()
     async def taming(self, ctx, name, pname=None):
         nameApi = requests.get(self.mojangapiurl + name).json()

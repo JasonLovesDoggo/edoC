@@ -371,8 +371,8 @@ class Moderator(commands.Cog):
     @commands.command()
     @commands.has_permissions(manage_messages=True)
     async def cls(self, ctx, amount: int):
-        amount + 1
-        await ctx.channel.purge(limit=amount)
+        amount2 = amount + 1
+        await ctx.channel.purge(limit=amount2)
 
     @commands.group(aliases=["purge", "clr", "clear"])
     @commands.guild_only()

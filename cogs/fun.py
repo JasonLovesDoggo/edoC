@@ -1,3 +1,4 @@
+import os
 import random
 import discord
 import secrets
@@ -14,6 +15,8 @@ class Fun(commands.Cog):
         self.bot = bot
         self.config = default.config()
         self.alex_api_token = self.config["alexflipnote_api"]
+        self.DoggoPicsCount = len(os.listdir("C:/Users/Jason/edoC/data/Dog Picks"))
+        print(self.DoggoPicsCount)
 
     @commands.command(aliases=["8ball"])
     async def eightball(self, ctx, *, question: commands.clean_content):
@@ -64,6 +67,14 @@ class Fun(commands.Cog):
         """ Posts a random dog """
         await self.randomimageapi(ctx, "https://random.dog/woof.json", "url")
 
+    @commands.command(aliases=["MyDoggo", "Bella", "Belz"])
+    async def MyDog(self, ctx):
+        import os, random
+        random.choice(os.listdir("")) #change dir name to whatever"""
+        pick = random.randint(0, self.DoggoPicsCount - 1)
+        doggopic = discord.File(f'C:/Users/Jason/edoC/data/Dog Picks/{pick}.jpg')
+        await ctx.send(file=doggopic)
+
     @commands.command(aliases=["flip", "coin"])
     async def coinflip(self, ctx):
         """ Coinflip! """
@@ -93,6 +104,7 @@ class Fun(commands.Cog):
         )
         embed.set_footer(text=data["ad"])
         await ctx.send(embed=embed)
+
 
     @commands.group()
     @commands.check(permissions.is_owner)

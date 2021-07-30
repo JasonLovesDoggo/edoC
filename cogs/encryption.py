@@ -1,13 +1,20 @@
 import base64
 import binascii
 import codecs
+
+import aiohttp
+
 import discord
 
 from io import BytesIO
 from discord.ext import commands
 from discord.ext.commands.errors import BadArgument
 from utils import default, http
+from utils.vars import MorseCode, MorseCodeReversed, ascii_letters
 
+
+# def urlify(in_string):
+#    return "%20".join(in_string.split())
 
 class Encryption(commands.Cog):
     def __init__(self, bot):
@@ -43,7 +50,7 @@ class Encryption(commands.Cog):
             raise BadArgument("File you've provided is empty")
         return content
 
-    async def encryptout(self, ctx, convert: str, input):
+    async def encryptout(self, ctx, convert: str, input=None):
         """ The main, modular function to control encrypt/decrypt commands """
         if not input:
             return await ctx.send(f"Aren't you going to give me anything to encode/decode **{ctx.author.name}**")
@@ -193,6 +200,33 @@ class Encryption(commands.Cog):
             await self.encryptout(ctx, "ASCII85 -> Text", base64.a85decode(input.encode("utf-8")))
         except Exception:
             await ctx.send("Invalid ASCII85...")
+
+    #    @encode.command(name="morse", aliases=["morsecode"])
+    #    async def encode_morse(self, ctx, *, input: commands.clean_content = None):
+    #        baseurl = "https://api.funtranslations.com/translate/morse.json?text="
+    #        urlinput = "%20".join(input.split())
+    #        print(baseurl + urlinput)
+    #        async with aiohttp.ClientSession() as cs:
+    #            async with cs.get(baseurl + urlinput) as api:
+    #                data = await api.json()
+    #        try:
+    #            output = data["contents"]["translated"]
+    #            await ctx.send(f"📑 Text -> morse ```fix\n {output}```")
+    #        except KeyError:
+    #            await ctx.send("sorry but that's some invalid text")
+
+    @encode.command(name='morse')
+    async def encode_to_morse(self, ctx, *, text: commands.clean_content = None):
+        try:
+            answer = ' '.join(MorseCode.get(i.upper()) for i in text)
+            await ctx.send(f"📑 **Text -> Morse** ```fix\n {answer}```")
+        except TypeError:
+            await ctx.send(f"Some of the characters in your message are not valid {ctx.author.mention}")
+
+    @decode.command(name='morse')
+    async def decode_from_morse(self, ctx, *, text: commands.clean_content = None):
+        answer = ''.join(MorseCodeReversed.get(i) for i in text.split())
+        await ctx.send(f"📑 **Morse -> Text** ```fix\n {answer}```")
 
 
 def setup(bot):

@@ -18,9 +18,12 @@ on = False
 
 class Admin(commands.Cog):
     def __init__(self, bot):
+        self.highest_num = 0
         self.bot = bot
         self.config = default.config()
         self._last_result = None
+        self.DoggoPath = r"C:/Users/Jason/edoC/data/Dog Picks"
+        self.filenum = 0
 
     @commands.command()
     @commands.check(permissions.is_owner)
@@ -61,7 +64,7 @@ class Admin(commands.Cog):
         # I would love to be credited as the original creator of the source code.
         #   -- Jason
         if ctx.author.id == 511724576674414600:
-            return await ctx.send(f"Well kinda **{ctx.author.name}**.. you still own the source code")
+            return await ctx.send(f"Well kinda **{ctx.author.name}**.. you own the source code")
         if ctx.author.id in self.config["owners"]:
             return await ctx.send(f"Yes **{ctx.author.name}** you are an admin! ✅")
 
@@ -226,6 +229,14 @@ class Admin(commands.Cog):
 
     @commands.command()
     @commands.check(permissions.is_owner)
+    async def reboot(self, ctx):
+        """ Reboot the bot """
+        await ctx.send("Rebooting now...")
+        time.sleep(1)
+        sys.exit(0)
+
+    @commands.command()
+    @commands.check(permissions.is_owner)
     async def shutdown(self, ctx):
         """ shut down the bot """
         await ctx.send("Shuting down now...")
@@ -280,18 +291,24 @@ class Admin(commands.Cog):
         """ Gives all the members of the server said role """
         if role_id is None:
             await ctx.send("You haven't specified a role! ")
-
-        if role_id not in ctx.message.server.roles:
+            return
+        if role_id not in ctx.message.guild.roles:
             await ctx.send("That role doesn't exist.")
+            return
+        addedusers = ""
 
-        if role_id not in ctx.message.author.roles:
-            await self.bot.add_roles(ctx.message.author, role_id)
-            await ctx.send(f"{role_id} role has been added to {ctx.message.author.mention}.")
+        for members, num in enumerate(ctx.message.guild.members):
+            if role_id not in ctx.message.author.roles:
+                addedusers += f" \n[{str(num).zfill(2)}] {members}"
+                await self.bot.add_roles(members, role_id)
+
+        data = BytesIO(addedusers.encode("utf-8"))
+        await ctx.send(content=f"The roles have been added to", file=discord.File(data, filename=f"{default.timetext('AddedUsers')}"))
 
     @commands.command(pass_context=True)
     async def role(self, ctx, *, role: discord.Role = None):
         """
-        Toggle whether or not you have a role. Usage: `~role DivinityPing`. Can take roles with spaces.
+        Toggle whether or not you have a role. Usage: `~role CoolDudes`. Can take roles with spaces.
         """
         if role is None:
             return await ctx.send("You haven't specified a role! ")
@@ -396,6 +413,36 @@ class Admin(commands.Cog):
             await ctx.send(err)
         except TypeError:
             await ctx.send("You need to either provide an image URL or upload one with the command")
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        path = self.DoggoPath
+        files = os.listdir(path)
+        for filename in files:
+            truename = filename[:-4]
+            if ' ' in truename:
+                continue
+            try:
+                if int(truename) > self.highest_num:
+                    self.highest_num = int(truename)
+            except ValueError:
+                pass
+        self.filenum = self.highest_num
+
+    @commands.check(permissions.is_owner)
+    @commands.command(aliases=["FDP"])
+    async def FormatDogPhotos(self, ctx):
+        """ Function to rename all the doggo files """
+        path = self.DoggoPath
+        files = os.listdir(path)
+        for count, file in enumerate(files):
+            if file.startswith("1" or "2" or "3" or "4" or "5" or "6" or "7" or "8" or "9"):
+                continue
+            else:
+                self.filenum += 1
+                os.rename(os.path.join(path, file), os.path.join(path, ''.join([str(self.filenum + 1), '.jpg'])))
+        await ctx.send(f"done\ncurrent limit is {self.filenum}")
+
 
 def setup(bot):
     bot.add_cog(Admin(bot))

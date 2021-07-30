@@ -1,3 +1,5 @@
+import asyncio
+
 import discord
 from discord.utils import find
 from discord.ext import commands
@@ -11,8 +13,27 @@ import logging
 from datetime import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from utils.vars import *
-
+logging.getLogger("events")
 owners = default.config()["owners"]
+
+
+async def Error(self, ctx, err):
+    logs_channel = self.bot.get_channel(self.config["edoc_logs"])
+    embed = discord.Embed(title="**Error!**",
+                          color=red,
+                          timestamp=ctx.message.created_at,
+                          description=err)
+    await logs_channel.send(embed=embed)
+    logging.error(msg="Error Error")
+
+async def Info(self, ctx, msg):
+    non_critical_logs_channel = self.bot.get_channel(self.config["edoc_non_critical_logs"])
+    embed = discord.Embed(title="**Info!**",
+                          color=orange,
+                          timestamp=ctx.message.created_at,
+                          description=msg)
+    await non_critical_logs_channel.send(embed=embed)
+    logging.error(msg="Info message has been sent msg = " + msg)
 
 
 class Events(commands.Cog):
@@ -25,18 +46,17 @@ class Events(commands.Cog):
         self.owner_commands = 0
         self.normal_commands = 0
         self.logs_channel = self.bot.get_channel(self.config["edoc_logs"])
-        self.update_db()
+        loop = asyncio.get_event_loop()
+        task = loop.create_task(self.update_db())
+        loop.run_until_complete(task)
 
     async def erroremb(self, ctx, *, description: str):
         """@summary creates a discord embed so i can send it with x details easier"""
         embed = discord.Embed(
-            title='**Error!**',
+            title='Error!',
             description=description,
-            color=colors["red"],
-            timestamp=ctx.message.created_at,
+            color=colors["red"]
         )
-        embed.set_author(name='edoC', icon_url="https://cdn.discordapp.com/avatars/845186772698923029/079dae091e0df03cc189c40a386fdb12.webp?size=1024")
-        embed.set_footer(text=embedfooter)
         await ctx.send(embed=embed)
 
     @commands.Cog.listener()
@@ -57,14 +77,30 @@ class Events(commands.Cog):
         for member in members:
             db.execute("INSERT OR IGNORE INTO User (UserID) VALUES (?)", member.id)
         for server in self.bot.guilds:
+            print(server.name)
             admins = None  # {}
-            #for member in guild.members:
+            # `for member in guild.members:
             #    if
             #            admins += members
             # inthings = [server.id, self.config["default_prefix"], server.name, admins] #
-            db.execute("INSERT OR IGNORE INTO guilds (GuildID, Prefix, GuildName, GuildAdmins) VALUES (?, ?, ?, ?);", (server.id, self.config["default_prefix"], server.name, admins))
+            db.execute("INSERT OR IGNORE INTO guilds (GuildID, Prefix, GuildName, GuildAdmins) VALUES (?, ?, ?, ?);",
+                       (server.id, self.config["default_prefix"], server.name, admins))
         db.commit()
         print("updated db")
+
+    #async def update_db(self):
+    #    members = self.bot.get_all_members()
+    #    for member in members:
+    #        db.execute("INSERT OR IGNORE INTO User (UserID) VALUES (?)", member.id)
+    #    for server in self.bot.guilds:
+    #        admins = None  # {}
+    #        #`for member in guild.members:
+    #        #    if
+    #        #            admins += members
+    #        # inthings = [server.id, self.config["default_prefix"], server.name, admins] #
+    #        db.execute("INSERT OR IGNORE INTO guilds (GuildID, Prefix, GuildName, GuildAdmins) VALUES (?, ?, ?, ?);", (server.id, self.config["default_prefix"], server.name, admins))
+    #    db.commit()
+    #    print("updated db")
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, err):
@@ -149,9 +185,11 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         """ The function that activates when boot was completed """
+        logschannel = self.bot.get_channel(self.config["edoc_logs"])
         if not self.ready:
             self.ready = True
             self.scheduler.start()
+            await logschannel.send(f"{self.bot.user} has been booted up")
 
             if not hasattr(self.bot, "uptime"):
                 self.bot.uptime = datetime.utcnow()
@@ -195,6 +233,7 @@ class Events(commands.Cog):
         else:
             print(f"{self.bot.user} Reconnected")
             logging.log("Bot reconnected")
+            await logschannel.send(f"{self.bot.user} has been reconnected")
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, prev, cur):
@@ -211,7 +250,6 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def premium_guild_subscription(self, ctx):
         await ctx.send(f"{ctx.auther} just boosted the server :party:")
-
 
 def setup(bot):
     bot.add_cog(Events(bot))
