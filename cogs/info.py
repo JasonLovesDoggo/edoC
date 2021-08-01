@@ -2,6 +2,7 @@ import os
 import platform
 import random
 import time
+from io import BytesIO
 
 import humanize
 import psutil
@@ -11,7 +12,7 @@ from discord.ext import commands
 
 from utils.info import fetch_info
 from utils.vars import *
-from utils import default
+from utils import default, permissions
 from lib.db import db
 import pathlib
 
@@ -27,8 +28,8 @@ class Information(commands.Cog):
             self.bot.uptime = datetime.utcnow()
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~
-    @commands.command(name="in")
-    async def _info(self, ctx):
+    @commands.command(aliases=["about", "stats", "status", "botinfo", "in"])
+    async def info(self, ctx):
         proc = psutil.Process()
         infos = fetch_info()
 
@@ -119,11 +120,19 @@ class Information(commands.Cog):
             )
             prefix = db.field("SELECT Prefix FROM guilds WHERE GuildID = ?",
                               ctx.guild.id)
-            e.set_footer(text=f"version: {version_info['version']} • prefix: {prefix}\n {embedfooter}")
+            e.set_footer(
+                text=f"version: {version_info['version']} • prefix: {prefix} • {len([x.name for x in self.bot.commands])} commands loaded\n {embedfooter}")
 
         await ctx.send(embed=e)
 
     # ~~~
+    @commands.command(aliases=["SAF"])
+    @permissions.has_permissions(attach_files=True)
+    async def sendasfile(self, ctx, *, text: str):
+        """ sends whatever the user sent as a file"""
+        data = BytesIO(text.encode("utf-8"))
+        await ctx.reply(file=discord.File(data, filename=f"{default.timetext('Text')}"))
+
     @commands.command()
     async def ping(self, ctx):
         """ Pong! """
@@ -174,13 +183,13 @@ class Information(commands.Cog):
         """Sends you the bot invite link."""
         perms = discord.Permissions.none()
         perms.administrator = True
-        await ctx.send(
+        await ctx.reply(
             f"**{ctx.author.name}**, use this URL to invite me\n<{discord.utils.oauth_url(self.bot.user.id, perms)}>")
 
     @commands.command()
     async def changehelp(self, ctx):
         """ Give Info on ~change """
-        await ctx.send("""~change 
+        await ctx.reply("""~change 
                         Commands:
                         avatar   Change avatar. 
                         nickname Change nickname. 
@@ -195,7 +204,7 @@ class Information(commands.Cog):
         """ Check out my source code <3 """
         # Do not remove this command, this has to stay due to the GitHub LICENSE.
         # TL:DR, you have to disclose source according to MIT.
-        await ctx.send(f"**{ctx.bot.user}** is powered by this source code:\nhttps://github.com/JakeWasChosen/edoC")
+        await ctx.reply(f"**{ctx.bot.user}** is powered by this source code:\nhttps://github.com/JakeWasChosen/edoC")
 
     @commands.command()
     async def todo(self, ctx):
@@ -210,10 +219,10 @@ class Information(commands.Cog):
         """ Get an invite to our support server! """
         if isinstance(ctx.channel, discord.DMChannel) or ctx.guild.id != 819282410213605406:
             return await ctx.send(f"**Here you go {ctx.author.name} 🍻\n<{self.config['botserver']}>**")
-        await ctx.send(f"**{ctx.author.name}** this is my home you know :3")
+        await ctx.reply(f"**{ctx.author.name}** this is my home you know :3")
 
-    @commands.command(aliases=["info", "stats", "status", "botinfo"])
-    async def about(self, ctx):
+    @commands.command(hidden=True)
+    async def altinfo(self, ctx):
         """ About the bot """
 
         ramUsage = self.process.memory_full_info().rss / 1024 ** 2

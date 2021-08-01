@@ -1,14 +1,16 @@
+import asyncio
 import os
 import random
-import discord
 import secrets
-import asyncio
-import aiohttp
-
 from io import BytesIO
+
+import aiohttp
 from discord.ext import commands
+
+import discord
 from utils import permissions, http, default
 from utils.vars import *
+
 
 class Fun(commands.Cog):
     def __init__(self, bot):
@@ -16,14 +18,23 @@ class Fun(commands.Cog):
         self.config = default.config()
         self.alex_api_token = self.config["alexflipnote_api"]
         self.DoggoPicsCount = len(os.listdir("C:/Users/Jason/edoC/data/Dog Picks"))
-        print(self.DoggoPicsCount)
+        self.logschannel = self.bot.get_channel(self.config["edoc_logs"])
+        print(f"(top of fun.py) DogPicsCount ~{self.DoggoPicsCount}")
 
     @commands.command(aliases=["8ball"])
     async def eightball(self, ctx, *, question: commands.clean_content):
         """ Consult 8ball to receive an answer """
         answer = random.choice(ballresponse)
-        color = random.choice(CoolColorResponse)
-        await ctx.send(f"🎱 **Question:** {question}\n**Answer:** {answer}")
+        tosend = f"🎱 **Question:** {question}\n**Answer:** {answer}"
+        emb = discord.Embed(description=tosend, color=random.choice(ColorsList))
+        await ctx.reply(embed=emb)
+
+    @commands.command(aliases=["rfact", "rf"])
+    @commands.cooldown(rate=1, per=1.3, type=commands.BucketType.user)
+    async def RandomFact(self, ctx):
+        fact = random.choice(random_facts)
+        emb = discord.Embed(description=fact, color=random.choice(ColorsList))
+        await ctx.reply(embed=emb, mention_author=False)
 
     async def randomimageapi(self, ctx, url: str, endpoint: str, token: str = None):
         try:
@@ -69,11 +80,13 @@ class Fun(commands.Cog):
 
     @commands.command(aliases=["MyDoggo", "Bella", "Belz"])
     async def MyDog(self, ctx):
-        import os, random
-        random.choice(os.listdir("")) #change dir name to whatever"""
-        pick = random.randint(0, self.DoggoPicsCount - 1)
-        doggopic = discord.File(f'C:/Users/Jason/edoC/data/Dog Picks/{pick}.jpg')
-        await ctx.send(file=doggopic)
+        img = random.choice(os.listdir("C:/Users/Jason/edoC/data/Dog Picks"))  # change dir name to whatever
+        file = discord.File(f"C:/Users/Jason/edoC/data/Dog Picks/{img}")
+        try:
+            await ctx.send(file=file)
+        except discord.HTTPException:
+            await ctx.send(f"The file that i was going to send was too large this has been reported to the devs\ntry to run the cmd again")
+            await self.logschannel.send(f"{img} is too large to send <@&{self.config['dev_role']}>")
 
     @commands.command(aliases=["flip", "coin"])
     async def coinflip(self, ctx):
@@ -104,7 +117,6 @@ class Fun(commands.Cog):
         )
         embed.set_footer(text=data["ad"])
         await ctx.send(embed=embed)
-
 
     @commands.group()
     @commands.check(permissions.is_owner)
@@ -213,7 +225,7 @@ class Fun(commands.Cog):
     async def ship(self, ctx, person1: commands.clean_content, person2: commands.clean_content):
         """ Rates what you desire """
         ship_amount = random.uniform(0.0, 100.0)
-        if "jake" or "jason" or "edoc" or "edoC" in person1 or person2 :
+        if "jake" or "jason" or "edoc" or "edoC" in person1 or person2:
             ship_amount = 69.42000
         await ctx.send(f"`{person1}` and `{person2}` are **{round(ship_amount, 4)} compatible **")
 

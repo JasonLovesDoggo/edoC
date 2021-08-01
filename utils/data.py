@@ -3,7 +3,7 @@ import random
 import discord
 
 from utils import permissions, default
-from discord.ext.commands import AutoShardedBot, DefaultHelpCommand, when_mentioned_or
+from discord.ext.commands import AutoShardedBot, when_mentioned_or
 from discord.ext import commands
 from lib.db import db
 
@@ -22,7 +22,7 @@ class Bot(AutoShardedBot):
 def get_prefix(bot, message):
     try:
         if not message.guild:
-            pass
+            return default.config["default_prefix"]
         else:
             prefix = db.field("SELECT Prefix FROM guilds WHERE GuildID = ?", message.guild.id)
             if prefix:

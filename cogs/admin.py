@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import random
 import time
 import aiohttp
 from discord.ext.commands import ExtensionNotLoaded
@@ -11,9 +12,13 @@ import os
 import sys
 import json
 from discord.ext import commands
+
+from lib.db import db
+from lib.db.db import cur
 from utils import permissions, default, http
 from io import BytesIO
 from cogs.mod import BanUser, MemberID
+from utils.vars import *
 on = False
 
 class Admin(commands.Cog):
@@ -78,7 +83,7 @@ class Admin(commands.Cog):
         for num, user in enumerate(self.bot.get_all_members(), start=1):
             allusers += f" \n[{str(num).zfill(2)}] {user} ~ {user.id}"
         data = BytesIO(allusers.encode("utf-8"))
-        await ctx.send(content=f"Users", file=discord.File(data, filename=f"{default.timetext('Users')}"))
+        await ctx.send(content=f"Users", file=discord.File(data, filename=f"Users.cmake"))
 
     @users.error
     async def users_error(self, ctx: commands.Context, error: commands.CommandError):
@@ -102,18 +107,17 @@ class Admin(commands.Cog):
     @commands.command()
     @permissions.has_permissions(manage_guild=True)
     async def prefix(self, ctx, next_prefix: str):
-        await ctx.send("this command currently does not exist its just a placeholder")
         """
          Change the value of prefix for the guild and insert it into the guilds table
          @param next_prefix:
          """
-        """guildid = ctx.guild.id
-        prefixchange = ''' INSERT INTO guilds(name,begin_date,end_date)
+        await ctx.send("this command currently does not exist its just a placeholder")
+        guildid = ctx.guild.id
+        prefixchange = ''' INSERT INTO guilds where GuildId = (name)
                   VALUES(?,?,?) '''
         db.execute(prefixchange)
-        conn.commit()
+        db.commit()
         return cur.lastrowid
-            """
 
     @commands.command(aliases=["rp", "saymore"])
     @commands.check(permissions.is_owner or permissions.is_mod)
@@ -129,6 +133,13 @@ class Admin(commands.Cog):
         if ctx.invoked_subcommand is None:
             await ctx.send_help(str(ctx.command))
 
+    @file.command(name="send")
+    @commands.check(permissions.is_owner)
+    async def file_send(self, ctx, filename: str):
+        """ sends the filename file """
+        file = discord.File(f"C:/Users/Jason/edoC/cogs/Texts/{filename}.txt")
+        await ctx.send(file=file)
+
     @file.command(name="read", aliases=["sayscript", "readscript"])
     @commands.check(permissions.is_owner)
     async def file_read(self, ctx, filename: str):
@@ -137,6 +148,9 @@ class Admin(commands.Cog):
         await asyncio.sleep(1.0)
         file = open(f"C:/Users/Jason/edoC/cogs/Texts/{filename}.txt", "r")
         for word in file:
+            for letr in word:
+                if not letr.isprintable():
+                    continue
             await ctx.send(word)
             await asyncio.sleep(1.2)
 
@@ -158,7 +172,7 @@ class Admin(commands.Cog):
         await BanUser(ctx, userid, reason)
         await ctx.send(f"banned {userid} for {reason}")
 
-    @commands.command()
+    @commands.command(aliases=["l"])
     @commands.check(permissions.is_owner)
     async def load(self, ctx, name: str):
         """ Loads an extension. """
@@ -259,7 +273,7 @@ class Admin(commands.Cog):
 
     @commands.command(hidden=True)
     @commands.guild_only()
-    @commands.check(permissions.is_owner or permissions.is_mod)
+    @commands.check(permissions.is_taco)
     async def nuke(self, ctx):
         """ Joke cmd doesnt rly do anything """
         message = await ctx.send("Making server backup then nuking")
@@ -428,6 +442,15 @@ class Admin(commands.Cog):
             except ValueError:
                 pass
         self.filenum = self.highest_num
+
+    @commands.check(permissions.is_owner)
+    @commands.command(aliases=["RDPN"])
+    async def ResetDogPhotoNames(self, ctx):
+        path = self.DoggoPath
+        files = os.listdir(path)
+        for count, file in enumerate(files):
+            os.rename(os.path.join(path, file), os.path.join(path, ''.join(f"{random.random()}.jpg")))
+        await ctx.send(f"done")
 
     @commands.check(permissions.is_owner)
     @commands.command(aliases=["FDP"])

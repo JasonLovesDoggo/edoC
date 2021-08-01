@@ -11,6 +11,8 @@ from discord.ext.commands import converter, Converter, BadArgument
 from utils import permissions, default
 from utils.data import get_prefix
 from lib.db import db
+from io import BytesIO
+
 
 
 class BannedUser(Converter):
@@ -371,8 +373,8 @@ class Moderator(commands.Cog):
     @commands.command()
     @commands.has_permissions(manage_messages=True)
     async def cls(self, ctx, amount: int):
-        amount2 = amount + 1
-        await ctx.channel.purge(limit=amount2)
+        amount2 = amount + 2
+        await ctx.channel.purge(limit=amount)
 
     @commands.group(aliases=["purge", "clr", "clear"])
     @commands.guild_only()

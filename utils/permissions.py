@@ -10,10 +10,19 @@ from utils import default
 
 owners = default.config()["owners"]
 
+peeps = {709086074537771019, 511724576674414600}
+def is_taco(ctx):
+    return ctx.author.id in peeps
+
+
 def is_owner(ctx):
     """ Checks if the author is one of the owners """
     return ctx.author.id in owners
+
+
 "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+
+
 def is_mod():
     """Is the user a moderator ?"""
 
@@ -55,6 +64,7 @@ async def is_user_admin(ctx):
 
 "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 
+
 async def check_permissions(ctx, perms, *, check=all):
     """ Checks if author has permissions to a permission """
     if ctx.author.id in owners:
@@ -66,9 +76,12 @@ async def check_permissions(ctx, perms, *, check=all):
 
 def Has_permissions(*, check=all, **perms):
     """ discord.Commands method to check if author has permissions """
+
     async def pred(ctx):
         return await check_permissions(ctx, perms, check=check)
+
     return commands.check(pred)
+
 
 async def check_priv(ctx, member):
     """ Custom (weird) way to check permissions when handling moderation commands """

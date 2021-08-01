@@ -217,6 +217,7 @@ class Encryption(commands.Cog):
 
     @encode.command(name='morse')
     async def encode_to_morse(self, ctx, *, text: commands.clean_content = None):
+        """ Encode in morse code """
         try:
             answer = ' '.join(MorseCode.get(i.upper()) for i in text)
             await ctx.send(f"📑 **Text -> Morse** ```fix\n {answer}```")
@@ -225,6 +226,7 @@ class Encryption(commands.Cog):
 
     @decode.command(name='morse')
     async def decode_from_morse(self, ctx, *, text: commands.clean_content = None):
+        """ Decode in morse code """
         answer = ''.join(MorseCodeReversed.get(i) for i in text.split())
         await ctx.send(f"📑 **Morse -> Text** ```fix\n {answer}```")
 

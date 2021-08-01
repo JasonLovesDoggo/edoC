@@ -40,6 +40,10 @@ MorseCodeReversed = {'..-.': 'f', '-..-': 'x', '/': ' ',
                      '-....': '6', '.--': 'w', '....': 'h', '-.': 'n', '.-.': 'r',
                      '-...': 'b', '---..': '8', '--..': 'z', '-..': 'd', '--.-': 'q',
                      '--.': 'g', '--': 'm', '..-': 'u', '.-': 'a', '...': 's', '.----': '1'}
+random_facts = [
+    "The amount of time almost equal to 69% of a week is 4 days and 20 hours", "Our auditory reaction time is twice as fast as our visual reaction time"
+]
+
 ballresponse = [
     "Yes", "No", "Take a wild guess...", "Very doubtful",
     "Sure", "Without a doubt", "Most likely", "Might be possible",
@@ -49,7 +53,6 @@ ballresponse = [
 CoolColorResponse = [
     "0x2CCC74", "0x04A4EC", "0x142434", "0xFFFFFF"
 ]
-
 # COLORS
 green = 0x2CCC74  # SUCCESS
 
@@ -66,6 +69,7 @@ red = 0xff0000  # LARGE ERROR / YOUTUBE OUTPUT
 dark_blue = 0x142434  # Looks nice lol
 
 white = 0xFFFFFF  # white
+ColorsList = [green, blue, purple, orange, magenta, red, dark_blue, white]
 
 colors = {
     "green": green,

@@ -1,5 +1,4 @@
 import asyncio
-
 import discord
 from discord.utils import find
 from discord.ext import commands
@@ -13,6 +12,7 @@ import logging
 from datetime import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from utils.vars import *
+
 logging.getLogger("events")
 owners = default.config()["owners"]
 
@@ -25,6 +25,7 @@ async def Error(self, ctx, err):
                           description=err)
     await logs_channel.send(embed=embed)
     logging.error(msg="Error Error")
+
 
 async def Info(self, ctx, msg):
     non_critical_logs_channel = self.bot.get_channel(self.config["edoc_non_critical_logs"])
@@ -45,15 +46,15 @@ class Events(commands.Cog):
         self.scheduler = AsyncIOScheduler()
         self.owner_commands = 0
         self.normal_commands = 0
-        self.logs_channel = self.bot.get_channel(self.config["edoc_logs"])
-        loop = asyncio.get_event_loop()
-        task = loop.create_task(self.update_db())
-        loop.run_until_complete(task)
+        self.critlogschannel = self.bot.get_channel(self.config["edoc_logs"])
+        self.allmembers = self.bot.get_all_members()
+        self.guilds = self.bot.guilds
+        self.noncritlogschannel = self.bot.get_channel(self.config["edoc_non_critical_logs"])
+        self.update_db()
 
     async def erroremb(self, ctx, *, description: str):
         """@summary creates a discord embed so i can send it with x details easier"""
         embed = discord.Embed(
-            title='Error!',
             description=description,
             color=colors["red"]
         )
@@ -72,23 +73,48 @@ class Events(commands.Cog):
         await channel.send("Please do ~help to get started")
         annoy = member
 
-    async def update_db(self):
-        members = self.bot.get_all_members()
-        for member in members:
+    # async def update_db(self):
+    #    members = self.bot.get_all_members()
+    #    for member in members:
+    #        db.execute("INSERT OR IGNORE INTO User (UserID) VALUES (?)", member.id)
+    #    for server in self.bot.guilds:
+    #        print(server.name)
+    #        admins = None  # {}
+    #        # `for member in guild.members:
+    #        #    if
+    #        #            admins += members
+    #        # inthings = [server.id, self.config["default_prefix"], server.name, admins] #
+    #        db.execute("INSERT OR IGNORE INTO guilds (GuildID, Prefix, GuildName, GuildAdmins) VALUES (?, ?, ?, ?);",
+    #                   (server.id, self.config["default_prefix"], server.name, admins))
+    #    db.commit()
+    #    print("updated db")
+    #    await asyncio.sleep(21600.0)
+
+    def update_db(self):
+        for member in self.allmembers:
+            if member.bot:
+                continue
             db.execute("INSERT OR IGNORE INTO User (UserID) VALUES (?)", member.id)
-        for server in self.bot.guilds:
-            print(server.name)
-            admins = None  # {}
-            # `for member in guild.members:
-            #    if
-            #            admins += members
-            # inthings = [server.id, self.config["default_prefix"], server.name, admins] #
-            db.execute("INSERT OR IGNORE INTO guilds (GuildID, Prefix, GuildName, GuildAdmins) VALUES (?, ?, ?, ?);",
-                       (server.id, self.config["default_prefix"], server.name, admins))
+
+        db.multiexec("INSERT OR IGNORE INTO guilds (GuildID, Prefix, GuildName) VALUES (?, ?, ?)",
+                     ((guild.id, self.config["default_prefix"], guild.name,) for guild in self.guilds))
+
+        db.multiexec("INSERT OR IGNORE INTO User (UserID) VALUES (?)",
+                     ((member.id,) for member in self.allmembers if not member.bot))
+
+        to_remove = []
+        allmembers = self.bot.get_all_members()
+        stored_members = db.column("SELECT UserID FROM User")
+        for id_ in stored_members:
+            if id_ not in list(allmembers):
+                to_remove.append(id_)
+        db.multiexec("DELETE FROM User WHERE UserID = ?",
+                     ((id_,) for id_ in to_remove))
+
         db.commit()
         print("updated db")
 
-    #async def update_db(self):
+    # async def update_db(self):
     #    members = self.bot.get_all_members()
     #    for member in members:
     #        db.execute("INSERT OR IGNORE INTO User (UserID) VALUES (?)", member.id)
@@ -105,11 +131,8 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx, err):
         if isinstance(err, commands.CommandNotFound):
-            await self.erroremb(ctx, description=f'The command you have requested is not found. \nPlease make sure you typed it out right',)
-
-        elif isinstance(err, errors.BadArgument):
-            helper = str(ctx.invoked_subcommand) if ctx.invoked_subcommand else str(ctx.command)
-            await self.erroremb(ctx, description=helper)
+            await self.erroremb(ctx,
+                                description=f'The command you have requested is not found. \nPlease make sure you typed it out right', )
 
         elif isinstance(err, errors.MissingRequiredArgument):
             await self.erroremb(ctx, description="Please make sure to fill out all the arguments")
@@ -127,15 +150,18 @@ class Events(commands.Cog):
             pass
 
         elif isinstance(err, errors.MaxConcurrencyReached):
-            await self.erroremb(ctx=ctx, description="You've reached max capacity of command usage at once, please finish the previous one...")
+            await self.erroremb(ctx=ctx,
+                                description="You've reached max capacity of command usage at once, please finish the previous one...")
 
         elif isinstance(err, errors.CommandOnCooldown):
-            await self.erroremb(ctx=ctx, description="This command is on cooldown... try again in {err.retry_after:.2f} seconds.")
+            await self.erroremb(ctx=ctx,
+                                description=f"This command is on cooldown... try again in {err.retry_after:.2f} seconds.")
 
         else:
             print('Unknown error!')
             await self.erroremb(ctx, description="Sorry but this is an unknown error the devs has been notified!")
-            await self.logs_channel.send(f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] made an error typing a command. The error is unknown!")
+            await self.critlogschannel.send(
+                f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] made an error typing a command. The error is unknown!")
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild):
@@ -185,7 +211,8 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         """ The function that activates when boot was completed """
-        logschannel = self.bot.get_channel(self.config["edoc_logs"])
+        global to_send
+        logschannel = self.bot.get_channel(self.config["edoc_non_critical_logs"])
         if not self.ready:
             self.ready = True
             self.scheduler.start()
@@ -221,8 +248,8 @@ class Events(commands.Cog):
                                      key=lambda z: z.position)[0]
                 except IndexError:
                     pass
-                else:
-                    invite_link = await to_send.create_invite(max_uses=1, unique=False, temporary=True)
+
+                invite_link = await to_send.create_invite(max_uses=1, unique=False, temporary=True)
                 if Server.id in guilds:
                     verified: bool = True
                 else:
@@ -236,20 +263,120 @@ class Events(commands.Cog):
             await logschannel.send(f"{self.bot.user} has been reconnected")
 
     @commands.Cog.listener()
+    async def on_user_update(self, before, after):
+        if before.name != after.name:
+            embed = discord.Embed(title="Username change",
+                                  colour=after.colour,
+                                  timestamp=datetime.utcnow())
+
+            fields = [("Before", before.name, False),
+                      ("After", after.name, False)]
+
+            for name, value, inline in fields:
+                embed.add_field(name=name, value=value, inline=inline)
+
+            await self.noncritlogschannel.send(embed=embed)
+
+        if before.discriminator != after.discriminator:
+            embed = discord.Embed(title="Discriminator change",
+                                  colour=after.colour,
+                                  timestamp=datetime.utcnow())
+
+            fields = [("Before", before.discriminator, False),
+                      ("After", after.discriminator, False)]
+
+            for name, value, inline in fields:
+                embed.add_field(name=name, value=value, inline=inline)
+
+            await self.noncritlogschannel.send(embed=embed)
+
+        if before.avatar_url != after.avatar_url:
+            embed = discord.Embed(title="Avatar change",
+                                  description="New image is below, old to the right.",
+                                  colour=self.noncritlogschannel.guild.get_member(after.id).colour,
+                                  timestamp=datetime.utcnow())
+
+            embed.set_thumbnail(url=before.avatar_url)
+            embed.set_image(url=after.avatar_url)
+
+            await self.noncritlogschannel.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_member_update(self, before, after):
+        if before.display_name != after.display_name:
+            embed = discord.Embed(title="Nickname change",
+                                  colour=after.colour,
+                                  timestamp=datetime.utcnow())
+
+            fields = [("Before", before.display_name, False),
+                      ("After", after.display_name, False)]
+
+            for name, value, inline in fields:
+                embed.add_field(name=name, value=value, inline=inline)
+
+            await self.noncritlogschannel.send(embed=embed)
+
+        elif before.roles != after.roles:
+            embed = discord.Embed(title="Role updates",
+                                  colour=after.colour,
+                                  timestamp=datetime.utcnow())
+
+            fields = [("Before", ", ".join([r.mention for r in before.roles]), False),
+                      ("After", ", ".join([r.mention for r in after.roles]), False)]
+
+            for name, value, inline in fields:
+                embed.add_field(name=name, value=value, inline=inline)
+
+            await self.noncritlogschannel.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_message_edit(self, before, after):
+        if not after.author.bot:
+            if before.content != after.content:
+                embed = discord.Embed(title="Message edit",
+                                      description=f"Edit by {after.author.display_name}.",
+                                      colour=after.author.colour,
+                                      timestamp=datetime.utcnow())
+
+                fields = [("Before", before.content, False),
+                          ("After", after.content, False)]
+
+                for name, value, inline in fields:
+                    embed.add_field(name=name, value=value, inline=inline)
+
+                await self.noncritlogschannel.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_message_delete(self, message):
+        if not message.author.bot:
+            embed = discord.Embed(title="Message deletion",
+                                  description=f"Action by {message.author.display_name}.",
+                                  colour=message.author.colour,
+                                  timestamp=datetime.utcnow())
+
+            fields = [("Content", message.content, False)]
+
+            for name, value, inline in fields:
+                embed.add_field(name=name, value=value, inline=inline)
+
+            await self.noncritlogschannel.send(embed=embed)
+
+    @commands.Cog.listener()
     async def on_voice_state_update(self, member, prev, cur):
         user = f"{member.name}#{member.discriminator}"
         if cur.afk and not prev.afk:
-            print(f"{user} went AFK!")
+            self.noncritlogschannel.send(f"{user} went AFK!")
         elif prev.afk and not cur.afk:
-            print(f"{user} is no longer AFK!")
+            self.noncritlogschannel.send(f"{user} is no longer AFK!")
         elif cur.self_mute and not prev.self_mute:  # Would work in a push to talk channel
-            print(f"{user} stopped talking!")
+            self.noncritlogschannel.send(f"{user} stopped talking!")
         elif prev.self_mute and not cur.self_mute:  # As would this one
-            print(f"{user} started talking!")
+            self.noncritlogschannel.send(f"{user} started talking!")
 
     @commands.Cog.listener()
     async def premium_guild_subscription(self, ctx):
         await ctx.send(f"{ctx.auther} just boosted the server :party:")
+
 
 def setup(bot):
     bot.add_cog(Events(bot))
