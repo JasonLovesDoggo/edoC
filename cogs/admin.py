@@ -19,7 +19,9 @@ from utils import permissions, default, http
 from io import BytesIO
 from cogs.mod import BanUser, MemberID
 from utils.vars import *
+
 on = False
+
 
 class Admin(commands.Cog):
     def __init__(self, bot):
@@ -83,7 +85,7 @@ class Admin(commands.Cog):
         for num, user in enumerate(self.bot.get_all_members(), start=1):
             allusers += f" \n[{str(num).zfill(2)}] {user} ~ {user.id}"
         data = BytesIO(allusers.encode("utf-8"))
-        await ctx.send(content=f"Users", file=discord.File(data, filename=f"Users.cmake"))
+        await ctx.send(content=f"Users", file=discord.File(data, filename=default.CustomTimetext('ini', 'Users')))
 
     @users.error
     async def users_error(self, ctx: commands.Context, error: commands.CommandError):
@@ -99,9 +101,10 @@ class Admin(commands.Cog):
         print(what_they_said)
 
     @commands.command()
-    @commands.check(permissions.is_owner or permissions.is_mod)
+    @commands.check(permissions.is_owner)
     async def say(self, ctx, *, what_to_say: str):
-        """ says text """  # todo add a thing that deletes the message that the ~say'er sent prob with ctx.message smth
+        """ says text """
+        await ctx.message.delete()
         await ctx.send(f'{what_to_say}')
 
     @commands.command()
@@ -317,7 +320,8 @@ class Admin(commands.Cog):
                 await self.bot.add_roles(members, role_id)
 
         data = BytesIO(addedusers.encode("utf-8"))
-        await ctx.send(content=f"The roles have been added to", file=discord.File(data, filename=f"{default.timetext('AddedUsers')}"))
+        await ctx.send(content=f"The roles have been added to",
+                       file=discord.File(data, filename=f"{default.timetext('AddedUsers')}"))
 
     @commands.command(pass_context=True)
     async def role(self, ctx, *, role: discord.Role = None):

@@ -21,6 +21,11 @@ class Fun(commands.Cog):
         self.logschannel = self.bot.get_channel(self.config["edoc_logs"])
         print(f"(top of fun.py) DogPicsCount ~{self.DoggoPicsCount}")
 
+    @commands.command(aliases=["parrot"])
+    async def echo(self, ctx, *, what_to_say: str):
+        """ repeats text """
+        await ctx.reply(f'🦜 {what_to_say}')
+
     @commands.command(aliases=["8ball"])
     async def eightball(self, ctx, *, question: commands.clean_content):
         """ Consult 8ball to receive an answer """
@@ -46,7 +51,6 @@ class Fun(commands.Cog):
             return await ctx.send("The API seems to be down...")
         except aiohttp.ContentTypeError:
             return await ctx.send("The API returned an error or didn't return JSON...")
-
         await ctx.send(r[endpoint])
 
     async def api_img_creator(self, ctx, url: str, filename: str, content: str = None):
@@ -77,6 +81,18 @@ class Fun(commands.Cog):
     async def dog(self, ctx):
         """ Posts a random dog """
         await self.randomimageapi(ctx, "https://random.dog/woof.json", "url")
+
+    @commands.command(aliases=["cate", "kat"])
+    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
+    async def cat(self, ctx):
+        """ Posts a random cat """
+        async with aiohttp.ClientSession() as cs:
+            async with cs.get(f"https://api.thecatapi.com/v1/images/search?api_key={self.config['cat_key']}") as api:
+                data = await api.json()
+            emb = discord.Embed(title="Kate",
+                                color=white)
+            emb.set_image(url=data[0]["url"])
+            await ctx.reply(embed=emb)
 
     @commands.command(aliases=["MyDoggo", "Bella", "Belz"])
     async def MyDog(self, ctx):
@@ -118,6 +134,14 @@ class Fun(commands.Cog):
         embed.set_footer(text=data["ad"])
         await ctx.send(embed=embed)
 
+    @commands.command()
+    async def clap(self, ctx, *, words: commands.clean_content = None):
+        tosend = ""
+        for word in words.split():
+            tosend += f"👏 {word} "
+        tosend += "👏"
+        await ctx.reply(tosend)
+
     @commands.group()
     @commands.check(permissions.is_owner)
     async def math(self, ctx):
@@ -158,10 +182,10 @@ class Fun(commands.Cog):
         await ctx.send(f"**{answer}**")
 
     @commands.command()
-    async def answer(self, ctx, *, thing: str):
+    async def answer(self, ctx, *, thing: str = None):
         """ purely just says yes or no randomly """
         ans = random.choice(["yes", "no"])
-        await ctx.send(ans)
+        await ctx.reply(ans)
 
     @commands.command()
     async def test(self, ctx):

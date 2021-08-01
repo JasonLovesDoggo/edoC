@@ -27,6 +27,9 @@ def timetext(name):
     """ Timestamp, but in text form """
     return f"{name}_{int(time.time())}.txt"
 
+def CustomTimetext(filetype, name):
+    """ Timestamp, but in text form BUT with a custom filetype"""
+    return f"{name}_{int(time.time())}.{filetype}"
 
 def timeago(target):
     """ Timeago in easier way """

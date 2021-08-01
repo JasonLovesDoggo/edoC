@@ -161,7 +161,7 @@ class Events(commands.Cog):
             print('Unknown error!')
             await self.erroremb(ctx, description="Sorry but this is an unknown error the devs has been notified!")
             await self.critlogschannel.send(
-                f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] made an error typing a command. The error is unknown!")
+                f"{ctx.message.author.mention} [in {ctx.message.guild.id}, #{ctx.message.channel}] made an error typing a command. The error is unknown!")
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild):
@@ -170,19 +170,12 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, guild, member):
-        channel = guild.sys
-        # if not self.config[f"join_message"]:
-        #    return
-        #
-        # try:
-        #    to_send = sorted([chan for chan in guild.channels if
-        #                      chan.permissions_for(guild.me).send_messages and isinstance(chan, discord.TextChannel)],
-        #                     key=lambda x: x.position)[0]
-        # except IndexError:
-        #    pass
-        # else:
-        #    join_msg = self.config[f"join_message"]
-        #    await to_send.send(f"{join_msg} {user.mention}")
+        channel = self.bot.get_channel(guild.system_channel.id)
+        if not self.config[f"join_message"]:
+            return
+        else:
+            join_msg = self.config[f"join_message"]
+            await channel.send(f"{join_msg} {member.mention}")
 
     @commands.Cog.listener()
     async def on_command(self, ctx):
@@ -202,7 +195,7 @@ class Events(commands.Cog):
                                 datefmt='%m/%d/%Y %I:%M:%S %p',
                                 level=logging.INFO,
                                 filemode='w+')
-            logging.info(f'{ctx.guild.name} > ')  # {ctx.author} > {ctx.message.clean_content}
+            logging.info(f'{ctx.guild.name} > {ctx.author} > {ctx.message.clean_content}')
         except AttributeError:
             print(f"Private message > {ctx.author} > {ctx.message.clean_content} > Blocked {blocked}")
             logging.info(f'Private message > ')
