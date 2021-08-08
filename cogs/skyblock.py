@@ -31,8 +31,8 @@ class Skyblock(commands.Cog):
         self.skystatsurl = 'https://sky.shiiyu.moe/stats/'
         self.mojangapiurl = 'https://api.mojang.com/users/profiles/minecraft/'
 
-
     @commands.command()
+    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
     async def taming(self, ctx, name, pname=None):
         nameApi = requests.get(self.mojangapiurl + name).json()
         target_profile = None
@@ -98,6 +98,7 @@ class Skyblock(commands.Cog):
                 await ctx.send(embed=embed)
 
     @commands.command()
+    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
     async def farming(self, ctx, name, pname=None):
         separator = '{:,}'
         nameApi = requests.get(self.mojangapiurl + name).json()
@@ -205,6 +206,7 @@ class Skyblock(commands.Cog):
             await ctx.send(embed=embed)
 
     @commands.command()
+    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
     async def mining(self, ctx, name, pname=None):
         nameApi = requests.get(self.mojangapiurl + name).json()
         target_profile = None
@@ -271,6 +273,7 @@ class Skyblock(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command()
+    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
     async def combat(self, ctx, name, pname=None):
         nameApi = requests.get(self.mojangapiurl + name).json()
         target_profile = None
@@ -336,6 +339,7 @@ class Skyblock(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(name='foraging')
+    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
     async def foraging(self, ctx, name, pname=None):
         nameApi = requests.get(self.mojangapiurl + name).json()
         target_profile = None
@@ -400,6 +404,7 @@ class Skyblock(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command()
+    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
     async def fishing(self, ctx, name, pname=None):
         nameApi = requests.get(self.mojangapiurl + name).json()
         target_profile = None
@@ -465,6 +470,7 @@ class Skyblock(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(name='enchanting')
+    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
     async def enchanting(self, ctx, name, pname=None):
         nameApi = requests.get(self.mojangapiurl + name).json()
         target_profile = None
@@ -530,6 +536,7 @@ class Skyblock(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(name='alchemy')
+    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
     async def alchemy(self, ctx, name, pname=None):
         nameApi = requests.get(self.mojangapiurl + name).json()
         target_profile = None
@@ -595,6 +602,7 @@ class Skyblock(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(name='carpentry')
+    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
     async def carpentry(self, ctx, name, pname=None):
         nameApi = requests.get(self.mojangapiurl + name).json()
         target_profile = None
@@ -726,11 +734,11 @@ class Skyblock(commands.Cog):
 
     @commands.command(name='dungeons', aliases=['dungeon', 'catacombs', 'cata'])
     async def dungeons(self, ctx, name, pname=None):
-        nameApi = requests.get(self.mojangapiurl + name).json()
+        nameApi = requests.get(f'https://api.mojang.com/users/profiles/minecraft/{name}').json()
         target_profile = None
 
         async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.skyapiurl + name) as api:
+            async with cs.get('https://sky.shiiyu.moe/api/v2/profile/' + name) as api:
                 data = await api.json()
 
         for profile in data["profiles"].values():
@@ -746,18 +754,72 @@ class Skyblock(commands.Cog):
         if target_profile is None:
             raise CommandInvokeError
 
+        healer = target_profile['data']['dungeons']['classes']['healer']['experience']['level']
+        mage = target_profile['data']['dungeons']['classes']['mage']['experience']['level']
+        tank = target_profile['data']['dungeons']['classes']['tank']['experience']['level']
+        bers = target_profile['data']['dungeons']['classes']['berserk']['experience']['level']
+        archer = target_profile['data']['dungeons']['classes']['archer']['experience']['level']
+        fe = target_profile['data']['dungeons']['catacombs']['floors']['0']['stats']['tier_completions'] if '0' in \
+                                                                                                            target_profile[
+                                                                                                                'data'][
+                                                                                                                'dungeons'][
+                                                                                                                'catacombs'][
+                                                                                                                'floors'] else 0
+        f1 = target_profile['data']['dungeons']['catacombs']['floors']['1']['stats']['tier_completions'] if '1' in \
+                                                                                                            target_profile[
+                                                                                                                'data'][
+                                                                                                                'dungeons'][
+                                                                                                                'catacombs'][
+                                                                                                                'floors'] else 0
+        f2 = target_profile['data']['dungeons']['catacombs']['floors']['2']['stats']['tier_completions'] if '2' in \
+                                                                                                            target_profile[
+                                                                                                                'data'][
+                                                                                                                'dungeons'][
+                                                                                                                'catacombs'][
+                                                                                                                'floors'] else 0
+        f3 = target_profile['data']['dungeons']['catacombs']['floors']['3']['stats']['tier_completions'] if '3' in \
+                                                                                                            target_profile[
+                                                                                                                'data'][
+                                                                                                                'dungeons'][
+                                                                                                                'catacombs'][
+                                                                                                                'floors'] else 0
+        f4 = target_profile['data']['dungeons']['catacombs']['floors']['4']['stats']['tier_completions'] if '4' in \
+                                                                                                            target_profile[
+                                                                                                                'data'][
+                                                                                                                'dungeons'][
+                                                                                                                'catacombs'][
+                                                                                                                'floors'] else 0
+        f5 = target_profile['data']['dungeons']['catacombs']['floors']['5']['stats']['tier_completions'] if '5' in \
+                                                                                                            target_profile[
+                                                                                                                'data'][
+                                                                                                                'dungeons'][
+                                                                                                                'catacombs'][
+                                                                                                                'floors'] else 0
+        f6 = target_profile['data']['dungeons']['catacombs']['floors']['6']['stats']['tier_completions'] if '6' in \
+                                                                                                            target_profile[
+                                                                                                                'data'][
+                                                                                                                'dungeons'][
+                                                                                                                'catacombs'][
+                                                                                                                'floors'] else 0
+        f7 = target_profile['data']['dungeons']['catacombs']['floors']['7']['stats']['tier_completions'] if '7' in \
+                                                                                                            target_profile[
+                                                                                                                'data'][
+                                                                                                                'dungeons'][
+                                                                                                                'catacombs'][
+                                                                                                                'floors'] else 0
+
         print(
             f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] looked at {name}'s {pname} Dungeons stats.")
 
         embed = discord.Embed(
             title='Dungeon Stats For ' + nameApi['name'] + ' On Profile ' + pname,
-            url=f'{self.skystatsurl}{name}/{pname}',
+            url=f'https://sky.shiiyu.moe/stats/{name}/{pname}',
             description='**Total Dungeon EXP:** ' + (
                 str(round(target_profile['data']['dungeons']['catacombs']['level']['xp'], 2))),
 
         )
         embed.set_author(name='Made by StickyRunnerTR#9676')
-        embed.set_thumbnail(url=self.mcheads + name)
+        embed.set_thumbnail(url='https://mc-heads.net/head/' + name)
         embed.set_footer(text=f'Requested by {ctx.message.author}.')
         embed.timestamp = ctx.message.created_at
 
@@ -766,24 +828,25 @@ class Skyblock(commands.Cog):
         embed.add_field(name='**EXP Until Next Level**', value=str(
             target_profile['data']['dungeons']['catacombs']['level']['xpForNext'] -
             target_profile['data']['dungeons']['catacombs']['level']['xpCurrent']))
-        embed.add_field(name='**Highest Floor In Catacombs**',
-                        value=str(target_profile['data']['dungeons']['catacombs']['highest_floor']).replace('_',
-                                                                                                            ' ').replace(
-                            'f', 'F'), inline=False)
-        if target_profile['data']['dungeons']['master_catacombs']['visited']:
-            embed.add_field(name='**Highest Floor In Master Mode**',
+        if target_profile['data']['dungeons']['catacombs']['visited'] == True:
+            embed.add_field(name='**Highest Floor\nIn Catacombs**',
+                            value=str(target_profile['data']['dungeons']['catacombs']['highest_floor']).replace('_',
+                                                                                                                ' ').replace(
+                                'f', 'F'), inline=False)
+        else:
+            await ctx.send('You have never visited Dungeons!')
+
+        if target_profile['data']['dungeons']['master_catacombs']['visited'] == True:
+            embed.add_field(name='**Highest Floor\nIn Master Mode**',
                             value=str(target_profile['data']['dungeons']['master_catacombs']['highest_floor']).replace(
-                                '_', ' ').replace('floor', 'Master'), inline=False)
-        embed.add_field(name='**Healer**', value='Level: ' + str(
-            target_profile['data']['dungeons']['classes']['healer']['experience']['level']))
-        embed.add_field(name='**Mage**', value='Level: ' + str(
-            target_profile['data']['dungeons']['classes']['mage']['experience']['level']))
-        embed.add_field(name='**Tank**', value='Level: ' + str(
-            target_profile['data']['dungeons']['classes']['tank']['experience']['level']))
-        embed.add_field(name='**Berserk**', value='Level: ' + str(
-            target_profile['data']['dungeons']['classes']['berserk']['experience']['level']))
-        embed.add_field(name='**Archer**', value='Level: ' + str(
-            target_profile['data']['dungeons']['classes']['archer']['experience']['level']))
+                                '_', ' ').replace('floor', 'Master'), inline=True)
+
+        embed.add_field(name='Class Levels',
+                        value=f'```yaml\nHealer: {healer} \nMage: {mage} \nTank: {tank}\nBerserker: {bers} \nArcher: {archer}```',
+                        inline=False)
+        embed.add_field(name='Times Completed:',
+                        value=f'```yaml\nEntrance: {fe} \nF1: {f1} \nF2: {f2} \nF3: {f3}\nF4: {f4} \nF5: {f5} \nF6: {f6} \nF7: {f7}```',
+                        inline=False)
 
         await ctx.send(embed=embed)
 

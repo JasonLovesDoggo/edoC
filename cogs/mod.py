@@ -371,6 +371,63 @@ class Moderator(commands.Cog):
         )
 
     @commands.command()
+    @commands.guild_only()
+    @permissions.has_permissions(manage_roles=True)
+    async def lock(self, ctx):
+        channel = ctx.channel
+        overwrite = channel.overwrites_for(ctx.guild.default_role)
+        if not overwrite.send_messages:
+            embed = discord.Embed(colour=0xFF004D,
+                                  description=f"{channel.mention} is already a locked channel")
+            embed.set_author(name='Invalid usage',
+                             icon_url='https://media.giphy.com/media/uljItOrPUGYfXrgAhO/giphy.gif')
+            try:
+                await ctx.send(embed=embed)
+                return
+            except:
+                try:
+                    await ctx.author.send(embed=embed)
+                    return
+                except:
+                    return
+        embed = discord.Embed(colour=0xFF004D,
+                              description=f":lock: **Locked channel** {ctx.channel.mention}")
+        await ctx.send(embed=embed)
+        await channel.set_permissions(ctx.guild.default_role, send_messages=False)
+
+    @commands.command()
+    @commands.guild_only()
+    @permissions.has_permissions(manage_roles=True)
+    async def unlock(self, ctx):
+        channel = ctx.channel
+        overwrite = channel.overwrites_for(ctx.guild.default_role)
+        if overwrite.send_messages:
+            embed = discord.Embed(colour=0xFF004D,
+                                  description=f"{channel.mention} is not a locked channel")
+            embed.set_author(name='Invalid usage',
+                             icon_url='https://media.giphy.com/media/uljItOrPUGYfXrgAhO/giphy.gif')
+            try:
+                await ctx.send(embed=embed)
+                return
+            except:
+                try:
+                    await ctx.author.send(embed=embed)
+                    return
+                except:
+                    return
+        await channel.set_permissions(ctx.guild.default_role, send_messages=True)
+        embed = discord.Embed(colour=0xFF004D,
+                              description=f":unlock: **Unlocked channel** {ctx.channel.mention}")
+        try:
+            await ctx.send(embed=embed)
+        except:
+            try:
+
+                await ctx.author.send(embed=embed)
+            except:
+                pass
+
+    @commands.command()
     @commands.has_permissions(manage_messages=True)
     async def cls(self, ctx, amount: int):
         amount2 = amount + 2

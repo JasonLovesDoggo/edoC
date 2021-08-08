@@ -5,12 +5,17 @@ import secrets
 from io import BytesIO
 
 import aiohttp
+import nekos
 from discord.ext import commands
+import html5lib
+from bs4 import BeautifulSoup
+from nekos import InvalidArgument
 
 import discord
 from utils import permissions, http, default
 from utils.vars import *
-
+import pyfiglet
+dogphotospath = os.listdir("C:/Users/Jason/edoC/data/Dog Picks")
 
 class Fun(commands.Cog):
     def __init__(self, bot):
@@ -19,10 +24,10 @@ class Fun(commands.Cog):
         self.alex_api_token = self.config["alexflipnote_api"]
         self.DoggoPicsCount = len(os.listdir("C:/Users/Jason/edoC/data/Dog Picks"))
         self.logschannel = self.bot.get_channel(self.config["edoc_logs"])
-        print(f"(top of fun.py) DogPicsCount ~{self.DoggoPicsCount}")
+        self.dogphotospath = dogphotospath
 
     @commands.command(aliases=["parrot"])
-    async def echo(self, ctx, *, what_to_say: str):
+    async def echo(self, ctx, *, what_to_say: commands.clean_content):
         """ repeats text """
         await ctx.reply(f'🦜 {what_to_say}')
 
@@ -33,6 +38,16 @@ class Fun(commands.Cog):
         tosend = f"🎱 **Question:** {question}\n**Answer:** {answer}"
         emb = discord.Embed(description=tosend, color=random.choice(ColorsList))
         await ctx.reply(embed=emb)
+
+    @commands.command(aliases=['asciiart'])
+    async def ascii(self, ctx, *, value):
+        art = pyfiglet.figlet_format(f"{value}")
+        await ctx.send(f"```\n{art}```")
+
+    @commands.command(aliases=["roll", "dice"])
+    async def rolldice(self, ctx, guess):
+        answer = random.randint(1, 6)
+        await ctx.reply(embed=discord.Embed(color={green if guess == answer else red}, description=f"{'True' if guess == answer else 'False'} your guess was {guess} and the answer was {answer}"))
 
     @commands.command(aliases=["rfact", "rf"])
     @commands.cooldown(rate=1, per=1.3, type=commands.BucketType.user)
@@ -94,9 +109,9 @@ class Fun(commands.Cog):
             emb.set_image(url=data[0]["url"])
             await ctx.reply(embed=emb)
 
-    @commands.command(aliases=["MyDoggo", "Bella", "Belz"])
+    @commands.command(aliases=["MyDoggo", "Bella", "Belz", "WhosAgudGurl"])
     async def MyDog(self, ctx):
-        img = random.choice(os.listdir("C:/Users/Jason/edoC/data/Dog Picks"))  # change dir name to whatever
+        img = random.choice(self.dogphotospath)  # change dir name to whatever
         file = discord.File(f"C:/Users/Jason/edoC/data/Dog Picks/{img}")
         try:
             await ctx.send(file=file)
@@ -109,6 +124,19 @@ class Fun(commands.Cog):
         """ Coinflip! """
         coinsides = ["Heads", "Tails"]
         await ctx.send(f"**{ctx.author.name}** flipped a coin and got **{random.choice(coinsides)}**!")
+
+    @commands.command()
+    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
+    async def topic(self, ctx):
+        """ Generates a random topic to start a conversation up"""
+        url = "https://www.conversationstarters.com/generator.php"
+        async with aiohttp.ClientSession() as s:
+            async with s.get(url) as r:
+                output = await r.read()
+                soup = BeautifulSoup(output, 'html5lib')
+                topics = soup.find("div", {"id": "random"})
+                topic = topics.contents[1]
+        await ctx.send(f"**{topic}**")
 
     @commands.command(aliases=["ie"])
     async def iseven(self, ctx, num: int):
@@ -187,6 +215,23 @@ class Fun(commands.Cog):
         ans = random.choice(["yes", "no"])
         await ctx.reply(ans)
 
+    @commands.command(aliases=["uwuify", "makeuwu", "makeowo"])
+    async def owoify(self, ctx, *, text: commands.clean_content = None):
+        """ "owoifes" the text"""
+        await ctx.reply(nekos.owoify(str(text)))
+
+    @commands.command()
+    async def why(self, ctx):
+        """ why """
+        await ctx.reply(nekos.why())
+
+    @commands.command(hidden=True)
+    @commands.check(permissions.is_taco)
+    async def img(self, ctx, imgtype: str):
+        try:
+            await ctx.reply(nekos.img(target=imgtype))
+        except InvalidArgument:
+            await ctx.reply("Please put in the correct arguments ")
     @commands.command()
     async def test(self, ctx):
         """ Test command for testing """
@@ -225,6 +270,27 @@ class Fun(commands.Cog):
         """
         t_rev = text[::-1].replace("@", "@\u200B").replace("&", "&\u200B")
         await ctx.send(f"🔁 {t_rev}")
+
+    @commands.command(hidden=True)
+    @commands.cooldown(rate=1, per=2.0, type=commands.BucketType.user)
+    @commands.guild_only()
+    async def nuke(self, ctx):
+        """ Joke cmd doesnt rly do anything """
+        message = await ctx.send("Making server backup then nuking")
+        await asyncio.sleep(.5)
+        await message.edit(content="Backup 33% complete")
+        await asyncio.sleep(.5)
+        await message.edit(content="Backup 64% complete")
+        await asyncio.sleep(.7)
+        await message.edit(content="Backup 86% complete")
+        await asyncio.sleep(.57)
+        await message.edit(content="Backup 93% complete")
+        await asyncio.sleep(2)
+        await message.edit(content="Backup 100% complete")
+        await asyncio.sleep(.5)
+        e = discord.Embed(title="**Nuking everything now**", colour=red)
+        e.set_image(url="https://emoji.gg/assets/emoji/7102_NukeExplosion.gif")
+        await ctx.send(embed=e)
 
     @commands.command()
     async def password(self, ctx, nbytes: int = 18):

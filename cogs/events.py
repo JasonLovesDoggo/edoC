@@ -10,14 +10,15 @@ import os
 import psutil
 import logging
 from datetime import datetime
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+import apscheduler.schedulers.asyncio
 from utils.vars import *
 
 logging.getLogger("events")
 owners = default.config()["owners"]
 
-
-async def Error(self, ctx, err):
+scheduler = apscheduler.schedulers.asyncio.AsyncIOScheduler()
+db.autosave(scheduler)
+async def  Error(self, ctx, err):
     logs_channel = self.bot.get_channel(self.config["edoc_logs"])
     embed = discord.Embed(title="**Error!**",
                           color=red,
@@ -43,13 +44,13 @@ class Events(commands.Cog):
         self.ready = False
         self.config = default.config()
         self.process = psutil.Process(os.getpid())
-        self.scheduler = AsyncIOScheduler()
+        self.scheduler = apscheduler.schedulers.asyncio.AsyncIOScheduler()
         self.owner_commands = 0
         self.normal_commands = 0
         self.critlogschannel = self.bot.get_channel(self.config["edoc_logs"])
         self.allmembers = self.bot.get_all_members()
         self.guilds = self.bot.guilds
-        self.noncritlogschannel = self.bot.get_channel(self.config["edoc_non_critical_logs"])
+        self.noncritlogschannel = self.config["edoc_non_critical_logs"]
         self.update_db()
 
     async def erroremb(self, ctx, *, description: str):
@@ -69,8 +70,10 @@ class Events(commands.Cog):
         else:
             wlcmchannel = None
         channel = self.bot.get_channel(wlcmchannel.id)
+        db.execute("INSERT OR IGNORE INTO Guilds (GuildID) VALUES (?)", guild.id,)
         await channel.send("Thank you for inviting me to the server")
         await channel.send("Please do ~help to get started")
+        await channel.send("also if edoC fails it is because your servers guildID didn't get put into the database please contact the dev about it \n*(you can find him in ~info)")
         annoy = member
 
     # async def update_db(self):
@@ -257,6 +260,7 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_user_update(self, before, after):
+        noncritlogschannel = self.bot.get_channel(self.noncritlogschannel)
         if before.name != after.name:
             embed = discord.Embed(title="Username change",
                                   colour=after.colour,
@@ -268,7 +272,7 @@ class Events(commands.Cog):
             for name, value, inline in fields:
                 embed.add_field(name=name, value=value, inline=inline)
 
-            await self.noncritlogschannel.send(embed=embed)
+            await noncritlogschannel.send(embed=embed)
 
         if before.discriminator != after.discriminator:
             embed = discord.Embed(title="Discriminator change",
@@ -281,21 +285,22 @@ class Events(commands.Cog):
             for name, value, inline in fields:
                 embed.add_field(name=name, value=value, inline=inline)
 
-            await self.noncritlogschannel.send(embed=embed)
+            await noncritlogschannel.send(embed=embed)
 
         if before.avatar_url != after.avatar_url:
             embed = discord.Embed(title="Avatar change",
                                   description="New image is below, old to the right.",
-                                  colour=self.noncritlogschannel.guild.get_member(after.id).colour,
+                                  colour=blue,
                                   timestamp=datetime.utcnow())
 
             embed.set_thumbnail(url=before.avatar_url)
             embed.set_image(url=after.avatar_url)
 
-            await self.noncritlogschannel.send(embed=embed)
+            await noncritlogschannel.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
+        noncritlogschannel = self.bot.get_channel(self.noncritlogschannel)
         if before.display_name != after.display_name:
             embed = discord.Embed(title="Nickname change",
                                   colour=after.colour,
@@ -307,7 +312,7 @@ class Events(commands.Cog):
             for name, value, inline in fields:
                 embed.add_field(name=name, value=value, inline=inline)
 
-            await self.noncritlogschannel.send(embed=embed)
+            await noncritlogschannel.send(embed=embed)
 
         elif before.roles != after.roles:
             embed = discord.Embed(title="Role updates",
@@ -320,10 +325,11 @@ class Events(commands.Cog):
             for name, value, inline in fields:
                 embed.add_field(name=name, value=value, inline=inline)
 
-            await self.noncritlogschannel.send(embed=embed)
+            await noncritlogschannel.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_message_edit(self, before, after):
+        noncritlogschannel = self.bot.get_channel(self.noncritlogschannel)
         if not after.author.bot:
             if before.content != after.content:
                 embed = discord.Embed(title="Message edit",
@@ -337,10 +343,11 @@ class Events(commands.Cog):
                 for name, value, inline in fields:
                     embed.add_field(name=name, value=value, inline=inline)
 
-                await self.noncritlogschannel.send(embed=embed)
+                await noncritlogschannel.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
+        noncritlogschannel = self.bot.get_channel(self.noncritlogschannel)
         if not message.author.bot:
             embed = discord.Embed(title="Message deletion",
                                   description=f"Action by {message.author.display_name}.",
@@ -352,19 +359,20 @@ class Events(commands.Cog):
             for name, value, inline in fields:
                 embed.add_field(name=name, value=value, inline=inline)
 
-            await self.noncritlogschannel.send(embed=embed)
+            await noncritlogschannel.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, prev, cur):
+        noncritlogschannel = self.bot.get_channel(self.noncritlogschannel)
         user = f"{member.name}#{member.discriminator}"
         if cur.afk and not prev.afk:
-            self.noncritlogschannel.send(f"{user} went AFK!")
+            noncritlogschannel.send(f"{user} went AFK!")
         elif prev.afk and not cur.afk:
-            self.noncritlogschannel.send(f"{user} is no longer AFK!")
+            noncritlogschannel.send(f"{user} is no longer AFK!")
         elif cur.self_mute and not prev.self_mute:  # Would work in a push to talk channel
-            self.noncritlogschannel.send(f"{user} stopped talking!")
+            noncritlogschannel.send(f"{user} stopped talking!")
         elif prev.self_mute and not cur.self_mute:  # As would this one
-            self.noncritlogschannel.send(f"{user} started talking!")
+            noncritlogschannel.send(f"{user} started talking!")
 
     @commands.Cog.listener()
     async def premium_guild_subscription(self, ctx):

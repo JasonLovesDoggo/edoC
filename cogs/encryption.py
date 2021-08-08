@@ -10,7 +10,7 @@ from io import BytesIO
 from discord.ext import commands
 from discord.ext.commands.errors import BadArgument
 from utils import default, http
-from utils.vars import MorseCode, MorseCodeReversed, ascii_letters
+from utils.vars import *
 
 
 # def urlify(in_string):
@@ -18,6 +18,7 @@ from utils.vars import MorseCode, MorseCodeReversed, ascii_letters
 
 class Encryption(commands.Cog):
     def __init__(self, bot):
+        self.PADDING = 5
         self.bot = bot
         self.config = default.config()
 
@@ -218,17 +219,86 @@ class Encryption(commands.Cog):
     @encode.command(name='morse')
     async def encode_to_morse(self, ctx, *, text: commands.clean_content = None):
         """ Encode in morse code """
+        answer = "Sorry i belive im having some problems rn"
+        if not text:
+            text = await self.detect_file(ctx)
+            ctxisfile = True
+        else:
+            ctxisfile = False
+        if len(text) >= 1900:
+            return await ctx.reply(
+                embed=discord.Embed(description="❌ Sorry that file is too large please use a smaller one", colour=red))
         try:
             answer = ' '.join(MorseCode.get(i.upper()) for i in text)
-            await ctx.send(f"📑 **Text -> Morse** ```fix\n {answer}```")
         except TypeError:
-            await ctx.send(f"Some of the characters in your message are not valid {ctx.author.mention}")
+            await ctx.reply(f"Some of the characters in your message are not valid {ctx.author.mention}")
+
+        if not ctxisfile:
+            await ctx.send(f"📑 **Text -> Morse** ```fix\n {answer}```")
+        else:
+            try:
+                data = BytesIO(answer.encode("utf-8"))
+            except AttributeError:
+                data = BytesIO(text)
+            try:
+                return await ctx.send(
+                    content=f"📑 **Text -> Morse** ",
+                    file=discord.File(data, filename=default.CustomTimetext("fix", "morsecode")))
+            except discord.HTTPException:
+                return await ctx.reply(embed=discord.Embed(description=f"❌ The file I returned was over 8 MB, sorry {ctx.author.name}...", colour=red))
 
     @decode.command(name='morse')
     async def decode_from_morse(self, ctx, *, text: commands.clean_content = None):
         """ Decode in morse code """
-        answer = ''.join(MorseCodeReversed.get(i) for i in text.split())
-        await ctx.send(f"📑 **Morse -> Text** ```fix\n {answer}```")
+        if not text:
+            text = await self.detect_file(ctx)
+            ctxisfile = True
+        else:
+            ctxisfile = False
+
+        try:
+            answer = ''.join(MorseCodeReversed.get(i) for i in text.split())
+        except TypeError:
+            return await ctx.reply(f"Some of the characters in your message are not valid")
+        if not ctxisfile:
+            await ctx.send(f"📑 **Morse -> Text** ```fix\n {answer}```")
+        else:
+            try:
+                data = BytesIO(answer.encode("utf-8"))
+            except AttributeError:
+                data = BytesIO(text)
+            try:
+                return await ctx.send(
+                    content=f"📑 **Morse -> Text** ",
+                    file=discord.File(data, filename=default.CustomTimetext("fix", "morsecode")))
+            except discord.HTTPException:
+                return await ctx.reply(embed=discord.Embed(description=f"❌ The file I returned was over 8 MB, sorry {ctx.author.name}...", colour=red))
+
+    @decode.command(name='all')
+    async def decode_all(self, ctx, *, text=None):
+        """ loops through all the encoding types and sends em all """
+        if not text:
+            text = await self.detect_file(ctx)
+        try:
+            data = BytesIO(text.encode("utf-8"))
+        except AttributeError:
+            data = BytesIO(text)
+        encyptions = {}
+        # b32 = base64.b32decode(text.encode())
+        # b64 = base64.b85encode(text.encode())
+        # a85 = base64.a85encode(text.encode())
+        # encyptions["Base32"] = b32
+        # encyptions["base85"] = b64[:-1]
+        # encyptions["Ascii85"] =a85[:-1]
+        encyptions["test"] = await self.encryptout(ctx, "base32 -> Text", base64.b32decode(text.encode("utf-8")))
+
+        emb = discord.Embed(title="Encryption Outputs",
+                            color=blue,
+                            description="")
+        for k, v in encyptions.items():
+            pad = ' ' * (self.PADDING - len(str(v)))
+            emb.description += f"`{pad}{v}`: **{k}**\n"
+        await ctx.reply(embed=emb)
 
 
 def setup(bot):

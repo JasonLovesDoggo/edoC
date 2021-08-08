@@ -12,7 +12,8 @@ import os
 import sys
 import json
 from discord.ext import commands
-
+import textwrap
+import traceback
 from lib.db import db
 from lib.db.db import cur
 from utils import permissions, default, http
@@ -274,25 +275,6 @@ class Admin(commands.Cog):
         await ctx.send(f'Dumping "**{message}** " Into {todofile.name}')
         todofile.close()
 
-    @commands.command(hidden=True)
-    @commands.guild_only()
-    @commands.check(permissions.is_taco)
-    async def nuke(self, ctx):
-        """ Joke cmd doesnt rly do anything """
-        message = await ctx.send("Making server backup then nuking")
-        time.sleep(0.5)
-        await message.edit(content="Backup 33% complete")
-        await asyncio.sleep(.5)
-        await message.edit(content="Backup 64% complete")
-        await asyncio.sleep(.7)
-        await message.edit(content="Backup 86% complete")
-        await asyncio.sleep(.57)
-        await message.edit(content="Backup 93% complete")
-        await asyncio.sleep(2)
-        await message.edit(content="Backup 100% complete")
-        await asyncio.sleep(.5)
-        await ctx.send("Nuking everything now")
-
     @commands.command()
     @commands.check(permissions.is_owner)
     async def clearfile(self, ctx, filename: str):
@@ -344,7 +326,7 @@ class Admin(commands.Cog):
                                   .format(role, ctx.message.author.mention))
 
     @commands.command()
-    @commands.check(permissions.is_owner or permissions.is_mod)
+    @commands.check(permissions.is_owner)
     async def dm(self, ctx, user_id: int, *, message: str):
         """ DM the user of your choice """
         user = self.bot.get_user(user_id)
@@ -463,11 +445,8 @@ class Admin(commands.Cog):
         path = self.DoggoPath
         files = os.listdir(path)
         for count, file in enumerate(files):
-            if file.startswith("1" or "2" or "3" or "4" or "5" or "6" or "7" or "8" or "9"):
-                continue
-            else:
                 self.filenum += 1
-                os.rename(os.path.join(path, file), os.path.join(path, ''.join([str(self.filenum + 1), '.jpg'])))
+                os.rename(os.path.join(path, file), os.path.join(path, ''.join([str(self.filenum), '.jpg'])))
         await ctx.send(f"done\ncurrent limit is {self.filenum}")
 
 

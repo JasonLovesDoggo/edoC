@@ -1,9 +1,13 @@
 psutil~=5.8.0
 timeago==1.0.13
 aiohttp~=3.6.3
-APScheduler~=3.7.0
+apscheduler~=3.7.0
 discord~=1.0.1
 requests~=2.25.1
 
 humanize~=3.9.0
 jishaku~=2.0.0
+html5lib~=1.1
+pyfiglet~=0.8.post1
+beautifulsoup4~=4.9.3
+wikipedia~=1.4.0

@@ -6,6 +6,8 @@ from io import BytesIO
 
 import humanize
 import psutil
+from discord.ext.menus import ListPageSource, MenuPages
+
 import discord
 from datetime import datetime
 from discord.ext import commands
@@ -15,6 +17,23 @@ from utils.vars import *
 from utils import default, permissions
 from lib.db import db
 import pathlib
+
+class Menu(ListPageSource):
+    def __init__(self, ctx, data):
+        self.ctx = ctx
+
+        super().__init__(data, per_page=3)
+
+    async def write_page(self, fields=[]):
+
+        embed = discord.Embed(title="Todo",
+                              description="Welcome to the edoC Todo dialog!",
+                              colour=self.ctx.author.colour)
+        embed.set_thumbnail(url=self.ctx.guild.me.avatar_url)
+        for name, value in fields:
+            embed.add_field(name=name, value=value, inline=False)
+
+        return embed
 
 
 class Information(commands.Cog):
@@ -26,6 +45,28 @@ class Information(commands.Cog):
         self.event = self.bot.get_cog("Events")
         if not hasattr(self.bot, "uptime"):
             self.bot.uptime = datetime.utcnow()
+
+    async def todomenu(self, ctx, command):
+        embed = discord.Embed(title=f"TODO",
+                              description="test",
+                              colour=ctx.author.colour)
+        embed.add_field(name="Command description", value=command.help)
+        await ctx.send(embed=embed)
+
+    @commands.command(aliases=["todomenu"])
+    async def todo(self, ctx):
+        """Shows this message."""
+        file = open("todo.txt", "r").readlines()
+        menu = MenuPages(source=Menu(ctx, list(file)),
+                         delete_message_after=True,
+                         timeout=60.0)
+        await menu.start(ctx)
+
+    @commands.command()
+    async def time(self, ctx):
+        """ Check what the time is for me (the bot) """
+        time = datetime.utcnow().strftime("%d %B %Y, %H:%M")
+        await ctx.send(f"Currently the time for me is **{time}**")
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~
     @commands.command(aliases=["about", "stats", "status", "botinfo", "in"])
@@ -133,6 +174,13 @@ class Information(commands.Cog):
         data = BytesIO(text.encode("utf-8"))
         await ctx.reply(file=discord.File(data, filename=f"{default.timetext('Text')}"))
 
+    @commands.command(aliases=["SAFF"])
+    @permissions.has_permissions(attach_files=True)
+    async def sendasformatedfile(self, ctx, filetype: str, *, text: str):
+        """ sends whatever the user sent as a file BUT with a specified filetype"""
+        data = BytesIO(text.encode("utf-8"))
+        await ctx.reply(file=discord.File(data, filename=f"{default.CustomTimetext(filetype ,'Text')}"))
+
     @commands.command()
     async def ping(self, ctx):
         """ Pong! """
@@ -178,7 +226,7 @@ class Information(commands.Cog):
         e.set_footer(text=f"Requested by {ctx.author.name}\n{embedfooter}")
         await ctx.send(embed=e)
 
-    @commands.command(aliases=["joinme", "join", "botinvite"])
+    @commands.command(aliases=["joinme", "inviteme", "botinvite"])
     async def invite(self, ctx):
         """Sends you the bot invite link."""
         perms = discord.Permissions.none()
@@ -205,14 +253,6 @@ class Information(commands.Cog):
         # Do not remove this command, this has to stay due to the GitHub LICENSE.
         # TL:DR, you have to disclose source according to MIT.
         await ctx.reply(f"**{ctx.bot.user}** is powered by this source code:\nhttps://github.com/JakeWasChosen/edoC")
-
-    @commands.command()
-    async def todo(self, ctx):
-        """reads the todo.txt file"""
-        file = open("todo.txt", "r")
-        the_thing = file.read()
-        await ctx.send(the_thing)
-        file.close()
 
     @commands.command(aliases=["supportserver", "feedbackserver"])
     async def botserver(self, ctx):

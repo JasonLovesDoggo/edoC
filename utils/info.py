@@ -17,6 +17,8 @@ def fetch_info():
     for f in p.rglob('*.py'):
         if str(f).startswith("venv"):
             continue
+        elif str(f).startswith("node_modules"):
+            continue
         file_amount += 1
         python_file_amount += 1
         with open(f, 'rb') as of:
@@ -34,9 +36,13 @@ def fetch_info():
     for f in p.rglob('*.txt'):
         if str(f).startswith("venv"):
             continue
+        elif str(f).startswith("node_modules"):
+            continue
         file_amount += 1
     for f in p.rglob('*.json'):
         if str(f).startswith("venv"):
+            continue
+        elif str(f).startswith("node_modules"):
             continue
         file_amount += 1
     return {
