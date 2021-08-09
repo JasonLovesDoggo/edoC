@@ -94,8 +94,8 @@ def random_color(self):
 embedfooter = "https://www.buymeacoffee.com/edoC Creating edoC is a tough task, if you would like me to continue with it, please consider donating!"
 
 version_info = {
-    "info": "Added skyblock + morse code support and a ton more",
-    "version": 0.86,
+    "info": "MUSIC IS UP I REPEAT MUSIC IS UP yes you heard right MUSIC IS UP",
+    "version": 0.88,
 }
 
 

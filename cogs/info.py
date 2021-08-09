@@ -176,7 +176,7 @@ class Information(commands.Cog):
 
             e.add_field(
                 name="__Latest changes__",
-                value=version_info["info"],
+                value=version_info["info"].title(),
                 inline=False,
             )
 
