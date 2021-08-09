@@ -19,6 +19,8 @@ def fetch_info():
             continue
         elif str(f).startswith("node_modules"):
             continue
+        elif str(f).startswith("ffmpeg"):
+            continue
         file_amount += 1
         python_file_amount += 1
         with open(f, 'rb') as of:

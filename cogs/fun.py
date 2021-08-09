@@ -1,13 +1,11 @@
 import asyncio
 import os
-import random
 import secrets
 from io import BytesIO
 
 import aiohttp
 import nekos
 from discord.ext import commands
-import html5lib
 from bs4 import BeautifulSoup
 from nekos import InvalidArgument
 
@@ -15,6 +13,7 @@ import discord
 from utils import permissions, http, default
 from utils.vars import *
 import pyfiglet
+import pyshorteners
 dogphotospath = os.listdir("C:/Users/Jason/edoC/data/Dog Picks")
 
 class Fun(commands.Cog):
@@ -26,7 +25,7 @@ class Fun(commands.Cog):
         self.logschannel = self.bot.get_channel(self.config["edoc_logs"])
         self.dogphotospath = dogphotospath
 
-    @commands.command(aliases=["parrot"])
+    @commands.command(aliases=["sayagain"])
     async def echo(self, ctx, *, what_to_say: commands.clean_content):
         """ repeats text """
         await ctx.reply(f'🦜 {what_to_say}')
@@ -210,7 +209,7 @@ class Fun(commands.Cog):
         await ctx.send(f"**{answer}**")
 
     @commands.command()
-    async def answer(self, ctx, *, thing: str = None):
+    async def answer(self, ctx):
         """ purely just says yes or no randomly """
         ans = random.choice(["yes", "no"])
         await ctx.reply(ans)
@@ -232,9 +231,13 @@ class Fun(commands.Cog):
             await ctx.reply(nekos.img(target=imgtype))
         except InvalidArgument:
             await ctx.reply("Please put in the correct arguments ")
+
     @commands.command()
     async def test(self, ctx):
         """ Test command for testing """
+        s = pyshorteners.Shortener()
+        for shortener in s.available_shorteners:
+            await ctx.send(shortener)
         await ctx.send(f"**{ctx.author.name}** has done the **Test** command Oo")
 
     @commands.command()

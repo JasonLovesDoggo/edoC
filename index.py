@@ -13,7 +13,7 @@ bot = Bot(
     allowed_mentions=discord.AllowedMentions(roles=True, users=True, everyone=False, replied_user=True),
     intents=discord.Intents(
         # kwargs found at https://discordpy.readthedocs.io/en/latest/api.html?highlight=intents#discord.Intents
-        guilds=True, members=True, messages=True, reactions=True, presences=True
+        guilds=True, members=True, messages=True, reactions=True, presences=True, voice_states=True
     )
 )
 

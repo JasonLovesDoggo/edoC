@@ -111,3 +111,6 @@ database.db
 
 #other
 todo.txt
+
+#ffmpeg
+\lib\ffmpeg

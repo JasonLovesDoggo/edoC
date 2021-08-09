@@ -1,4 +1,10 @@
+import random
+
 import discord
+#EMOJIS
+emojis = {
+    "green_checkmark": "✅"
+}
 
 ascii_letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -80,6 +86,10 @@ colors = {
     "dark_blue": dark_blue,
     "white": white,
 }
+
+
+def random_color(self):
+    return discord.Color.from_rgb(random.randint(1, 255), random.randint(1, 255), random.randint(1, 255))
 
 embedfooter = "https://www.buymeacoffee.com/edoC Creating edoC is a tough task, if you would like me to continue with it, please consider donating!"
 

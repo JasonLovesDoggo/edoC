@@ -1,13 +1,12 @@
 import os
 import platform
-import random
 import time
 from io import BytesIO
 
 import humanize
 import psutil
 from discord.ext.menus import ListPageSource, MenuPages
-
+from pyshorteners import Shortener
 import discord
 from datetime import datetime
 from discord.ext import commands
@@ -25,7 +24,6 @@ class Menu(ListPageSource):
         super().__init__(data, per_page=3)
 
     async def write_page(self, fields=[]):
-
         embed = discord.Embed(title="Todo",
                               description="Welcome to the edoC Todo dialog!",
                               colour=self.ctx.author.colour)
@@ -46,6 +44,25 @@ class Information(commands.Cog):
         if not hasattr(self.bot, "uptime"):
             self.bot.uptime = datetime.utcnow()
 
+        #@commands.command(aliases=["UIS", "UsersSpotify"])
+        #async def UserInfoSpotify(ctx, user: discord.Member = None):
+        #    if not user:
+        #        user = ctx.author
+        #        pass
+        #    if user.activities:
+        #        for activity in user.activities:
+        #            from discord import Spotify
+        #            if isinstance(activity, Spotify):
+        #                embed = discord.Embed(
+        #                    title=f"{user.name}'s Spotify",
+        #                    description="Listening to {}".format(activity.title),
+        #                    color=green)
+        #                embed.set_thumbnail(url=activity.album_cover_url)
+        #                embed.add_field(name="Artist", value=activity.artist)
+        #                embed.add_field(name="Album", value=activity.album)
+        #                embed.set_footer(text="Song started at {}".format(activity.created_at.strftime("%H:%M")))
+        #                await ctx.send(embed=embed)
+
     async def todomenu(self, ctx, command):
         embed = discord.Embed(title=f"TODO",
                               description="test",
@@ -61,6 +78,18 @@ class Information(commands.Cog):
                          delete_message_after=True,
                          timeout=60.0)
         await menu.start(ctx)
+
+    @commands.command(aliases=["URLshorten"])
+    async def shorten(self, ctx, *, url):
+        s = Shortener()
+        ShortenedUrl = s.owly.short(url)
+        await ctx.reply(embed=discord.Embed(description=ShortenedUrl, colour=random_color))
+
+    @commands.command(aliases=["URLexpand"])
+    async def expand(self, ctx, *, url):
+        s = Shortener()
+        ExpandedUrl = s.owly.expand(url)
+        await ctx.reply(embed=discord.Embed(description=ExpandedUrl, colour=random_color))
 
     @commands.command()
     async def time(self, ctx):
@@ -179,7 +208,7 @@ class Information(commands.Cog):
     async def sendasformatedfile(self, ctx, filetype: str, *, text: str):
         """ sends whatever the user sent as a file BUT with a specified filetype"""
         data = BytesIO(text.encode("utf-8"))
-        await ctx.reply(file=discord.File(data, filename=f"{default.CustomTimetext(filetype ,'Text')}"))
+        await ctx.reply(file=discord.File(data, filename=f"{default.CustomTimetext(filetype, 'Text')}"))
 
     @commands.command()
     async def ping(self, ctx):
@@ -198,6 +227,10 @@ class Information(commands.Cog):
         cm = cr = fn = cl = ls = fc = 0
         for f in p.rglob('*.py'):
             if str(f).startswith("venv"):
+                continue
+            elif str(f).startswith("node_modules"):
+                continue
+            elif str(f).startswith("ffmpeg"):
                 continue
             fc += 1
             with open(f, 'rb') as of:

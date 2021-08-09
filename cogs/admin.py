@@ -124,11 +124,13 @@ class Admin(commands.Cog):
         return cur.lastrowid
 
     @commands.command(aliases=["rp", "saymore"])
-    @commands.check(permissions.is_owner or permissions.is_mod)
-    async def repeat(self, ctx, times: int, *, content='repeating...'):
+    @commands.check(permissions.is_owner)
+    async def saymany(self, ctx, times: int, *, content='repeating...'):
         """Repeats a message multiple times."""
+        saidtimes = 0
         for i in range(times):
-            await ctx.send(content)
+            saidtimes += 1
+            await ctx.send(content + f" ||({saidtimes})||")
             await asyncio.sleep(1.0)
 
     @commands.group()
