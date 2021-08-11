@@ -1,19 +1,54 @@
-from discord.ext.commands import CommandInvokeError
-
-import discord
+import aiohttp
 import requests
 from discord.ext import commands
-import aiohttp
+from discord.ext.commands.errors import CommandInvokeError
 
-from utils import default
 from utils.vars import *
 
+SbColors = {
+    "ErrorColor": 0xff0000,
+    "TamingColor": 0x89CFF0,
+    "FishingColor": 0x1b95e0,
+    "FarmingColor": 0xc3db79,
+    "CombatColor": 0xd4af37,
+    "ForagingColor": 0x006400,
+    "EnchantingColor": 0xaf7cac,
+    "RunecraftingColor": 0xffb6c1,
+    "AlchemyColor": 0xdd143d,
+    "CarpentryColor": 0xc6a27e,
+    "MiningColor": 0x000000,
+    "SlayersColor": 0x990000
+}
+
+
+class SkyblockUpdatedError(BaseException):
+    print(f"****SKYBLOCK HAS UPDATED****")
 
 class Skyblock(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.config = default.config()
-        self.runecraftingCap = 75400
+        
+        self.separator = '{:,}'
+        self.target_profile = None
+        self.MojangUrl = 'https://api.mojang.com/users/profiles/minecraft/'
+        self.SkyV2 = 'https://sky.shiiyu.moe/api/v2/profile/'
+        self.SkyShiiyuStats = 'https://sky.shiiyu.moe/stats/'
+        self.McHeads = 'https://mc-heads.net/head/'
+
+        self.TamingColor = SbColors["TamingColor"]
+        self.FishingColor = SbColors["FishingColor"]
+        self.FarmingColor = SbColors["FarmingColor"]
+        self.CombatColor = SbColors["CombatColor"]
+        self.ForagingColor = SbColors["ForagingColor"]
+        self.EnchantingColor = SbColors["EnchantingColor"]
+        self.RunecraftingColor = SbColors["RunecraftingColor"]
+        self.AlchemyColor = SbColors["AlchemyColor"]
+        self.CarpentryColor = SbColors["CarpentryColor"]
+        self.MiningColor = SbColors["MiningColor"]
+        self.SlayersColor = SbColors["SlayersColor"]
+
+        # skills
+        self.RuneCraftingCap = 75400
         self.lvl50 = 55172425
         self.lvl51 = 59472425
         self.lvl52 = 64072425
@@ -25,22 +60,15 @@ class Skyblock(commands.Cog):
         self.lvl58 = 97972425
         self.lvl59 = 104672425
         self.lvl60 = 111672425
-        self.separator = '{:,}'
-        self.mcheads = 'https://mc-heads.net/head/'
-        self.skyapiurl = 'https://sky.shiiyu.moe/api/v2/profile/'
-        self.skystatsurl = 'https://sky.shiiyu.moe/stats/'
-        self.mojangapiurl = 'https://api.mojang.com/users/profiles/minecraft/'
 
-    @commands.command()
-    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
+    """ SKILLS """
+
+    @commands.command(name='taming', description='Shows your Taming statistics.')
     async def taming(self, ctx, name, pname=None):
-        nameApi = requests.get(self.mojangapiurl + name).json()
-        target_profile = None
-
+        nameApi = requests.get(self.MojangUrl + name).json()
         async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.skyapiurl + name) as api:
+            async with cs.get(self.SkyV2 + name) as api:
                 data = await api.json()
-
                 for profile in data["profiles"].values():
                     if pname is None:
                         if profile['current']:
@@ -74,15 +102,15 @@ class Skyblock(commands.Cog):
 
                 embed = discord.Embed(
                     title='Taming Level for ' + nameApi['name'] + ' On Profile ' + pname,
-                    url=f'{self.skystatsurl}{name}/{pname}',
+                    url=f'{self.SkyShiiyuStats}{name}/{pname}',
                     description='**Total Taming EXP: ** ' + self.separator.format(round(int(xpForMax))),
-                    color=discord.Colour.from_rgb(137, 207, 240)
+                    color=self.TamingColor
                 )
 
                 # Contents of discord embed
                 embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
-                embed.set_thumbnail(url=self.mcheads + name)
-                embed.set_footer(text=embedfooter)
+                embed.set_thumbnail(url=self.McHeads + name)
+
                 embed.timestamp = ctx.message.created_at
 
                 embed.add_field(name='**Taming Level**',
@@ -97,15 +125,12 @@ class Skyblock(commands.Cog):
 
                 await ctx.send(embed=embed)
 
-    @commands.command()
-    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
+    @commands.command(name='farming', description='Shows your Farming statistics.')
     async def farming(self, ctx, name, pname=None):
-        separator = '{:,}'
-        nameApi = requests.get(self.mojangapiurl + name).json()
-        target_profile = None
+        nameApi = requests.get(self.MojangUrl + name).json()
 
         async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.skyapiurl + name) as api:
+            async with cs.get(self.SkyV2 + name) as api:
                 data = await api.json()
 
         for profile in data["profiles"].values():
@@ -118,10 +143,11 @@ class Skyblock(commands.Cog):
                 target_profile = profile
                 pname = profile['cute_name']
                 break
-        if target_profile is None:
-            raise CommandInvokeError
+        if not target_profile:
+            raise SkyblockUpdatedError
 
         levelCap = target_profile['data']['level_caps']['farming']
+
         xpCap = 0
         if levelCap == 50:
             xpCap = self.lvl50
@@ -167,15 +193,15 @@ class Skyblock(commands.Cog):
         # Start of the embed
         embed = discord.Embed(
             title='Farming Level for ' + nameApi['name'] + ' On Profile ' + pname,
-            url=f'{self.skystatsurl}{name}/{pname}',
-            description='**Total Farming EXP: ** ' + separator.format(round(int(xpForMax))),
-            color=orange
+            url=f'{self.SkyShiiyuStats}{name}/{pname}',
+            description='**Total Farming EXP: ** ' + self.separator.format(round(int(xpForMax))),
+            color=self.FarmingColor
         )
 
         # Contents of discord embed
         embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
-        embed.set_thumbnail(url=self.mcheads + name)
-        embed.set_footer(text=embedfooter)
+        embed.set_thumbnail(url=self.McHeads + name)
+
         embed.timestamp = ctx.message.created_at
 
         embed.add_field(name='**Level Cap**', value=str(round(levelCap)))
@@ -185,34 +211,32 @@ class Skyblock(commands.Cog):
 
         if levelCap == 60:
             embed.add_field(name=f'**XP Over Level {levelCap}**',
-                            value=(separator.format(round(xpForMax - xpCap)) + ' Overflow XP'))
+                            value=(self.separator.format(round(xpForMax - xpCap)) + ' Overflow XP'))
             embed.add_field(name='**Ranking**',
-                            value=separator.format(target_profile['data']['levels']['farming']['rank']))
+                            value=self.separator.format(target_profile['data']['levels']['farming']['rank']))
             embed.add_field(name='**Level with Progress**',
                             value=(round(target_profile['data']['levels']['farming']['levelWithProgress'], 2)))
 
             await ctx.send(embed=embed)
         else:
             embed.add_field(name=f'**Level Required to Level {levelCap}**',
-                            value=separator.format(round(xpCap - xpForMax)))
-            embed.add_field(name='**Remaining XP for Next Level**', value=separator.format(round(int(xpMax))),
+                            value=self.separator.format(round(xpCap - xpForMax)))
+            embed.add_field(name='**Remaining XP for Next Level**', value=self.separator.format(round(int(xpMax))),
                             inline=False)
             embed.add_field(name='**Ranking**',
-                            value=separator.format(target_profile['data']['levels']['farming']['rank']))
-            embed.add_field(name='**Xp Required for Max Level**', value=separator.format(round(int(of))))
+                            value=self.separator.format(target_profile['data']['levels']['farming']['rank']))
+            embed.add_field(name='**Xp Required for Max Level**', value=self.separator.format(round(int(of))))
             embed.add_field(name='**Level with Progress**',
                             value=(round(target_profile['data']['levels']['farming']['levelWithProgress'], 2)))
 
             await ctx.send(embed=embed)
 
-    @commands.command()
-    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
+    @commands.command(name='mining', description='Shows your Mining statistics.')
     async def mining(self, ctx, name, pname=None):
-        nameApi = requests.get(self.mojangapiurl + name).json()
-        target_profile = None
+        nameApi = requests.get(self.MojangUrl + name).json()
 
         async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.skystatsurl + name) as api:
+            async with cs.get(self.SkyV2 + name) as api:
                 data = await api.json()
 
         for profile in data["profiles"].values():
@@ -225,8 +249,8 @@ class Skyblock(commands.Cog):
                 target_profile = profile
                 pname = profile['cute_name']
                 break
-        if target_profile is None:
-            raise CommandInvokeError
+        if not target_profile:
+            raise SkyblockUpdatedError
 
         print(
             f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] looked at {name}'s {pname} Mining stats.")
@@ -249,15 +273,14 @@ class Skyblock(commands.Cog):
         # Start of the embed
         embed = discord.Embed(
             title='Mining Level for ' + nameApi['name'] + ' On Profile ' + pname,
-            url=f'{self.skystatsurl}{name}/{pname}',
+            url=f'{self.SkyShiiyuStats}{name}/{pname}',
             description='**Total Mining EXP: ** ' + self.separator.format(round(int(xpForMax))),
-            color=green
+            color=self.MiningColor
         )
 
         # Contents of discord embed
         embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
-        embed.set_thumbnail(url=self.mcheads + name)
-        embed.set_footer(text=embedfooter)
+        embed.set_thumbnail(url=self.McHeads + name)
         embed.timestamp = ctx.message.created_at
 
         embed.add_field(name='**Mining Level**',
@@ -272,14 +295,12 @@ class Skyblock(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command()
-    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
+    @commands.command(name='combat', description='Shows your Combat statistics.')
     async def combat(self, ctx, name, pname=None):
-        nameApi = requests.get(self.mojangapiurl + name).json()
-        target_profile = None
+        nameApi = requests.get(self.MojangUrl + name).json()
 
         async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.skyapiurl + name) as api:
+            async with cs.get(self.SkyV2 + name) as api:
                 data = await api.json()
 
         for profile in data["profiles"].values():
@@ -293,7 +314,7 @@ class Skyblock(commands.Cog):
                 pname = profile['cute_name']
                 break
         if target_profile is None:
-            raise CommandInvokeError
+            raise SkyblockUpdatedError
 
         print(
             f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] looked at {name}'s {pname} Combat stats.")
@@ -315,15 +336,15 @@ class Skyblock(commands.Cog):
 
         embed = discord.Embed(
             title='Combat Level for ' + nameApi['name'] + ' On Profile ' + pname,
-            url=f'{self.skystatsurl}{name}/{pname}',
+            url=f'{self.SkyShiiyuStats}{name}/{pname}',
             description='**Total Combat EXP: ** ' + self.separator.format(round(int(xpForMax))),
-            color=discord.Colour.from_rgb(212, 175, 55)
+            color=self.CombatColor
         )
 
         # Contents of discord embed
         embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
-        embed.set_thumbnail(url=self.mcheads + name)
-        embed.set_footer(text=embedfooter)
+        embed.set_thumbnail(url=self.McHeads + name)
+
         embed.timestamp = ctx.message.created_at
 
         embed.add_field(name='**Combat Level**',
@@ -338,13 +359,12 @@ class Skyblock(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(name='foraging')
-    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
+    @commands.command(name='foraging', description='Shows your Foraging statistics.')
     async def foraging(self, ctx, name, pname=None):
-        nameApi = requests.get(self.mojangapiurl + name).json()
-        target_profile = None
+        nameApi = requests.get(self.MojangUrl + name).json()
+
         async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.skyapiurl + name) as api:
+            async with cs.get(self.SkyV2 + name) as api:
                 data = await api.json()
 
         for profile in data["profiles"].values():
@@ -358,7 +378,7 @@ class Skyblock(commands.Cog):
                 pname = profile['cute_name']
                 break
         if target_profile is None:
-            raise CommandInvokeError
+            raise SkyblockUpdatedError
 
         print(
             f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] looked at {name}'s {pname} Foraging stats.")
@@ -380,15 +400,15 @@ class Skyblock(commands.Cog):
 
         embed = discord.Embed(
             title='Foraging Level for ' + nameApi['name'] + ' On Profile ' + pname,
-            url=f'{self.skystatsurl}{name}/{pname}',
+            url=f'{self.SkyShiiyuStats}{name}/{pname}',
             description='**Total Foraging EXP: ** ' + self.separator.format(round(int(xpForMax))),
-            color=discord.Colour.from_rgb(0, 100, 0)
+            color=self.ForagingColor
         )
 
         # Contents of discord embed
         embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
-        embed.set_thumbnail(url=self.mcheads + name)
-        embed.set_footer(text=embedfooter)
+        embed.set_thumbnail(url=self.McHeads + name)
+
         embed.timestamp = ctx.message.created_at
 
         embed.add_field(name='**Foraging Level**',
@@ -403,14 +423,12 @@ class Skyblock(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command()
-    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
+    @commands.command(description='Shows your Fishing statistics.')
     async def fishing(self, ctx, name, pname=None):
-        nameApi = requests.get(self.mojangapiurl + name).json()
-        target_profile = None
+        nameApi = requests.get(self.MojangUrl + name).json()
 
         async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.skyapiurl + name) as api:
+            async with cs.get(self.SkyV2 + name) as api:
                 data = await api.json()
 
         for profile in data["profiles"].values():
@@ -424,7 +442,7 @@ class Skyblock(commands.Cog):
                 pname = profile['cute_name']
                 break
         if target_profile is None:
-            raise CommandInvokeError
+            raise SkyblockUpdatedError
 
         print(
             f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] looked at {name}'s {pname} Fishing stats.")
@@ -446,15 +464,15 @@ class Skyblock(commands.Cog):
 
         embed = discord.Embed(
             title='Fishing Level for ' + nameApi['name'] + ' On Profile ' + pname,
-            url=f'{self.skystatsurl}{name}/{pname}',
+            url=f'{self.SkyShiiyuStats}{name}/{pname}',
             description='**Total Fishing EXP: ** ' + self.separator.format(round(int(xpForMax))),
-            color=discord.Colour.from_rgb(27, 149, 224)
+            color=self.FishingColor
         )
 
         # Contents of discord embed
         embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
-        embed.set_thumbnail(url=self.mcheads + name)
-        embed.set_footer(text=embedfooter)
+        embed.set_thumbnail(url=self.McHeads + name)
+
         embed.timestamp = ctx.message.created_at
 
         embed.add_field(name='**Fishing Level**',
@@ -469,14 +487,12 @@ class Skyblock(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(name='enchanting')
-    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
+    @commands.command(aliases=['ench'], description='Shows your Enchanting statistics.')
     async def enchanting(self, ctx, name, pname=None):
-        nameApi = requests.get(self.mojangapiurl + name).json()
-        target_profile = None
+        nameApi = requests.get(self.MojangUrl + name).json()
 
         async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.skyapiurl + name) as api:
+            async with cs.get(self.SkyV2 + name) as api:
                 data = await api.json()
 
         for profile in data["profiles"].values():
@@ -490,7 +506,7 @@ class Skyblock(commands.Cog):
                 pname = profile['cute_name']
                 break
         if target_profile is None:
-            raise CommandInvokeError
+            raise SkyblockUpdatedError
 
         print(
             f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] looked at {name}'s {pname} Enchanting stats.")
@@ -502,7 +518,7 @@ class Skyblock(commands.Cog):
             of = 0
 
         xpForNext = target_profile['data']['levels']['enchanting']['xpForNext']
-        if xpForNext == None or xpForNext <= 0:
+        if xpForNext is None or xpForNext <= 0:
             xpForNext = 0
 
         xpNow = target_profile['data']['levels']['enchanting']['xpCurrent']
@@ -512,15 +528,15 @@ class Skyblock(commands.Cog):
 
         embed = discord.Embed(
             title='Enchanting Level for ' + nameApi['name'] + ' On Profile ' + pname,
-            url=f'{self.skystatsurl}{name}/{pname}',
+            url=f'{self.SkyShiiyuStats}{name}/{pname}',
             description='**Total Enchanting EXP: ** ' + self.separator.format(round(int(xpForMax))),
-            color=discord.Colour.from_rgb(175, 124, 172)
+            color=self.EnchantingColor
         )
 
         # Contents of discord embed
         embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
-        embed.set_thumbnail(url=self.mcheads + name)
-        embed.set_footer(text=embedfooter)
+        embed.set_thumbnail(url=self.McHeads + name)
+
         embed.timestamp = ctx.message.created_at
 
         embed.add_field(name='**Enchanting Level**',
@@ -535,14 +551,12 @@ class Skyblock(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(name='alchemy')
-    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
+    @commands.command(aliases=['alch'], description='Shows your Alchemy statistics.')
     async def alchemy(self, ctx, name, pname=None):
-        nameApi = requests.get(self.mojangapiurl + name).json()
-        target_profile = None
+        nameApi = requests.get(self.MojangUrl + name).json()
 
         async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.skyapiurl + name) as api:
+            async with cs.get(self.SkyV2 + name) as api:
                 data = await api.json()
 
         for profile in data["profiles"].values():
@@ -556,7 +570,7 @@ class Skyblock(commands.Cog):
                 pname = profile['cute_name']
                 break
         if target_profile is None:
-            raise CommandInvokeError
+            raise SkyblockUpdatedError
 
         print(
             f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] looked at {name}'s {pname} Alchemy stats.")
@@ -578,15 +592,15 @@ class Skyblock(commands.Cog):
 
         embed = discord.Embed(
             title='Alchemy Level for ' + nameApi['name'] + ' On Profile ' + pname,
-            url=f'{self.skystatsurl}{name}/{pname}',
+            url=f'{self.SkyShiiyuStats}{name}/{pname}',
             description='**Total Alchemy EXP: ** ' + self.separator.format(round(int(xpForMax))),
-            color=discord.Colour.from_rgb(221, 20, 61)
+            color=self.AlchemyColor
         )
 
         # Contents of discord embed
         embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
-        embed.set_thumbnail(url=self.mcheads + name)
-        embed.set_footer(text=embedfooter)
+        embed.set_thumbnail(url=self.McHeads + name)
+
         embed.timestamp = ctx.message.created_at
 
         embed.add_field(name='**Alchemy Level**',
@@ -601,14 +615,12 @@ class Skyblock(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(name='carpentry')
-    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
+    @commands.command(name='carpentry', description='Shows your Carpentry statistics.')
     async def carpentry(self, ctx, name, pname=None):
-        nameApi = requests.get(self.mojangapiurl + name).json()
-        target_profile = None
+        nameApi = requests.get(self.MojangUrl + name).json()
 
         async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.skyapiurl + name) as api:
+            async with cs.get(self.SkyV2 + name) as api:
                 data = await api.json()
 
         for profile in data["profiles"].values():
@@ -622,7 +634,7 @@ class Skyblock(commands.Cog):
                 pname = profile['cute_name']
                 break
         if target_profile is None:
-            raise CommandInvokeError
+            raise SkyblockUpdatedError
 
         print(
             f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] looked at {name}'s {pname} Carpentry stats.")
@@ -644,15 +656,15 @@ class Skyblock(commands.Cog):
 
         embed = discord.Embed(
             title='Carpentry Level for ' + nameApi['name'] + ' On Profile ' + pname,
-            url=f'{self.skystatsurl}{name}/{pname}',
+            url=f'{self.SkyShiiyuStats}{name}/{pname}',
             description='**Total Carpentry EXP: ** ' + self.separator.format(round(int(xpForMax))),
-            color=discord.Colour.from_rgb(198, 162, 126)
+            color=self.CarpentryColor
         )
 
         # Contents of discord embed
         embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
-        embed.set_thumbnail(url=self.mcheads + name)
-        embed.set_footer(text=embedfooter)
+        embed.set_thumbnail(url=self.McHeads + name)
+
         embed.timestamp = ctx.message.created_at
 
         embed.add_field(name='**Carpentry Level**',
@@ -667,13 +679,12 @@ class Skyblock(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(name='runecrafting')
+    @commands.command(name='runecrafting', description='Shows your Runecrafting statistics.')
     async def runecrafting(self, ctx, name, pname=None):
-        nameApi = requests.get(self.mojangapiurl + name).json()
-        target_profile = None
+        nameApi = requests.get(self.MojangUrl + name).json()
 
         async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.skyapiurl + name) as api:
+            async with cs.get(self.SkyV2 + name) as api:
                 data = await api.json()
 
         for profile in data["profiles"].values():
@@ -687,19 +698,19 @@ class Skyblock(commands.Cog):
                 pname = profile['cute_name']
                 break
         if target_profile is None:
-            raise CommandInvokeError
+            raise SkyblockUpdatedError
 
         print(
             f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] looked at {name}'s {pname} Runecrafting stats.")
 
         xpForMax = target_profile['data']['levels']['runecrafting']['xp']
-        of = self.runecraftingCap - xpForMax
+        of = self.RuneCraftingCap - xpForMax
 
         if of <= 0:
             of = 0
 
         xpForNext = target_profile['data']['levels']['runecrafting']['xpForNext']
-        if xpForNext == None or xpForNext <= 0:
+        if xpForNext is None or xpForNext <= 0:
             xpForNext = 0
 
         xpNow = target_profile['data']['levels']['runecrafting']['xpCurrent']
@@ -709,15 +720,15 @@ class Skyblock(commands.Cog):
 
         embed = discord.Embed(
             title='Runecrafting Level for ' + nameApi['name'] + ' On Profile ' + pname,
-            url=f'{self.skystatsurl}{name}/{pname}',
+            url=f'{self.SkyShiiyuStats}{name}/{pname}',
             description='**Total Runecrafting EXP: ** ' + self.separator.format(round(int(xpForMax))),
-            color=discord.Colour.from_rgb(255, 182, 193)
+            color=self.RunecraftingColor
         )
 
         # Contents of discord embed
         embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
-        embed.set_thumbnail(url=self.mcheads + name)
-        embed.set_footer(text=embedfooter)
+        embed.set_thumbnail(url=self.McHeads + name)
+
         embed.timestamp = ctx.message.created_at
 
         embed.add_field(name='**Runecrafting Level**',
@@ -732,13 +743,16 @@ class Skyblock(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(name='dungeons', aliases=['dungeon', 'catacombs', 'cata'])
+    """ DUNGEONS"""
+
+    @commands.command(name='dungeons', aliases=['dungeon', 'catacombs', 'cata'],
+                      description='Shows your Dungeoneering statistics.')
     async def dungeons(self, ctx, name, pname=None):
-        nameApi = requests.get(f'https://api.mojang.com/users/profiles/minecraft/{name}').json()
+        nameApi = requests.get(f'{self.MojangUrl}{name}').json()
         target_profile = None
 
         async with aiohttp.ClientSession() as cs:
-            async with cs.get('https://sky.shiiyu.moe/api/v2/profile/' + name) as api:
+            async with cs.get(self.SkyV2 + name) as api:
                 data = await api.json()
 
         for profile in data["profiles"].values():
@@ -813,13 +827,12 @@ class Skyblock(commands.Cog):
 
         embed = discord.Embed(
             title='Dungeon Stats For ' + nameApi['name'] + ' On Profile ' + pname,
-            url=f'https://sky.shiiyu.moe/stats/{name}/{pname}',
+            url=f'{self.SkyShiiyuStats}{name}/{pname}',
             description='**Total Dungeon EXP:** ' + (
                 str(round(target_profile['data']['dungeons']['catacombs']['level']['xp'], 2))),
 
         )
-        embed.set_author(name='Made by StickyRunnerTR#9676')
-        embed.set_thumbnail(url='https://mc-heads.net/head/' + name)
+        embed.set_thumbnail(url=self.McHeads + name)
         embed.set_footer(text=f'Requested by {ctx.message.author}.')
         embed.timestamp = ctx.message.created_at
 
@@ -828,7 +841,7 @@ class Skyblock(commands.Cog):
         embed.add_field(name='**EXP Until Next Level**', value=str(
             target_profile['data']['dungeons']['catacombs']['level']['xpForNext'] -
             target_profile['data']['dungeons']['catacombs']['level']['xpCurrent']))
-        if target_profile['data']['dungeons']['catacombs']['visited'] == True:
+        if target_profile['data']['dungeons']['catacombs']['visited']:
             embed.add_field(name='**Highest Floor\nIn Catacombs**',
                             value=str(target_profile['data']['dungeons']['catacombs']['highest_floor']).replace('_',
                                                                                                                 ' ').replace(
@@ -836,7 +849,7 @@ class Skyblock(commands.Cog):
         else:
             await ctx.send('You have never visited Dungeons!')
 
-        if target_profile['data']['dungeons']['master_catacombs']['visited'] == True:
+        if target_profile['data']['dungeons']['master_catacombs']['visited']:
             embed.add_field(name='**Highest Floor\nIn Master Mode**',
                             value=str(target_profile['data']['dungeons']['master_catacombs']['highest_floor']).replace(
                                 '_', ' ').replace('floor', 'Master'), inline=True)
@@ -849,14 +862,16 @@ class Skyblock(commands.Cog):
                         inline=False)
 
         await ctx.send(embed=embed)
+    """ SLAYERS """
 
-    @commands.command(aliases=['slayer'])
+    @commands.command(name='slayer', aliases=['slayers'],
+                      description='Shows all of your Zombie, Spider, Wolf and Enderman Slayer statistics.')
     async def slayers(self, ctx, name, pname=None):
-        nameApi = requests.get(self.mojangapiurl + name).json()
+        nameApi = requests.get(self.MojangUrl + name).json()
         target_profile = None
 
         async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.skyapiurl + name) as api:
+            async with cs.get(self.SkyV2 + name) as api:
                 data = await api.json()
 
         for profile in data["profiles"].values():
@@ -923,20 +938,19 @@ class Skyblock(commands.Cog):
 
         embed = discord.Embed(
             title='Slayer Information for ' + nameApi['name'],
-            url=f'{self.skystatsurl}{name}/{pname}',
+            url=f'{self.SkyShiiyuStats}{name}/{pname}',
             description='**Total Slayer EXP:** ' + self.separator.format(int(target_profile['data'][
                                                                                  'slayer_xp'])) + 'XP' + '\n ***Total Coins Spent on Slayers: ***' + self.separator.format(
                 int(target_profile['data']['slayer_coins_spent']['total'])) + ' coins',
-            color=discord.Colour.from_rgb(153, 0, 0)
+            color=self.SlayersColor
         )
 
         # Contents of discord embed
-        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
-        embed.set_thumbnail(url=self.mcheads + name)
-        embed.set_footer(text=embedfooter)
+        embed.set_author(name=f'Requested by {ctx.message.author.display_name}.', icon_url=ctx.message.author.avatar_url)
+        embed.set_thumbnail(url=self.McHeads + name)
         embed.timestamp = ctx.message.created_at
 
-        embed.add_field(name='**Revenent Horror \nLevel**',
+        embed.add_field(name='**Revenant Horror \nLevel**',
                         value='Level ' + str(target_profile['data']['slayers']['zombie']['level']['currentLevel']))
         embed.add_field(name='**Revenant Horror \nGathered XP**',
                         value=str(
@@ -950,7 +964,7 @@ class Skyblock(commands.Cog):
 
         embed.add_field(name='**Tarantula Broodfather \nLevel**',
                         value='Level ' + str(target_profile['data']['slayers']['spider']['level']['currentLevel']))
-        embed.add_field(name='**Tarantula Broodfatherr \nGathered XP**',
+        embed.add_field(name='**Tarantula Broodfather \nGathered XP**',
                         value=str(
                             self.separator.format(target_profile['data']['slayers']['spider']['level']['xp'])) + 'XP')
         embed.add_field(name='**Coins Spent on \nTarantula Slayer**',
@@ -965,7 +979,7 @@ class Skyblock(commands.Cog):
         embed.add_field(name='**Sven Packmaster \nGathered XP**',
                         value=str(
                             self.separator.format(target_profile['data']['slayers']['wolf']['level']['xp'])) + 'XP')
-        embed.add_field(name='**Coins Spents on \nSven Slayer**',
+        embed.add_field(name='**Coins Spent on \nSven Slayer**',
                         value=self.separator.format(
                             int(target_profile['data']['slayer_coins_spent']['wolf'])) + ' Coins')
         embed.add_field(name='Sven Packmaster Kills:',
@@ -983,15 +997,5 @@ class Skyblock(commands.Cog):
                             t3eman) + '\nT4: ' + str(t4eman) + '```', inline=False)
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=["sbhelp", "sbcmdshelp", "skyblockhelp"])
-    async def helpme(self, ctx):
-        embed = discord.Embed(
-            title="**How To Use Skyblock Commands:**",
-            description="~ <desired skill> <player name> <profile name> (Profile name is not required.)",
-            color=discord.Colour.from_rgb(255, 255, 255)
-        )
-        embed.set_footer(text='With the help of StickyRunnerTR#9676')
-
-        await ctx.send(embed=embed)
 def setup(bot):
     bot.add_cog(Skyblock(bot))

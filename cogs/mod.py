@@ -5,13 +5,11 @@ from discord import NotFound, Object
 import discord
 import re
 import asyncio
-
 from discord.ext import commands
 from discord.ext.commands import converter, Converter, BadArgument
 from utils import permissions, default
 from utils.data import get_prefix
 from lib.db import db
-from io import BytesIO
 
 
 

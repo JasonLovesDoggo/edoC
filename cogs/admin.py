@@ -30,8 +30,20 @@ class Admin(commands.Cog):
         self.bot = bot
         self.config = default.config()
         self._last_result = None
-        self.DoggoPath = r"C:/Users/Jason/edoC/data/Dog Picks"
+        self.DoggoPath = r"C:/Users/Jason/edoC/data/img/Dog Picks"
         self.filenum = 0
+
+    @commands.command()
+    @commands.check(permissions.is_owner)
+    async def rules(self, ctx):
+        emb = discord.Embed(title="edoC Support Server Rules\nPlease Read Carefully",
+                            color=white
+                            )
+        emb.set_author(name="Jason", url="https://bio.link/edoC", icon_url="https://i.imgur.com/LOJhKuN.png")
+        emb.description = rules
+        emb.set_footer(text="Saying that you’re joking isn’t an excuse for breaking rules.\nThese rules are subject to change at anytime without prior notice.")
+        emb.set_thumbnail(url="https://i.imgur.com/yww1r5E.jpeg")
+        await ctx.send(allowed_mentions=discord.AllowedMentions(roles=True, users=True, everyone=True, replied_user=True), embed=emb)
 
     @commands.command()
     @commands.check(permissions.is_owner)
@@ -116,10 +128,7 @@ class Admin(commands.Cog):
          @param next_prefix:
          """
         await ctx.send("this command currently does not exist its just a placeholder")
-        guildid = ctx.guild.id
-        prefixchange = ''' INSERT INTO guilds where GuildId = (name)
-                  VALUES(?,?,?) '''
-        db.execute(prefixchange)
+        db.execute("UPDATE guilds SET Prefix=? WHERE GuildId=?", (next_prefix, ctx.guild.id))
         db.commit()
         return cur.lastrowid
 
@@ -307,7 +316,8 @@ class Admin(commands.Cog):
         await ctx.send(content=f"The roles have been added to",
                        file=discord.File(data, filename=f"{default.timetext('AddedUsers')}"))
 
-    @commands.command(pass_context=True)
+    @commands.command(aliases=["trole", "ToggleRole"])
+    @commands.check(permissions.is_owner)
     async def role(self, ctx, *, role: discord.Role = None):
         """
         Toggle whether or not you have a role. Usage: `~role CoolDudes`. Can take roles with spaces.
@@ -447,8 +457,8 @@ class Admin(commands.Cog):
         path = self.DoggoPath
         files = os.listdir(path)
         for count, file in enumerate(files):
-                self.filenum += 1
-                os.rename(os.path.join(path, file), os.path.join(path, ''.join([str(self.filenum), '.jpg'])))
+            self.filenum += 1
+            os.rename(os.path.join(path, file), os.path.join(path, ''.join([str(self.filenum), '.jpg'])))
         await ctx.send(f"done\ncurrent limit is {self.filenum}")
 
 

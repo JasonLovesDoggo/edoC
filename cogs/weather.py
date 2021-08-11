@@ -12,14 +12,14 @@ class Weather(commands.Cog):
         self.bot = bot
         self.config = default.config()
         self.process = psutil.Process(os.getpid())
-        self.openweathermap_api = self.config["open_weather_map_api_key"]
+        self.openweathermap_api_key = self.config["open_weather_map_api_key"]
 
     @commands.command(aliases=["w"])
     @commands.cooldown(rate=1, per=2.0, type=commands.BucketType.user)
     async def weather(self, ctx, *, city: str):
         base_url = "http://api.openweathermap.org/data/2.5/weather?"
         city_name = city
-        weather_key = self.config["open_weather_map_api_key"]
+        weather_key = self.openweathermap_api_key
         complete_url = base_url + "appid=" + weather_key + "&q=" + city_name
         response = requests.get(complete_url)
         x = response.json()

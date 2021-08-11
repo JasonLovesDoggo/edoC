@@ -64,13 +64,8 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_guild_join(self, guild, member):
         """guild thingos """
-        general = find(lambda x: x.name == 'general' or 'General', guild.text_channels)
-        if general and general.permissions_for(guild.me).send_messages:
-            wlcmchannel = general
-        else:
-            wlcmchannel = None
-        channel = self.bot.get_channel(wlcmchannel.id)
-        db.execute("INSERT OR IGNORE INTO Guilds (GuildID) VALUES (?)", guild.id,)
+        channel = self.bot.get_channel(guild.system_channel)
+        db.execute("INSERT OR IGNORE INTO Guilds (GuildID) VALUES(?)", guild.id,)
         await channel.send("Thank you for inviting me to the server")
         await channel.send("Please do ~help to get started")
         await channel.send("also if edoC fails it is because your servers guildID didn't get put into the database please contact the dev about it \n*(you can find him in ~info)")
@@ -168,6 +163,7 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild):
+        db.execute("DELETE FROM Guilds WHERE GuildID=?", (guild.id,))
         print(f"edoc has left {guild.name} it had {len(guild.members)} members")
         # todo add a thing to remove said guild from the database after an hour
 
@@ -224,14 +220,14 @@ class Events(commands.Cog):
             # Check if user desires to have a different type of activity
             activity = self.config["activity_type"].lower()
             activity_type = {"listening": 2, "watching": 3, "competing": 5}
+            totalmembers = sum(g.member_count for g in self.bot.guilds)
 
             await self.bot.change_presence(
                 activity=discord.Game(
-                    type=activity_type.get(activity, 0), name=self.config["activity"]
+                    type=activity_type.get(activity, 2), name=f"Watching over {totalmembers} members!"
                 ),
                 status=status_type.get(status, discord.Status.online)
             )
-            totalmembers = sum(g.member_count for g in self.bot.guilds)
             # Indicate that the bot has successfully booted up
             print(
                 f"Ready: {self.bot.user} | Total members {totalmembers} | Guild count: {len(self.bot.guilds)} | Guilds")
@@ -244,8 +240,10 @@ class Events(commands.Cog):
                                      key=lambda z: z.position)[0]
                 except IndexError:
                     pass
-
-                invite_link = await to_send.create_invite(max_uses=1, unique=False, temporary=True)
+                try:
+                    invite_link = await to_send.create_invite(max_uses=1, unique=False, temporary=True)
+                except discord.Forbidden:
+                    invite_link = "Invalid perms"
                 if Server.id in guilds:
                     verified: bool = True
                 else:
@@ -366,13 +364,13 @@ class Events(commands.Cog):
         noncritlogschannel = self.bot.get_channel(self.noncritlogschannel)
         user = f"{member.name}#{member.discriminator}"
         if cur.afk and not prev.afk:
-            noncritlogschannel.send(f"{user} went AFK!")
+            await noncritlogschannel.send(f"{user} went AFK!")
         elif prev.afk and not cur.afk:
-            noncritlogschannel.send(f"{user} is no longer AFK!")
+            await noncritlogschannel.send(f"{user} is no longer AFK!")
         elif cur.self_mute and not prev.self_mute:  # Would work in a push to talk channel
-            noncritlogschannel.send(f"{user} stopped talking!")
+            await noncritlogschannel.send(f"{user} stopped talking!")
         elif prev.self_mute and not cur.self_mute:  # As would this one
-            noncritlogschannel.send(f"{user} started talking!")
+            await noncritlogschannel.send(f"{user} started talking!")
 
     @commands.Cog.listener()
     async def premium_guild_subscription(self, ctx):

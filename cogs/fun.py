@@ -13,15 +13,14 @@ import discord
 from utils import permissions, http, default
 from utils.vars import *
 import pyfiglet
-import pyshorteners
-dogphotospath = os.listdir("C:/Users/Jason/edoC/data/Dog Picks")
+dogphotospath = os.listdir("C:/Users/Jason/edoC/data/img/Dog Picks")
 
 class Fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.config = default.config()
         self.alex_api_token = self.config["alexflipnote_api"]
-        self.DoggoPicsCount = len(os.listdir("C:/Users/Jason/edoC/data/Dog Picks"))
+        self.DoggoPicsCount = len(os.listdir("C:/Users/Jason/edoC/data/img/Dog Picks"))
         self.logschannel = self.bot.get_channel(self.config["edoc_logs"])
         self.dogphotospath = dogphotospath
 
@@ -111,7 +110,7 @@ class Fun(commands.Cog):
     @commands.command(aliases=["MyDoggo", "Bella", "Belz", "WhosAgudGurl"])
     async def MyDog(self, ctx):
         img = random.choice(self.dogphotospath)  # change dir name to whatever
-        file = discord.File(f"C:/Users/Jason/edoC/data/Dog Picks/{img}")
+        file = discord.File(f"C:/Users/Jason/edoC/data/img/Dog Picks/{img}")
         try:
             await ctx.send(file=file)
         except discord.HTTPException:
@@ -235,9 +234,6 @@ class Fun(commands.Cog):
     @commands.command()
     async def test(self, ctx):
         """ Test command for testing """
-        s = pyshorteners.Shortener()
-        for shortener in s.available_shorteners:
-            await ctx.send(shortener)
         await ctx.send(f"**{ctx.author.name}** has done the **Test** command Oo")
 
     @commands.command()

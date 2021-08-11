@@ -1,9 +1,11 @@
 import random
 
 import discord
-#EMOJIS
+
+# EMOJIS
 emojis = {
-    "green_checkmark": "✅"
+    "green_checkmark": "✔",
+    "red_x": "❌"
 }
 
 ascii_letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -48,7 +50,6 @@ MorseCodeReversed = {'..-.': 'f', '-..-': 'x', '/': ' ',
                      '-...': 'b', '---..': '8', '--..': 'z', '-..': 'd', '--.-': 'q',
                      '--.': 'g', '--': 'm', '..-': 'u', '.-': 'a', '...': 's', '.----': '1'}
 
-
 ballresponse = [
     "Yes", "No", "Take a wild guess...", "Very doubtful",
     "Sure", "Without a doubt", "Most likely", "Might be possible",
@@ -60,19 +61,12 @@ CoolColorResponse = [
 ]
 # COLORS
 green = 0x2CCC74  # SUCCESS
-
 blue = 0x04A4EC  # NORMAL?
-
 purple = 0x9B40D2  # TWITCH OUTPUT / IDK?
-
 orange = 0xDA8115  # NOTE / SMALL ERROR / LOGS?
-
 magenta = 0xE81354  # ERROR
-
 red = 0xff0000  # LARGE ERROR / YOUTUBE OUTPUT
-
 dark_blue = 0x142434  # Looks nice lol
-
 white = 0xFFFFFF  # white
 ColorsList = [green, blue, purple, orange, magenta, dark_blue, white]
 
@@ -87,9 +81,43 @@ colors = {
     "white": white,
 }
 
+# SKYBLOCK STUFF
+SbColors = {
+    "ErrorColor": 0xff0000,
+    "TamingColor": 0x89CFF0,
+    "FishingColor": 0x1b95e0,
+    "FarmingColor": 0xc3db79,
+    "CombatColor": 0xd4af37,
+    "ForagingColor": 0x006400,
+    "EnchantingColor": 0xaf7cac,
+    "RunecraftingColor": 0xffb6c1,
+    "AlchemyColor": 0xdd143d,
+    "CarpentryColor": 0xc6a27e,
+    "MiningColor": 0x000000
+}
 
-def random_color(self):
+separator = '{:,}'
+SkyShiiyuApi = 'https://sky.shiiyu.moe/api/v2/profile/'
+SkyShiiyuStats = 'https://sky.shiiyu.moe/stats/'
+NameApiUrl = 'https://api.mojang.com/users/profiles/minecraft/'
+mcheads = 'https://mc-heads.net/head/'
+
+EMBED_FOOTER = 'With the helps of StickyRunnerTR#9676 and VxnomRandom#6495.'
+
+
+# END OF SKYBLOCK STUFF
+def picture(image_name=None):
+    images = {
+        "SUCCESS": "https://i.imgur.com/sp2zmN9.png",
+        "ERROR": "https://i.imgur.com/lLlHVPq.png",
+        "GSHEET": "https://i.imgur.com/u9PgNkk.png"
+    }
+    return images[image_name]
+
+
+def random_color():
     return discord.Color.from_rgb(random.randint(1, 255), random.randint(1, 255), random.randint(1, 255))
+
 
 embedfooter = "https://www.buymeacoffee.com/edoC Creating edoC is a tough task, if you would like me to continue with it, please consider donating!"
 
@@ -105,6 +133,7 @@ def ErrorEmbed(ctx, error):
                         timestamp=ctx.message.created_at,
                         description=error)
     return emb
+
 
 # Bot replies
 NEGATIVE_REPLIES = [
@@ -266,7 +295,50 @@ random_facts = [
     "Kansas state law requires pedestrians crossing the highways at night to wear tail lights."
 ]
 
-
+rules = """
+        **Main Rules**
+        
+        **[ 1. ] »** Always abide by Discord [Terms of Services](https://discord.com/terms) & [Guidelines.](https://discord.com/guidelines)
+        
+        **[ 2. ] »** No harassment or cyberbullying - this includes bullying members though DMs.
+        
+        **[ 3. ] »** No discrimination of any kind - this includes but is not limited to racism, homophobia and bigotry.
+        
+        **[ 4. ] »** No spam, toxicity, NSFW (this includes PFP's/Nicks )or excessive swearing (light swearing is acceptable).
+        
+        **[ 5. ] »** Don’t mention people without reason (including ghost pinging) - this includes all members as well as staff.
+        
+        **[ 6. ] »** Don’t mini-mod - you can point people in the right direction or inform them of the rules but don’t impersonate a mod, members with Trusted role are exempt from this.
+                
+        **[ 7. ] »** No Abusing alternate accounts.
+        
+        **[ 8. ] »** Use the channels for their correct purpose.
+        
+        **[ 9. ] »** Treat everyone with respect. Absolutely no harassment, witch hunting, sexism, racism, or hate speech will be tolerated.
+        
+        **[ 10. ] »** Always obey staff, do not argue with them.
+        
+        **[ 11. ] »** Don't release personal information.
+        
+        **[ 12. ] »** Don't ask for roles.
+        
+        **[ 13. ] »** Our rules aren't perfect, if a mod/admin thinks you broke a rule that isn't here, they have the permission to warn/mute/ban/kick you accordingly.
+        
+        **[ 14. ] »** Treat everyone with respect. Absolutely no harassment, witch hunting, sexism, racism, or hate speech will be tolerated.
+        
+        **[ 15. ] »** No spam or self-promotion (server invites, advertisements, etc) without permission from a staff member. This includes DMing fellow members.
+        
+        **Voice Chat Rules**
+        **[ 1 ] »** All the above rules still apply in voice chats.
+        
+        **[ 2 ] »** Don't Earrape.
+        
+        **[ 3 ] »** Don’t play music/videos through your mic - use the appropriate bots. 
+        
+        **[ 4 ] »** No audible eating, chewing and shouting.
+        
+        **[ 5 ] »** Be aware of your background noise.
+        """
 """
 Types of permission checks you can run
 add_reactions

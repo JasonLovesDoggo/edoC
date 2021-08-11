@@ -60,9 +60,20 @@ def column(command, *values):
     return [item[0] for item in cur.fetchall()]
 
 
-def execute(command, *values):
-    cur.execute(command, tuple(values))
+#def execute(command, *values):
+#    cur.execute(command, tuple(values))
 
+def execute(sql: str, prepared: tuple = (), commit: bool = True):
+    """ Execute SQL command with args for 'Prepared Statements' """
+    try:
+        data = cur.execute(sql, prepared)
+    except Exception as e:
+        return f"{type(e).__name__}: {e}"
+    status_word = sql.split(' ')[0].upper()
+    status_code = data.rowcount if data.rowcount > 0 else 0
+    if status_word == "SELECT":
+        status_code = len(data.fetchall())
+    return f"{status_word} {status_code}"
 
 def multiexec(command, valueset):
     cur.executemany(command, valueset)
