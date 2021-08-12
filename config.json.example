@@ -1,17 +1,23 @@
 {
-  "token": "insert_discord_token",
-  "open_weather_map_api_key": "insert_open_weather_map_api_key",
-  "join_message": "Welcome! ?",
+  "token": "replace with Discord token",
+  "open_weather_map_api_key": "replace with openweathermap api key",
+  "join_message": "Welcome!",
   "owners": [
-    put your userid here
+    replace with your DiscordId
   ],
-  "prefix": [
-    "~"
-  ],
+  "default_prefix": "~",
   "activity": "Development in action!! (prefix ~)",
-  "activity_type": "competing",
-  "status_type": "dnd",
-  "teamup_api_key": "insert_api_key_for_this_too",
-  "alexflipnote_api": "insert_the_token_for_this",
-  "version": "2.0.2"
+  "activity_type": "playing|watching|listening|competing",
+  "status_type": "online|idle|dnd",
+  "alexflipnote_api": "Replace with a alexflipnote api key",
+  "teamup_api_key": "replace with a teamup api key",
+  "dsc_gg_api_key": "replace with a dsc.gg api key",
+  "hypixel_api_key": "replace with a hypixel api key",
+  "cat_key": "replace with a thecatapi.com api key",
+  "spotify_client_secret": "replace with a spotify client secret",
+  "yt_google_api_key": "replace with the google youtube api key",
+  "botsever": "https://discord.gg/6EFAqm5aSG",
+  "edoc_logs": replace_with_your_logchannel_id_e.g._870494056340422687,
+  "edoc_non_critical_logs": replace_with_your_noncriticallogchannel_id_e.g._870494056340422687,
+  "dev_role": 819284202209280081
 }
