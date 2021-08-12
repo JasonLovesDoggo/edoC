@@ -11,8 +11,6 @@ from utils import permissions, default
 from utils.data import get_prefix
 from lib.db import db
 
-
-
 class BannedUser(Converter):
     async def convert(self, ctx, arg):
         if ctx.guild.me.guild_permissions.ban_members:
@@ -73,7 +71,7 @@ async def BannedU(ctx):
 
 
 async def BanUser(ctx, userid: MemberID, reason):
-    await BannedUsers + userid
+    BannedUsers + userid
     db.execute("INSERT INTO users (?, ?)", userid, reason)
     # db.execute("INSERT INTO users (Reason)", reason)
     db.commit()

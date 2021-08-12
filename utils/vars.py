@@ -123,7 +123,7 @@ embedfooter = "https://www.buymeacoffee.com/edoC Creating edoC is a tough task, 
 
 version_info = {
     "info": "MUSIC IS UP I REPEAT MUSIC IS UP yes you heard right MUSIC IS UP",
-    "version": 0.88,
+    "version": 0.89,
 }
 
 

