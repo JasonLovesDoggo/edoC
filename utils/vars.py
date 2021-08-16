@@ -127,12 +127,12 @@ version_info = {
 }
 
 
-def ErrorEmbed(ctx, error):
+async def ErrorEmbed(ctx, error):
     emb = discord.Embed(title=f"Error with your command",
                         color=red,
-                        timestamp=ctx.message.created_at,
                         description=error)
-    return emb
+    emb.set_footer(text=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
+    await ctx.send(embed=emb)
 
 
 # Bot replies

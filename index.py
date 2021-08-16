@@ -4,10 +4,10 @@ from discord.ext.commands.context import Context
 from utils import default
 from utils.data import Bot, MyNewHelp, get_prefix
 
-
+#TODO add a fully not erroring get_prefix
 config = default.config()
 bot = Bot(
-    command_prefix=get_prefix, prefix=get_prefix,
+    command_prefix="~", prefix="~",
     owner_ids=config["owners"], case_insensitive=True, command_attrs=dict(hidden=True), help_command=MyNewHelp(),
     description='Relatively simply awesome bot. Developed by Jake CEO of annoyance#1904',
     allowed_mentions=discord.AllowedMentions(roles=True, users=True, everyone=False, replied_user=True),

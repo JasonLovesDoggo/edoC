@@ -22,7 +22,7 @@ SbColors = {
 
 
 class SkyblockUpdatedError(BaseException):
-    print(f"****SKYBLOCK HAS UPDATED****")
+    pass
 
 class Skyblock(commands.Cog):
     def __init__(self, bot):

@@ -258,16 +258,6 @@ class Admin(commands.Cog):
 
     @commands.command()
     @commands.check(permissions.is_owner)
-    async def restart(self, ctx):
-        """Restart the bot."""
-        await ctx.message.edit(content='Good Bye :wave:')
-        await asyncio.sleep(.5)
-        await ctx.message.delete()
-        python = sys.executable
-        os.execl(python, python, *sys.argv)
-
-    @commands.command()
-    @commands.check(permissions.is_owner)
     async def shutdown(self, ctx):
         """ shut down the bot """
         await ctx.send("Shuting down now...")

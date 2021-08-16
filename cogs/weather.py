@@ -1,6 +1,7 @@
 import os
+
+import aiohttp
 import psutil
-import requests
 from discord.ext import commands
 from utils import default
 import discord
@@ -17,13 +18,13 @@ class Weather(commands.Cog):
     @commands.command(aliases=["w"])
     @commands.cooldown(rate=1, per=2.0, type=commands.BucketType.user)
     async def weather(self, ctx, *, city: str):
-        base_url = "http://api.openweathermap.org/data/2.5/weather?"
+        base_url = "http://api.openweathermap.org/data/2.5/weather?appid="
         city_name = city
         weather_key = self.openweathermap_api_key
-        complete_url = base_url + "appid=" + weather_key + "&q=" + city_name
-        response = requests.get(complete_url)
-        x = response.json()
-        channel = ctx.message.channel
+        complete_url = base_url + weather_key + "&q=" + city_name
+        async with aiohttp.ClientSession() as cs:
+            async with cs.get(complete_url) as api:
+                x = await api.json()
         if x["cod"] != "404":
             y = x["main"]
             current_temperature = y["temp"]
@@ -41,10 +42,10 @@ class Weather(commands.Cog):
             e.add_field(name="Atmospheric Pressure(hPa)", value=f"{current_pressure}hPa", inline=False)
             e.set_footer(text=f"Requested by {ctx.author.name}")
             e.set_thumbnail(url="https://i.ibb.co/CMrsxdX/weather.png%22")
-            e.set_footer(text=f"Requested by {ctx.author.name}\n{embedfooter}")
-            await channel.send(embed=e)
-        elif x["cod"] == "404":
-            await channel.send(ErrorEmbed(ctx, "City Not Found"))
+            e.set_footer(text=f"Requested by {ctx.author.name}\n{embedfooter}", icon_url=ctx.message.author.avatar_url)
+            await ctx.send(embed=e)
+        else:
+            await ErrorEmbed(ctx, "City Not Found")
 
 
 def setup(bot):

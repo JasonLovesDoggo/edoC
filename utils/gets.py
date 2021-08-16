@@ -31,7 +31,7 @@ def getAgo(time):
 
 # Find User on server
 def getUser(ctx, msg):
-    if '' is msg:
+    if msg == '':
         return ctx.message.author
     elif 1 == len(ctx.message.mentions):
         return ctx.message.mentions[0]

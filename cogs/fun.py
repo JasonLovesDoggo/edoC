@@ -14,6 +14,7 @@ import discord
 from utils import permissions, http, default
 from utils.vars import *
 import pyfiglet
+
 dogphotospath = os.listdir("C:/Users/Jason/edoC/data/img/Dog Picks")
 
 class Fun(commands.Cog):
@@ -46,7 +47,8 @@ class Fun(commands.Cog):
     @commands.command(aliases=["roll", "dice"])
     async def rolldice(self, ctx, guess):
         answer = random.randint(1, 6)
-        await ctx.reply(embed=discord.Embed(color={green if guess == answer else red}, description=f"{'True' if guess == answer else 'False'} your guess was {guess} and the answer was {answer}"))
+        await ctx.reply(embed=discord.Embed(color={green if guess == answer else red},
+                                            description=f"{'True' if guess == answer else 'False'} your guess was {guess} and the answer was {answer}"))
 
     @commands.command(aliases=["rfact", "rf"])
     @commands.cooldown(rate=1, per=1.3, type=commands.BucketType.user)
@@ -126,7 +128,8 @@ class Fun(commands.Cog):
         try:
             await ctx.send(file=file)
         except discord.HTTPException:
-            await ctx.send(f"The file that i was going to send was too large this has been reported to the devs\ntry to run the cmd again")
+            await ctx.send(
+                f"The file that i was going to send was too large this has been reported to the devs\ntry to run the cmd again")
             await self.logschannel.send(f"{img} is too large to send <@&{self.config['dev_role']}>")
 
     @commands.command(aliases=["flip", "coin"])
@@ -180,6 +183,21 @@ class Fun(commands.Cog):
         tosend += "👏"
         await ctx.reply(tosend)
 
+    @commands.command(aliases=['Rcap'])
+    async def Mock(self, ctx, *, words):
+        if ctx.author == ctx.guild.owner or 511724576674414600:
+            await ctx.message.delete()
+        tosend = ""
+        number = 1  # 1 if you want it to start with a capitol 0 if you want it to start with a lowercase
+        for letter in words.lower():
+            if number == 1:
+                tosend += letter.upper()
+                number = 0
+            else:
+                tosend += letter.lower()
+                number = 1
+        await ctx.send(tosend)
+
     @commands.group()
     @commands.check(permissions.is_owner)
     async def math(self, ctx):
@@ -216,6 +234,7 @@ class Fun(commands.Cog):
             await edit(ctx, embed=em)
         else:
             await edit(ctx, content='\N{HEAVY EXCLAMATION MARK SYMBOL} Only Emotes...', ttl=3)
+
     @commands.command()
     async def f(self, ctx, *, text: commands.clean_content = None):
         """ Press F to pay respect """
@@ -312,6 +331,7 @@ class Fun(commands.Cog):
         if ctx.author == ctx.guild.owner or 511724576674414600:
             hiarchypos = ctx.channel.position
             cloned = await ctx.channel.clone()
+            await ctx.channel.delete()
             channel = cloned
             await channel.edit(position=hiarchypos)
         else:
@@ -342,11 +362,11 @@ class Fun(commands.Cog):
         await ctx.send(f"I'd rate `{thing}` a **{round(rate_amount, 4)} / 100**")
 
     @commands.command()
-    async def ship(self, ctx, person1: commands.clean_content, person2: commands.clean_content):
+    async def ship(self, ctx, person1: commands, person2: commands):
         """ Rates what you desire """
         ship_amount = random.uniform(0.0, 100.0)
-        if "jake" or "jason" or "edoc" or "edoC" in person1 or person2:
-            ship_amount = 69.42000
+        if "jake" or "jason" or "edoc" in person1.lower() or person2.lower():
+            ship_amount = 69.42069
         await ctx.send(f"`{person1}` and `{person2}` are **{round(ship_amount, 4)} compatible **")
 
     @commands.command()

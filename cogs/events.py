@@ -139,7 +139,7 @@ class Events(commands.Cog):
                                 description=f'The command you have requested is not found. \nPlease make sure you typed it out right', )
 
         elif isinstance(err, errors.MissingRequiredArgument):
-            await self.erroremb(ctx, description="Please make sure to fill out all the arguments")
+            await ctx.send_help(str(ctx.command))
         elif isinstance(err, errors.CommandInvokeError):
             error = default.traceback_maker(err.original)
             if "2000 or fewer" in str(err) and len(ctx.message.clean_content) > 1900:
@@ -165,7 +165,7 @@ class Events(commands.Cog):
             print('Unknown error!')
             await self.erroremb(ctx, description="Sorry but this is an unknown error the devs has been notified!")
             await self.critlogschannel.send(
-                f"{ctx.message.author.mention} [in {ctx.message.guild.id}, #{ctx.message.channel}] made an error typing a command. The error is unknown!")
+                f"{ctx.message.author.mention} [in {ctx.message.guild.id}, #{ctx.message.channel}] made an error typing a command. The error is unknown!\n{err}")
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild):

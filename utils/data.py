@@ -1,6 +1,6 @@
 import discord
 
-from utils import permissions, default
+from utils import permissions, default, vars
 from discord.ext.commands import AutoShardedBot, when_mentioned_or
 from discord.ext import commands
 from lib.db import db
@@ -71,5 +71,5 @@ class MyNewHelp(commands.MinimalHelpCommand):
     async def send_pages(self):
         destination = self.get_destination()
         for page in self.paginator.pages:
-            emby = discord.Embed(description=page)
+            emby = discord.Embed(description=page, color=vars.random_color())
             await destination.send(embed=emby)

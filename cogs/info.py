@@ -54,8 +54,7 @@ class Information(commands.Cog):
         self.PADDING = 9
         self.process = psutil.Process(os.getpid())
         self.event = self.bot.get_cog("Events")
-        if not hasattr(self.bot, "uptime"):
-            self.bot.uptime = datetime.utcnow()
+
         self.oldcolorApiH = 'https://www.thecolorapi.com/id?hex='
         self.ColorApi = 'https://api.color.pizza/v1/'
 
@@ -172,11 +171,11 @@ class Information(commands.Cog):
         ExpandedUrl = s.owly.expand(url)
         await ctx.reply(embed=discord.Embed(description=ExpandedUrl, colour=random_color))
 
-    @commands.command()
-    async def time(self, ctx):
-        """ Check what the time is for me (the bot) """
-        time = datetime.utcnow().strftime("%d %B %Y, %H:%M")
-        await ctx.send(f"Currently the time for me is **{time}**")
+    #@commands.command()
+    #async def time(self, ctx):
+    #    """ Check what the time is for me (the bot) """
+    #    time = datetime.utcnow().strftime("%d %B %Y, %H:%M")
+    #    await ctx.send(f"Currently the time for me is **{time}**")
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~
     @commands.command(aliases=["about", "stats", "status", "botinfo", "in"])
