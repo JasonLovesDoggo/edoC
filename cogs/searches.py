@@ -61,7 +61,7 @@ async def embed_maker(ctx, url: str, icon: str, color: str, title: str):
     await ctx.send(embed=embed)
 
 
-class Search(commands.Cog):
+class Searches(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.config = default.config()

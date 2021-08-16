@@ -84,7 +84,7 @@ async def BanUser(ctx, userid: MemberID, reason):
     return await ctx.send(userid + " Was banned from using the bot")
 
 
-class Moderator(commands.Cog):
+class Mod(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.config = default.config()

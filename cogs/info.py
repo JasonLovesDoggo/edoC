@@ -47,7 +47,7 @@ def convert_all_to_hex(inputcolor):
     pass
 
 
-class Information(commands.Cog):
+class Info(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.config = default.config()
@@ -178,8 +178,8 @@ class Information(commands.Cog):
     #    await ctx.send(f"Currently the time for me is **{time}**")
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~
-    @commands.command(aliases=["about", "stats", "status", "botinfo", "in"])
-    async def info(self, ctx):
+    @commands.command(aliases=["stats", "status", "botinfo", "in"])
+    async def about(self, ctx):
         proc = psutil.Process()
         infos = fetch_info()
 
