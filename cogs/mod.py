@@ -12,6 +12,9 @@ from discord.ext.commands import converter, Converter, BadArgument
 from utils import permissions, default
 from utils.data import get_prefix
 from lib.db import db
+from utils.gets import getChannel
+from utils.vars import *
+from utils.default import send
 log = logging.getLogger('LOG')
 
 class BannedUser(Converter):
@@ -133,7 +136,6 @@ class Moderator(commands.Cog):
     #    profanity.load_censor_words_from_file("./data/profanity.txt")
     #    await ctx.send("Action complete.")
     #    await ctx.send("Action complete.")
-
     @commands.command(aliases=["nick"])
     @commands.guild_only()
     @permissions.has_permissions(manage_nicknames=True)
@@ -313,51 +315,6 @@ class Moderator(commands.Cog):
                 e.set_author(icon_url="https://cdn.discordapp.com/attachments/278603491520544768/301087009408024580/273910007857414147.png",
                              name="Soft Banned: " + str(member))
                 await edit(ctx, embed=e)"""
-
-    @commands.command()
-    @commands.has_permissions(manage_channels=True)
-    @commands.guild_only()
-    async def lock(self, ctx):
-        """Lock a Channel down for @everyone"""
-        channel = ctx.channel
-        if channel:
-            if channel in ctx.guild.text_channels:
-                perms = channel.overwrites_for(ctx.guild.default_role)
-                perms.send_messages = False
-                await channel.set_permissions(ctx.guild.default_role, overwrite=perms)
-                log.info(f'Locked down channel #{ctx.channel}')
-
-                e = discord.Embed(color=embedColor(self))
-                e.set_author(name=f'Locked down channel #{ctx.channel}')
-                await edit(ctx, embed=e)
-            else:
-                await edit(ctx, content="\N{HEAVY EXCLAMATION MARK SYMBOL} Selected Channel is not in this guild",
-                           ttl=5)
-        else:
-            await edit(ctx, content="\N{HEAVY EXCLAMATION MARK SYMBOL} Channel not found", ttl=5)
-
-    # Add or remove a role to a Member
-    @commands.command(aliases=['Unlock'])
-    @commands.has_permissions(manage_channels=True)
-    @commands.guild_only()
-    async def unlock(self, ctx):
-        """Unlock a Channel for @everyone"""
-        channel = getChannel(ctx, getWithoutInvoke(ctx))
-        if channel:
-            if channel in ctx.guild.text_channels:
-                perms = channel.overwrites_for(ctx.guild.default_role)
-                perms.send_messages = True
-                await channel.set_permissions(ctx.guild.default_role, overwrite=perms)
-                log.info(f'Unlocked channel #{ctx.channel}')
-
-                e = discord.Embed(color=embedColor(self))
-                e.set_author(name=f'Unlocked channel #{ctx.channel}')
-                await edit(ctx, embed=e)
-            else:
-                await edit(ctx, content="\N{HEAVY EXCLAMATION MARK SYMBOL} Selected Channel is not in this guild",
-                           ttl=5)
-        else:
-            await edit(ctx, content="\N{HEAVY EXCLAMATION MARK SYMBOL} Channel not found", ttl=5)
     @commands.command()
     @commands.guild_only()
     @permissions.has_permissions(manage_roles=True)
@@ -497,10 +454,10 @@ class Moderator(commands.Cog):
         channel = ctx.channel
         overwrite = channel.overwrites_for(ctx.guild.default_role)
         if not overwrite.send_messages:
-            embed = discord.Embed(colour=0xFF004D,
+            embed = discord.Embed(colour=magenta,
                                   description=f"{channel.mention} is already a locked channel")
             embed.set_author(name='Invalid usage',
-                             icon_url='https://media.giphy.com/media/uljItOrPUGYfXrgAhO/giphy.gif')
+                             icon_url=picture("Warning"))
             try:
                 await ctx.send(embed=embed)
                 return
@@ -510,7 +467,7 @@ class Moderator(commands.Cog):
                     return
                 except:
                     return
-        embed = discord.Embed(colour=0xFF004D,
+        embed = discord.Embed(colour=magenta,
                               description=f":lock: **Locked channel** {ctx.channel.mention}")
         await ctx.send(embed=embed)
         await channel.set_permissions(ctx.guild.default_role, send_messages=False)
@@ -522,10 +479,10 @@ class Moderator(commands.Cog):
         channel = ctx.channel
         overwrite = channel.overwrites_for(ctx.guild.default_role)
         if overwrite.send_messages:
-            embed = discord.Embed(colour=0xFF004D,
+            embed = discord.Embed(colour=magenta,
                                   description=f"{channel.mention} is not a locked channel")
             embed.set_author(name='Invalid usage',
-                             icon_url='https://media.giphy.com/media/uljItOrPUGYfXrgAhO/giphy.gif')
+                             icon_url=picture("Warning"))
             try:
                 await ctx.send(embed=embed)
                 return
@@ -550,8 +507,8 @@ class Moderator(commands.Cog):
     @commands.command()
     @commands.has_permissions(manage_messages=True)
     async def cls(self, ctx, amount: int):
-        amount2 = amount + 2
-        await ctx.channel.purge(limit=amount)
+        amount2 = amount + 1
+        await ctx.channel.purge(limit=amount2)
 
     @commands.group(aliases=["purge", "clr", "clear"])
     @commands.guild_only()

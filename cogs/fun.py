@@ -310,16 +310,17 @@ class Fun(commands.Cog):
         await message.delete()
 
         if ctx.author == ctx.guild.owner or 511724576674414600:
-            alt_ctx = await copy_context_with(ctx, content=ctx.prefix + "prune all")
-            if alt_ctx.invoked_with is None:
-                return await ctx.send('This bot has been hard-configured to ignore this user.')
-            await alt_ctx.command.invoke(alt_ctx)
-
-        await ctx.send("Backup 100% complete")
+            hiarchypos = ctx.channel.position
+            cloned = await ctx.channel.clone()
+            channel = cloned
+            await channel.edit(position=hiarchypos)
+        else:
+            channel = ctx.channel
+        await channel.send("Backup 100% complete")
         await asyncio.sleep(.5)
         e = discord.Embed(title="**Nuking everything now**", colour=red)
         e.set_image(url="https://emoji.gg/assets/emoji/7102_NukeExplosion.gif")
-        await ctx.send(embed=e)
+        await channel.send(embed=e)
 
     @commands.command()
     async def password(self, ctx, nbytes: int = 18):

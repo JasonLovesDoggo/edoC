@@ -109,7 +109,8 @@ def picture(image_name=None):
     images = {
         "SUCCESS": "https://i.imgur.com/sp2zmN9.png",
         "ERROR": "https://i.imgur.com/lLlHVPq.png",
-        "GSHEET": "https://i.imgur.com/u9PgNkk.png"
+        "GSHEET": "https://i.imgur.com/u9PgNkk.png",
+        "Warning": 'https://media.giphy.com/media/uljItOrPUGYfXrgAhO/giphy.gif'
     }
     return images[image_name]
 
