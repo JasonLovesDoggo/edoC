@@ -3,19 +3,21 @@ import platform
 import time
 from io import BytesIO
 
+import aiohttp
 import humanize
 import psutil
 from discord.ext.menus import ListPageSource, MenuPages
 from pyshorteners import Shortener
 import discord
-from datetime import datetime
 from discord.ext import commands
-
 from utils.info import fetch_info
 from utils.vars import *
 from utils import default, permissions
 from lib.db import db
 import pathlib
+from utils.gets import *
+from PIL import Image
+
 
 class Menu(ListPageSource):
     def __init__(self, ctx, data):
@@ -34,6 +36,17 @@ class Menu(ListPageSource):
         return embed
 
 
+# Hex to RGB
+def hex_to_rgb(value):
+    value = value.replace('#', '')
+    lv = len(value)
+    return tuple(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
+
+
+def convert_all_to_hex(inputcolor):
+    pass
+
+
 class Information(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -43,9 +56,11 @@ class Information(commands.Cog):
         self.event = self.bot.get_cog("Events")
         if not hasattr(self.bot, "uptime"):
             self.bot.uptime = datetime.utcnow()
+        self.oldcolorApiH = 'https://www.thecolorapi.com/id?hex='
+        self.ColorApi = 'https://api.color.pizza/v1/'
 
-        #@commands.command(aliases=["UIS", "UsersSpotify"])
-        #async def UserInfoSpotify(ctx, user: discord.Member = None):
+        # @commands.command(aliases=["UIS", "UsersSpotify"])
+        # async def UserInfoSpotify(ctx, user: discord.Member = None):
         #    if not user:
         #        user = ctx.author
         #        pass
@@ -63,6 +78,68 @@ class Information(commands.Cog):
         #                embed.set_footer(text="Song started at {}".format(activity.created_at.strftime("%H:%M")))
         #                await ctx.send(embed=embed)
 
+    # @commands.group()
+    # async def color(self, ctx, colorC):
+    #    """ blank """
+    #    if ctx.invoked_subcommand is None:
+    #        basecolor = str(Color(colorC).hex).replace('#', '')
+    #        im = Image.new("RGB", (100, 100), colorC)
+    #        im.
+    #        #img = discord.File(fp=im, filename=f'{basecolor}.png')
+    #        Cemb = discord.Embed(title=colorC, color=red)
+    #        Cemb.set_image(url=im)
+    #        await ctx.send(embed=Cemb)
+
+    # @color.command()
+    # async def help(self, ctx):
+    #    await ctx.reply("Please use ~help color")
+
+    # @color.command()
+    # async def list(self, ctx):
+    #    await ctx.send(f"```py\n{ValidDefColors}\n```")
+
+    """        async with aiohttp.ClientSession() as cs:
+            async with cs.get(self.colorApiH + color) as api:
+                data = await api.json()
+        if color is None:
+            role = getRole(ctx, color)
+            if role:
+                color = getColor(str(role.color))
+        if color:
+            value = Color(color).hex_l.strip('#')
+
+            e = discord.Embed(title=Color(color).web.title(), colour=int(value, 16))
+            e.url = f'http://www.colorhexa.com/{value}'
+            e.add_field(name='HEX', value=Color(color).hex_l)
+            e.add_field(name='RGB', value=Color(color).rgb)
+            e.add_field(name='HSL', value=Color(color).hsl)
+            e.set_image(url=f'http://www.colorhexa.com/{value}.png')
+            await send(ctx, embed=e)
+        else:
+            await send(ctx, '\N{HEAVY EXCLAMATION MARK SYMBOL} Could not find color', ttl=3)
+        await ctx.reply(data['hex'])"""
+
+    @commands.command(aliases=['CColour', 'CC'])
+    async def Ccolor(self, ctx, colorname: str):
+        """Convert Color from HEX to RGB or simply search for webcolors."""
+        colorname.replace('#', '')
+        async with aiohttp.ClientSession() as cs:
+            async with cs.get(self.ColorApi + colorname) as api:
+                data = await api.json()
+                data = data['colors'][0]
+        await ctx.send(self.ColorApi + colorname)
+        await ctx.reply(data)
+        cdata = data['rgb']
+        r = cdata['r']
+        g = cdata['g']
+        b = cdata['b']
+        img = Image.new('RGB', (300, 250), (r, g, b))
+        img.save(fp=f'data/img/temp/{ctx.message.id}.png')
+        embed = discord.Embed(color=discord.Color.from_rgb(r=r, g=g, b=b), title=data['name'])
+        embed.set_footer(text=f"Distance from color {str(round(data['distance'], ndigits=2))}")
+        embed.set_image(url=f"attachment://data/img/temp/{ctx.message.id}.png")
+        await ctx.send(embed=embed)
+
     async def todomenu(self, ctx, command):
         embed = discord.Embed(title=f"TODO",
                               description="test",
@@ -78,6 +155,10 @@ class Information(commands.Cog):
                          delete_message_after=True,
                          timeout=60.0)
         await menu.start(ctx)
+
+    @commands.command(aliases=['len'])
+    async def length(self, ctx, *, word):
+        await ctx.reply(len(word))
 
     @commands.command(aliases=["URLshorten"])
     async def shorten(self, ctx, *, url):

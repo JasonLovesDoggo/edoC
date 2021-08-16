@@ -1,5 +1,3 @@
-import random
-
 import discord
 
 from utils import permissions, default
@@ -7,6 +5,7 @@ from discord.ext.commands import AutoShardedBot, when_mentioned_or
 from discord.ext import commands
 from lib.db import db
 
+config = default.config()
 
 class Bot(AutoShardedBot):
     def __init__(self, *args, prefix=None, **kwargs):
@@ -19,20 +18,19 @@ class Bot(AutoShardedBot):
 
         await self.process_commands(msg)
 
+
 def get_prefix(bot, message):
     try:
         if not message.guild:
-            return default.config["default_prefix"]
+            return config["default_prefix"]
         else:
             prefix = db.field("SELECT Prefix FROM guilds WHERE GuildID = ?", message.guild.id)
             if prefix:
                 return when_mentioned_or(prefix)(bot, message)
             else:
-                return default.config["default_prefix"]
+                return config["default_prefix"]
     except AttributeError:
-            return default.config["default_prefix"]
-
-
+        return config["default_prefix"]
 
 
 """

@@ -4,6 +4,7 @@ from io import BytesIO
 from utils import default
 from discord.ext import commands
 from utils.vars import embedfooter
+from utils.default import spacefill
 
 class Discord_Info(commands.Cog):
     def __init__(self, bot):
@@ -22,9 +23,16 @@ class Discord_Info(commands.Cog):
     async def roles(self, ctx):
         """ Get all roles in current server """
         allroles = ""
-
+        largest_one = 0
         for num, role in enumerate(sorted(ctx.guild.roles, reverse=True), start=1):
-            allroles += f"[{str(num).zfill(2)}] {role.id}\t{role.name}\t[ Users: {len(role.members)} ]\r\n"
+            numofroles = len(str(len(ctx.guild.roles)))
+            lenofword = len(f"[{str(num).zfill(numofroles)}] {role.id}\t{role.name}")
+            if lenofword > largest_one:
+                largest_one = lenofword
+        for num, role in enumerate(sorted(ctx.guild.roles, reverse=True), start=1):
+            numofroles = len(str(len(ctx.guild.roles)))
+            lenofword = len(f"[{str(num).zfill(numofroles)}] {role.id}\t{role.name}")
+            allroles += f"[{str(num).zfill(numofroles)}] {role.id}\t{role.name}\t{spacefill(largest_one - lenofword)}[ Users: {len(role.members)} ]\r\n"
 
         data = BytesIO(allroles.encode("utf-8"))
         await ctx.send(content=f"Roles in **{ctx.guild.name}**", file=discord.File(data, filename=f"{default.CustomTimetext('apache' ,'Roles')}"))

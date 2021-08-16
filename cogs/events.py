@@ -12,7 +12,7 @@ import logging
 from datetime import datetime
 import apscheduler.schedulers.asyncio
 from utils.vars import *
-
+import glob
 logging.getLogger("events")
 owners = default.config()["owners"]
 
@@ -52,6 +52,12 @@ class Events(commands.Cog):
         self.guilds = self.bot.guilds
         self.noncritlogschannel = self.config["edoc_non_critical_logs"]
         self.update_db()
+        self.tempimgpath = 'data/img/temp/*'
+
+    async def emptyfolder(self, folder):
+        files = glob.glob(folder)
+        for f in files:
+            os.remove(f)
 
     async def erroremb(self, ctx, *, description: str):
         """@summary creates a discord embed so i can send it with x details easier"""
@@ -204,6 +210,7 @@ class Events(commands.Cog):
     async def on_ready(self):
         """ The function that activates when boot was completed """
         global to_send
+        await self.emptyfolder(self.tempimgpath)
         logschannel = self.bot.get_channel(self.config["edoc_non_critical_logs"])
         if not self.ready:
             self.ready = True
@@ -263,6 +270,7 @@ class Events(commands.Cog):
             embed = discord.Embed(title="Username change",
                                   colour=after.colour,
                                   timestamp=datetime.utcnow())
+            embed.set_footer(text=f"{before.name} {f'> {after.name}' if before.name != after.name else ''}")
 
             fields = [("Before", before.name, False),
                       ("After", after.name, False)]
@@ -276,6 +284,7 @@ class Events(commands.Cog):
             embed = discord.Embed(title="Discriminator change",
                                   colour=after.colour,
                                   timestamp=datetime.utcnow())
+            embed.set_footer(text=f"{before.name} {f'> {after.name}' if before.name != after.name else ''}")
 
             fields = [("Before", before.discriminator, False),
                       ("After", after.discriminator, False)]
@@ -288,12 +297,11 @@ class Events(commands.Cog):
         if before.avatar_url != after.avatar_url:
             embed = discord.Embed(title="Avatar change",
                                   description="New image is below, old to the right.",
-                                  colour=blue,
-                                  timestamp=datetime.utcnow())
+                                  colour=blue)
 
             embed.set_thumbnail(url=before.avatar_url)
             embed.set_image(url=after.avatar_url)
-
+            embed.set_footer(text=f"{before.name} {f'> {after.name}' if before.name != after.name else ''}\n in {after.channel.guild.name}")
             await noncritlogschannel.send(embed=embed)
 
     @commands.Cog.listener()
@@ -306,6 +314,7 @@ class Events(commands.Cog):
 
             fields = [("Before", before.display_name, False),
                       ("After", after.display_name, False)]
+            embed.set_footer(text=f"{before.name} {f'> {after.name}' if before.name != after.name else ''}")
 
             for name, value, inline in fields:
                 embed.add_field(name=name, value=value, inline=inline)
@@ -316,12 +325,13 @@ class Events(commands.Cog):
             embed = discord.Embed(title="Role updates",
                                   colour=after.colour,
                                   timestamp=datetime.utcnow())
-
+            embed.set_footer(text=f"{before.name} {f'> {after.name}' if before.name != after.name else ''}")
             fields = [("Before", ", ".join([r.mention for r in before.roles]), False),
                       ("After", ", ".join([r.mention for r in after.roles]), False)]
 
             for name, value, inline in fields:
                 embed.add_field(name=name, value=value, inline=inline)
+            embed.set_footer(text=f"{before.name} {f'> {after.name}' if before.name != after.name else ''}")
 
             await noncritlogschannel.send(embed=embed)
 
@@ -348,7 +358,7 @@ class Events(commands.Cog):
         noncritlogschannel = self.bot.get_channel(self.noncritlogschannel)
         if not message.author.bot:
             embed = discord.Embed(title="Message deletion",
-                                  description=f"Action by {message.author.display_name}.",
+                                  description=f"Action by {message.author.display_name}.\nIn {message.channel}\nIn{message.channel.guild}",
                                   colour=message.author.colour,
                                   timestamp=datetime.utcnow())
 

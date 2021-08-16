@@ -195,6 +195,16 @@ class Fun(commands.Cog):
         answer = num1 // num2
         await ctx.send(answer)
 
+    @commands.command(aliases=["JumboEmoji"])
+    async def LargenEmoji(self, ctx):
+        """Display your favorite emotes in large."""
+        emote = getEmote(ctx, getWithoutInvoke(ctx))
+        if emote:
+            em = discord.Embed(colour=embedColor(self))
+            em.set_image(url=emote.url)
+            await edit(ctx, embed=em)
+        else:
+            await edit(ctx, content='\N{HEAVY EXCLAMATION MARK SYMBOL} Only Emotes...', ttl=3)
     @commands.command()
     async def f(self, ctx, *, text: commands.clean_content = None):
         """ Press F to pay respect """

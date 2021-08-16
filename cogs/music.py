@@ -1,3 +1,5 @@
+from discord import ClientException
+
 import discord
 import asyncio
 import random
@@ -8,7 +10,8 @@ from discord.ext import commands
 from googleapiclient.discovery import build
 from discord.ext.commands import command
 from utils import default, permissions
-from utils.vars import emojis
+from utils.vars import *
+from datetime import timedelta
 
 ffmpegpath = "C:/Users/Jason/edoC/lib/ffmpeg/ffmpeg-4.4-full_build/ffmpeg-4.4-full_build/bin/ffmpeg.exe"
 
@@ -84,7 +87,7 @@ stim = {
 
 ffmpeg_options = {
     'options': '-vn',
-    # 'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5'
+    #'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5'
 }
 
 
@@ -118,7 +121,6 @@ class Downloader(discord.PCMVolumeTransformer):
 
         filename = data['url'] if stream else ytdl.prepare_filename(data)
         return cls(discord.FFmpegPCMAudio(filename, executable=ffmpegpath, **ffmpeg_options,), data=data), song_list
-        #return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data), song_list
 
     async def get_info(self, url):
         """
@@ -143,7 +145,7 @@ class MusicPlayer(commands.Cog, name='Music'):
         self.bot = bot
         self.checkmark = emojis["green_checkmark"]
 
-        # self.music=self.database.find_one('music')
+        #self.music=self.database.find_one('music')
         self.player = {
             "audio_files": []
         }
@@ -185,7 +187,7 @@ class MusicPlayer(commands.Cog, name='Music'):
         Generate a unique file name for the song file to be named as
         """
         chars = list(string.ascii_letters + string.digits)
-        name = 'C:/Users/Jason/edoC/lib/Music/Temp'
+        name = 'C:/Users/Jason/edoC/lib/Music/Temp/'
         for i in range(random.randint(9, 25)):
             name += random.choice(chars)
 
@@ -268,7 +270,7 @@ class MusicPlayer(commands.Cog, name='Music'):
                 message = await ctx.channel.fetch_message(ctxId)
                 await message.delete()
             except Exception as Error:
-                print("Failed to get the message")
+                print(f"Failed to get the message\n\n{Error}")
 
         if self.player[ctx.guild.id]['reset'] is True:
             self.player[ctx.guild.id]['reset'] = False
@@ -301,8 +303,8 @@ class MusicPlayer(commands.Cog, name='Music'):
         emb = discord.Embed(colour=self.random_color, title='Now Playing',
                             description=download.title, url=download.url)
         emb.set_thumbnail(url=download.thumbnail)
-        emb.set_footer(
-            text=f'Requested by {ctx.author.display_name}', icon_url=ctx.author.avatar_url)
+        views = "{:,}".format(download.views)
+        emb.set_footer(text=f"{timedelta(seconds=download.duration)} views: {str(views)}\nRequested by {ctx.author.display_name}", icon_url=ctx.author.avatar_url)
         loop = asyncio.get_event_loop()
 
         if data['queue']:
@@ -311,9 +313,11 @@ class MusicPlayer(commands.Cog, name='Music'):
         ctxId = await ctx.send(embed=emb)
         self.player[ctx.guild.id]['player'] = download
         self.player[ctx.guild.id]['author'] = ctx
-        ctx.voice_client.play(
-            download, after=lambda a: loop.create_task(self.done(ctx, ctxId.id)))
-
+        try:
+            ctx.voice_client.play(
+                download, after=lambda a: loop.create_task(self.done(ctx, ctxId.id)))
+        except ClientException:
+            pass
         # if str(ctx.guild.id) in self.music: #NOTE adds user's default volume if in database
         #     ctx.voice_client.source.volume=self.music[str(ctx.guild.id)]['vol']/100
         ctx.voice_client.source.volume = self.player[ctx.guild.id]['volume']
@@ -326,6 +330,9 @@ class MusicPlayer(commands.Cog, name='Music'):
         `Ex:` s.play Titanium David Guetta
         `Command:` play(song_name)
         """
+        if ctx.author.voice is None:
+            return await ctx.send('**Please join a voice channel to play music**'.title())
+
         if ctx.guild.id in self.player:
             if ctx.voice_client.is_playing() is True:  # NOTE: SONG CURRENTLY PLAYING
                 return await self.queue(ctx, song)
@@ -363,9 +370,6 @@ class MusicPlayer(commands.Cog, name='Music'):
                 - items in queue:
                     please join the same voice channel as the bot to add song to queue
         """
-
-        if ctx.author.voice is None:
-            return await ctx.send('**Please join a voice channel to play music**'.title())
 
         if ctx.voice_client is None:
             return await ctx.author.voice.channel.connect()
@@ -614,7 +618,7 @@ class MusicPlayer(commands.Cog, name='Music'):
         return await ctx.send("**Please join the same voice channel as the bot to use the command**".title(),
                               delete_after=30)
     @commands.check(permissions.is_owner)
-    @commands.command(brief='Download songs', description='[prefix]download <video url or title> Downloads the song')
+    @commands.command(brief='Download songs', description='~download <video url or title> Downloads the song')
     async def download(self, ctx, *, song):
         """
         Downloads the audio from given URL source and sends the audio source back to user to download from URL, the file will be removed from storage once sent.

@@ -1,11 +1,13 @@
-﻿import time
+﻿import asyncio
+import logging
+import time
 import json
 import discord
 import traceback
 import timeago as timesince
 
 from io import BytesIO
-
+log = logging.getLogger(__name__)
 
 def config(filename: str = "config"):
     """ Fetch default config file """
@@ -22,7 +24,8 @@ def traceback_maker(err, advance: bool = True):
     error = '```py\n{1}{0}: {2}\n```'.format(type(err).__name__, _traceback, err)
     return error if advance else f"{type(err).__name__}: {err}"
 
-
+def spacefill(len):
+    return ' ' * len
 def timetext(name):
     """ Timestamp, but in text form """
     return f"{name}_{int(time.time())}.txt"
@@ -50,7 +53,6 @@ def responsible(target, reason):
         return f"{responsible} no reason given..."
     return f"{responsible} {reason}"
 
-
 def actionmessage(case, mass=False):
     """ Default way to present action confirmation in chat """
     output = f"**{case}** the user"
@@ -76,3 +78,26 @@ async def prettyResults(ctx, filename: str = "Results", resultmsg: str = "Here's
         content=resultmsg,
         file=discord.File(data, filename=timetext(filename.title()))
     )
+async def send(ctx, content=None, embed=None, ttl=None):
+    perms = ctx.channel.permissions_for(ctx.me).embed_links
+    ttl = None if ctx.message.content.endswith(' stay') else ttl
+    try:
+        if ttl and perms:
+            await ctx.message.edit(content=content, embed=embed)
+            await asyncio.sleep(ttl)
+            try:
+                await ctx.message.delete()
+            except:
+                log.error('Failed to delete Message in {}, #{}'.format(ctx.guild.name, ctx.channel.name))
+                pass
+        elif ttl is None and perms:
+            await ctx.message.edit(content=content, embed=embed)
+        elif embed is None:
+            await ctx.message.edit(content=content, embed=embed)
+        elif embed and not perms:
+            await ctx.message.edit(content='\N{HEAVY EXCLAMATION MARK SYMBOL} No Perms for Embeds', delete_after=5)
+    except:
+        if embed and not perms:
+            await ctx.message.edit(content='\N{HEAVY EXCLAMATION MARK SYMBOL} No Perms for Embeds', delete_after=5)
+        else:
+            await ctx.send(content=content, embed=embed, delete_after=ttl, file=None)
