@@ -108,14 +108,14 @@ class Fun(commands.Cog):
             emb.set_image(url=data[0]["url"])
             await ctx.reply(embed=emb)
 
-    @commands.command(name='lizard')
+    @commands.command()
     @commands.cooldown(1, 2, type=commands.BucketType.user)
-    async def show_lizard(self, ctx):
+    async def lizard(self, ctx):
         async with aiohttp.ClientSession() as cs:
             async with cs.get('https://nekos.life/api/v2/img/lizard') as api:
                 data = await api.json()
         emb = discord.Embed(title="Lizard",
-                            color=random_color())
+                            color=green)
         emb.set_image(url=data['url'])
         await ctx.send(embed=emb)
 

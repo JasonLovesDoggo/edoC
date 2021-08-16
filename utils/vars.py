@@ -121,7 +121,7 @@ def random_color():
 embedfooter = "https://www.buymeacoffee.com/edoC Creating edoC is a tough task, if you would like me to continue with it, please consider donating!"
 
 version_info = {
-    "info": "MUSIC IS UP I REPEAT MUSIC IS UP yes you heard right MUSIC IS UP",
+    "info": "Yeah we got ~lizard why you askin?",
     "version": 0.89,
 }
 
