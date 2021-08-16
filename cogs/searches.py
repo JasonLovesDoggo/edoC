@@ -239,4 +239,4 @@ class Searches(commands.Cog):
 # pinterest https://www.pinterest.ca/search/pins/?q=
 
 def setup(bot):
-    bot.add_cog(Search(bot))
+    bot.add_cog(Searches(bot))

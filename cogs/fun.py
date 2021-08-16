@@ -7,7 +7,6 @@ import aiohttp
 import nekos
 from discord.ext import commands
 from bs4 import BeautifulSoup
-from jishaku.models import copy_context_with
 from nekos import InvalidArgument
 
 import discord
@@ -225,15 +224,14 @@ class Fun(commands.Cog):
         await ctx.send(answer)
 
     @commands.command(aliases=["JumboEmoji"])
-    async def LargenEmoji(self, ctx):
+    async def LargenEmoji(self, ctx, emote):
         """Display your favorite emotes in large."""
-        emote = getEmote(ctx, getWithoutInvoke(ctx))
         if emote:
-            em = discord.Embed(colour=embedColor(self))
+            em = discord.Embed(colour=random_color())
             em.set_image(url=emote.url)
-            await edit(ctx, embed=em)
+            await ctx.send(ctx, embed=em)
         else:
-            await edit(ctx, content='\N{HEAVY EXCLAMATION MARK SYMBOL} Only Emotes...', ttl=3)
+            await ctx.reply(ctx, content='\N{HEAVY EXCLAMATION MARK SYMBOL} Only Emotes...', delete_after=3)
 
     @commands.command()
     async def f(self, ctx, *, text: commands.clean_content = None):

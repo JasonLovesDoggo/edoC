@@ -6,7 +6,17 @@ from discord.ext import commands
 from utils.vars import embedfooter
 from utils.default import spacefill
 
-class Discord_Info(commands.Cog):
+def diff(num1, num2):
+    if num1 > num2:
+        answer = num1 - num2
+    elif num2 > num1:
+        answer = num2 - num1
+    else:
+        answer = 0
+    return answer
+
+
+class Discord(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.config = default.config()
@@ -23,19 +33,30 @@ class Discord_Info(commands.Cog):
     async def roles(self, ctx):
         """ Get all roles in current server """
         allroles = ""
-        largest_one = 0
+        largest_name = 0
+        most_members = 0
+
+        for num, role in enumerate(sorted(ctx.guild.roles, reverse=True), start=1):
+            if len(role.name) > largest_name:
+                largest_name = len(role.name)
+            if len(role.members) > most_members:
+                most_members = len(role.members)
+
         for num, role in enumerate(sorted(ctx.guild.roles, reverse=True), start=1):
             numofroles = len(str(len(ctx.guild.roles)))
-            lenofword = len(f"[{str(num).zfill(numofroles)}] {role.id}\t{role.name}")
-            if lenofword > largest_one:
-                largest_one = lenofword
-        for num, role in enumerate(sorted(ctx.guild.roles, reverse=True), start=1):
-            numofroles = len(str(len(ctx.guild.roles)))
-            lenofword = len(f"[{str(num).zfill(numofroles)}] {role.id}\t{role.name}")
-            allroles += f"[{str(num).zfill(numofroles)}] {role.id}\t{role.name}\t{spacefill(largest_one - lenofword)}[ Users: {len(role.members)} ]\r\n"
+            length = len(role.name)
+            allroles += f"[{str(num).zfill(numofroles)}] {role.id}\t{role.name}{spacefill(largest_name - length + 1)}[ Users: {len(role.members)}{spacefill(len(str(most_members - len(role.members) )))}]\r\n"
+        # """+ f"[ Users: {len(role.members)} ]\r\n"""
+        # full_roles = f"[{str(num).zfill(numofroles)}] {role.id}\t{role.name}\t[ Users: {len(role.members)} ]\r\n"
+        # thing = f"[{str(num).zfill(numofroles)}] {role.id}\t{role.name}\t"
+        # roles = f"[{str(num).zfill(numofroles)}] {role.id}\t{role.name}\t"
+        # allroles += f'{roles:{len(full_roles)}} [ Users: {len(role.members)} ]\r\n'.zfill(self)
+        # allroles += f"[{str(num).zfill(numofroles)}] {role.id}\t{role.name}\t".rjust(largest_one) + f"[ Users: {len(role.members)} ]\r\n"
+        # lenofword = len(f"[{str(num).zfill(numofroles)}] {role.id}\t{role.name}")
 
         data = BytesIO(allroles.encode("utf-8"))
-        await ctx.send(content=f"Roles in **{ctx.guild.name}**", file=discord.File(data, filename=f"{default.CustomTimetext('apache' ,'Roles')}"))
+        await ctx.send(content=f"Roles in **{ctx.guild.name}**",
+                       file=discord.File(data, filename=f"{default.CustomTimetext('apache', 'Roles')}"))
 
     @commands.command()
     @commands.guild_only()
@@ -116,7 +137,8 @@ class Discord_Info(commands.Cog):
         user = user or ctx.author
 
         show_roles = ", ".join(
-            [f"<@&{x.id}>" for x in sorted(user.roles, key=lambda x: x.position, reverse=True) if x.id != ctx.guild.default_role.id]
+            [f"<@&{x.id}>" for x in sorted(user.roles, key=lambda x: x.position, reverse=True) if
+             x.id != ctx.guild.default_role.id]
         ) if len(user.roles) > 1 else "None"
         join_position = sorted(ctx.guild.members, key=lambda m: m.joined_at).index(user) + 1
         embed = discord.Embed(colour=user.top_role.colour.value)
@@ -132,6 +154,6 @@ class Discord_Info(commands.Cog):
 
         await ctx.send(content=f"ℹ About **{user.id}**", embed=embed)
 
-
+        self.bot.remove_command("roles")
 def setup(bot):
-    bot.add_cog(Discord_Info(bot))
+    bot.add_cog(Discord(bot))
