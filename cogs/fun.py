@@ -108,6 +108,17 @@ class Fun(commands.Cog):
             emb.set_image(url=data[0]["url"])
             await ctx.reply(embed=emb)
 
+    @commands.command(name='lizard')
+    @commands.cooldown(1, 2, type=commands.BucketType.user)
+    async def show_lizard(self, ctx):
+        async with aiohttp.ClientSession() as cs:
+            async with cs.get('https://nekos.life/api/v2/img/lizard') as api:
+                data = await api.json()
+        emb = discord.Embed(title="Lizard",
+                            color=random_color())
+        emb.set_image(url=data['url'])
+        await ctx.send(embed=emb)
+
     @commands.command(aliases=["MyDoggo", "Bella", "Belz", "WhosAgudGurl"])
     async def MyDog(self, ctx):
         img = random.choice(self.dogphotospath)  # change dir name to whatever

@@ -301,7 +301,7 @@ class Events(commands.Cog):
 
             embed.set_thumbnail(url=before.avatar_url)
             embed.set_image(url=after.avatar_url)
-            embed.set_footer(text=f"{before.name} {f'> {after.name}' if before.name != after.name else ''}\n in {after.channel.guild.name}")
+            embed.set_footer(text=f"{before.name} {f'> {after.name}' if before.name != after.name else ''}\n fullname: {before}")
             await noncritlogschannel.send(embed=embed)
 
     @commands.Cog.listener()
