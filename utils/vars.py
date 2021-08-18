@@ -67,6 +67,7 @@ magenta = 0xE81354  # ERROR
 red = 0xff0000  # LARGE ERROR / YOUTUBE OUTPUT
 dark_blue = 0x142434  # Looks nice lol
 white = 0xFFFFFF  # white
+error = 0xe74d3c
 ColorsList = [green, blue, purple, orange, magenta, dark_blue, white]
 
 colors = {
@@ -78,6 +79,7 @@ colors = {
     "red": red,
     "dark_blue": dark_blue,
     "white": white,
+    "error": error
 }
 
 # SKYBLOCK STUFF
@@ -128,7 +130,7 @@ version_info = {
 
 
 async def ErrorEmbed(ctx, error):
-    emb = discord.Embed(title=f"Error with your command",
+    emb = discord.Embed(title=f"Error with {ctx.prefix}{ctx.command}",
                         color=red,
                         description=error)
     emb.set_footer(text=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
@@ -380,3 +382,52 @@ view_channel
 view_guild_insights
 Methods
 """
+errors = (
+    'CommandError',
+    'MissingRequiredArgument',
+    'BadArgument',
+    'PrivateMessageOnly',
+    'NoPrivateMessage',
+    'CheckFailure',
+    'CheckAnyFailure',
+    'CommandNotFound',
+    'DisabledCommand',
+    'CommandInvokeError',
+    'TooManyArguments',
+    'UserInputError',
+    'CommandOnCooldown',
+    'MaxConcurrencyReached',
+    'NotOwner',
+    'MessageNotFound',
+    'MemberNotFound',
+    'GuildNotFound',
+    'UserNotFound',
+    'ChannelNotFound',
+    'ChannelNotReadable',
+    'BadColourArgument',
+    'RoleNotFound',
+    'BadInviteArgument',
+    'EmojiNotFound',
+    'PartialEmojiConversionFailure',
+    'BadBoolArgument',
+    'MissingRole',
+    'BotMissingRole',
+    'MissingAnyRole',
+    'BotMissingAnyRole',
+    'MissingPermissions',
+    'BotMissingPermissions',
+    'NSFWChannelRequired',
+    'ConversionError',
+    'BadUnionArgument',
+    'ArgumentParsingError',
+    'UnexpectedQuoteError',
+    'InvalidEndOfQuotedStringError',
+    'ExpectedClosingQuoteError',
+    'ExtensionError',
+    'ExtensionAlreadyLoaded',
+    'ExtensionNotLoaded',
+    'NoEntryPointError',
+    'ExtensionFailed',
+    'ExtensionNotFound',
+    'CommandRegistrationError',
+)

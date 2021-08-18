@@ -70,6 +70,9 @@ class HelpFormat(DefaultHelpCommand):
 class MyNewHelp(commands.MinimalHelpCommand):
     async def send_pages(self):
         destination = self.get_destination()
-        for page in self.paginator.pages:
-            emby = discord.Embed(description=page, color=vars.random_color())
-            await destination.send(embed=emby)
+        try:
+            for page in self.paginator.pages:
+                emby = discord.Embed(description=page, color=vars.random_color())
+                await destination.send(embed=emby)
+        except discord.Forbidden:
+            await destination.send("Couldn't send help to you due to blocked DMs...")

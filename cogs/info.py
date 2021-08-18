@@ -5,11 +5,14 @@ from io import BytesIO
 
 import aiohttp
 import humanize
+import menus
 import psutil
+from discord.ext.commands import ColourConverter
 from discord.ext.menus import ListPageSource, MenuPages
 from pyshorteners import Shortener
 import discord
 from discord.ext import commands
+
 from utils.info import fetch_info
 from utils.vars import *
 from utils import default, permissions
@@ -57,7 +60,6 @@ class Info(commands.Cog):
 
         self.oldcolorApiH = 'https://www.thecolorapi.com/id?hex='
         self.ColorApi = 'https://api.color.pizza/v1/'
-
         # @commands.command(aliases=["UIS", "UsersSpotify"])
         # async def UserInfoSpotify(ctx, user: discord.Member = None):
         #    if not user:
@@ -119,14 +121,19 @@ class Info(commands.Cog):
         await ctx.reply(data['hex'])"""
 
     @commands.command(aliases=['CColour', 'CC'])
-    async def Ccolor(self, ctx, colorname: str):
+    async def Ccolor(self, ctx, colorname: ColourConverter):
         """Convert Color from HEX to RGB or simply search for webcolors."""
-        colorname.replace('#', '')
+        test = await ctx.send("Blank")
         async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.ColorApi + colorname) as api:
+            await test.edit(content='1')
+            async with cs.get(self.ColorApi + str(colorname)) as api:
+                await test.edit(content='2')
                 data = await api.json()
+                await test.edit(content='3')
                 data = data['colors'][0]
-        await ctx.send(self.ColorApi + colorname)
+                await test.edit(content='4')
+        await ctx.send(self.ColorApi + str(colorname))
+        await test.edit(content='5')
         await ctx.reply(data)
         cdata = data['rgb']
         r = cdata['r']
@@ -178,6 +185,31 @@ class Info(commands.Cog):
     #    await ctx.send(f"Currently the time for me is **{time}**")
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~
+    @commands.command()
+    @commands.cooldown(rate=2, per=200, type=commands.BucketType.guild)
+    async def CmdStats(self, ctx):
+        cmdsran = self.bot.commands_ran
+        marklist = sorted(cmdsran.items(), key=lambda x: x[1], reverse=True)
+        sortdict = dict(marklist)
+        p = ctx.prefix
+        value_iterator = iter(sortdict.values())
+        key_iterator = iter(sortdict.keys())
+        emby = discord.Embed(title='edoC command Stats', description=f'{self.bot.total_commands_ran} Commands ran this boot\n', color=random_color())
+
+        emby.add_field(name='Top 10 commandas ran', value=f'🥇:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                          f'🥈:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                          f'🥉:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                          f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                          f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                          f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                          f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                          f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                          f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                          f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n')
+
+        emby.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+
+        await ctx.reply(embed=emby)
     @commands.command(aliases=["stats", "status", "botinfo", "in"])
     async def about(self, ctx):
         proc = psutil.Process()
@@ -208,15 +240,15 @@ class Info(commands.Cog):
 
             pmem = humanize.naturalsize(mem.rss)
             vmem = humanize.naturalsize(mem.vms)
-
+            cmds = self.bot.total_commands_ran
             e.add_field(
                 name="__:gear: Usage__",
                 value=
                 f"**{pmem}** physical memory\n"
                 f"**{vmem}** virtual memory\n"
-                f"**{cpu:.2f}**% CPU",
+                f"**{cpu}**% CPU\n"
+                f"**{cmds}** Commands ran this boot\n",
                 inline=True)
-
             e.add_field(
                 name="__Servers count__",
                 value=str(len(self.bot.guilds)),
@@ -456,6 +488,9 @@ class Info(commands.Cog):
         emojis = [str(x) for x in server.emojis]
         await ctx.say(" ".join(emojis))
 
+    def top10(self):
+        for key, v in self.items():
+            return key
 
 def setup(bot):
     bot.add_cog(Info(bot))

@@ -1,16 +1,20 @@
 import asyncio
+import json
 import os
 import secrets
+import sys
 from io import BytesIO
 
 import aiohttp
 import nekos
 from discord.ext import commands
 from bs4 import BeautifulSoup
+from jishaku.models import copy_context_with
 from nekos import InvalidArgument
 
 import discord
 from utils import permissions, http, default
+from utils.gets import getEmote
 from utils.vars import *
 import pyfiglet
 
@@ -48,6 +52,56 @@ class Fun(commands.Cog):
         answer = random.randint(1, 6)
         await ctx.reply(embed=discord.Embed(color={green if guess == answer else red},
                                             description=f"{'True' if guess == answer else 'False'} your guess was {guess} and the answer was {answer}"))
+
+    @commands.command()
+    async def rip(self, ctx, name: str = None, *, text: str = None):
+        if name is None:
+            name = ctx.message.author.name
+        if len(ctx.message.mentions) >= 1:
+            name = ctx.message.mentions[0].name
+        if text is not None:
+            if len(text) > 22:
+                one = text[:22]
+                two = text[22:]
+                url = "http://www.tombstonebuilder.com/generate.php?top1=R.I.P&top3={0}&top4={1}&top5={2}".format(name,
+                                                                                                                  one,
+                                                                                                                  two).replace(
+                    " ", "%20")
+            else:
+                url = "http://www.tombstonebuilder.com/generate.php?top1=R.I.P&top3={0}&top4={1}".format(name,
+                                                                                                         text).replace(
+                    " ", "%20")
+        else:
+            if name[-1].lower() != 's':
+                name += "'s"
+            url = "http://www.tombstonebuilder.com/generate.php?top1=R.I.P&top3={0}&top4=Hopes and Dreams".format(
+                name).replace(" ", "%20")
+        await ctx.send(url)
+
+    @commands.command(aliases=['achievement', 'ach'])
+    async def mc(self, ctx, *, txt: str):
+        """Generate a Minecraft Achievement"""
+        author = ctx.author.display_name if len(ctx.author.display_name) < 22 else "Achievement Unlocked!"
+        t = txt.replace(' ', '+')
+        a = author.replace(' ', '+')
+        if len(txt) > 25:
+            return await ErrorEmbed(ctx, error="Please keep your message under 25 chars")
+        api = f'https://mcgen.herokuapp.com/a.php?i=2&h={a}&t={t}'
+        emb = discord.Embed(color=random_color())
+        emb.set_image(url=api)
+        await ctx.send(embed=emb)
+
+    @commands.command(pass_context=True, aliases=['identify', 'captcha', 'whatis'])
+    async def i(self, ctx, *, url: str):
+        """Identify an image/gif using Microsofts Captionbot API"""
+        with aiohttp.ClientSession() as session:
+            async with session.post("https://www.captionbot.ai/api/message",
+                                    data={"conversationId": "FPrBPK2gAJj", "waterMark": "", "userMessage": url}) as r:
+                pass
+        load = await self.get_json("https://www.captionbot.ai/api/message?waterMark=&conversationId=FPrBPK2gAJj")
+        msg = '`{0}`'.format(json.loads(load)['BotMessages'][-1])
+        await ctx.send(msg)
+
 
     @commands.command(aliases=["rfact", "rf"])
     @commands.cooldown(rate=1, per=1.3, type=commands.BucketType.user)
@@ -224,14 +278,15 @@ class Fun(commands.Cog):
         await ctx.send(answer)
 
     @commands.command(aliases=["JumboEmoji"])
-    async def LargenEmoji(self, ctx, emote):
+    async def LargenEmoji(self, ctx, emoji):
         """Display your favorite emotes in large."""
+        emote = getEmote(ctx, emoji)
         if emote:
             em = discord.Embed(colour=random_color())
             em.set_image(url=emote.url)
-            await ctx.send(ctx, embed=em)
+            await ctx.send(embed=em)
         else:
-            await ctx.reply(ctx, content='\N{HEAVY EXCLAMATION MARK SYMBOL} Only Emotes...', delete_after=3)
+            await ctx.send(content='\N{HEAVY EXCLAMATION MARK SYMBOL} Only Emotes...')
 
     @commands.command()
     async def f(self, ctx, *, text: commands.clean_content = None):

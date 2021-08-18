@@ -185,7 +185,7 @@ async def play_game(bot, ctx, chance_for_error=0.0):
         await smsg.edit(content=get_printable_board(board))
         while True:
             try:
-                msg  = await bot.wait_for('message', check=check, timeout=20.0)
+                msg = await bot.wait_for('message', check=check, timeout=20.0)
                 if msg.content == 'exit':
                     await ctx.send("You quit")
                     return

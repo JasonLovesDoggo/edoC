@@ -7,7 +7,9 @@ import traceback
 import timeago as timesince
 
 from io import BytesIO
+
 log = logging.getLogger(__name__)
+
 
 def config(filename: str = "config"):
     """ Fetch default config file """
@@ -18,21 +20,57 @@ def config(filename: str = "config"):
         raise FileNotFoundError("JSON file wasn't found")
 
 
+def UpdateBlacklist(newblacklist, filename: str = "blacklist"):
+    try:
+        with open(f"{filename}.json", encoding='utf-8', mode="r+") as file:
+            data = json.load(file)
+            data.update(newblacklist)
+            data.seek(0)
+            json.dump(data, file)
+    except FileNotFoundError:
+        raise FileNotFoundError("JSON file wasn't found")
+
+
+def MakeBlackList(dict, filename: str = "blacklist", ):
+    try:
+        with open(f"{filename}.json", encoding='utf-8', mode="r+") as file:
+            data = json.load(file)
+            guilds = {}
+            users = {}
+            for gid in data['guilds']:
+                pass
+    except FileNotFoundError:
+        raise FileNotFoundError("JSON file wasn't found")
+
+def bold(text: str):
+    return f'**{text}**'
+def italic(text: str):
+    return f'*{text}*'
+def bolditalic(text: str):
+    return f'***{text}***'
+def underline(text: str):
+    return f'__{text}__'
+
 def traceback_maker(err, advance: bool = True):
     """ A way to debug your code anywhere """
     _traceback = ''.join(traceback.format_tb(err.__traceback__))
     error = '```py\n{1}{0}: {2}\n```'.format(type(err).__name__, _traceback, err)
     return error if advance else f"{type(err).__name__}: {err}"
 
+
 def spacefill(len):
     return ' ' * len
+
+
 def timetext(name):
     """ Timestamp, but in text form """
     return f"{name}_{int(time.time())}.txt"
 
+
 def CustomTimetext(filetype, name):
     """ Timestamp, but in text form BUT with a custom filetype"""
     return f"{name}_{int(time.time())}.{filetype}"
+
 
 def timeago(target):
     """ Timeago in easier way """
@@ -52,6 +90,7 @@ def responsible(target, reason):
     if not reason:
         return f"{responsible} no reason given..."
     return f"{responsible} {reason}"
+
 
 def actionmessage(case, mass=False):
     """ Default way to present action confirmation in chat """
@@ -78,6 +117,8 @@ async def prettyResults(ctx, filename: str = "Results", resultmsg: str = "Here's
         content=resultmsg,
         file=discord.File(data, filename=timetext(filename.title()))
     )
+
+
 async def send(ctx, content=None, embed=None, ttl=None):
     perms = ctx.channel.permissions_for(ctx.me).embed_links
     ttl = None if ctx.message.content.endswith(' stay') else ttl

@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import logging
 import random
 import time
@@ -12,15 +13,16 @@ import os
 import sys
 import json
 from discord.ext import commands
-import textwrap
-import traceback
 from lib.db import db
 from lib.db.db import cur
 from utils import permissions, default, http
 from io import BytesIO
 from cogs.mod import BanUser, MemberID
 from utils.vars import *
-
+import io
+import textwrap
+import traceback
+from contextlib import redirect_stdout
 on = False
 
 
@@ -32,6 +34,76 @@ class Admin(commands.Cog):
         self._last_result = None
         self.DoggoPath = r"C:/Users/Jason/edoC/data/img/Dog Picks"
         self.filenum = 0
+        self._last_result = None
+        self.sessions = set()
+
+    @commands.command(hidden=True)
+    async def do(self, ctx, times: int, *, command):
+        """Repeats a command a specified number of times."""
+        msg = copy.copy(ctx.message)
+        msg.content = ctx.prefix + command
+
+        new_ctx = await self.bot.get_context(msg, cls=type(ctx))
+
+        for i in range(times):
+            await new_ctx.reinvoke()
+
+    def cleanup_code(self, content):
+        """Automatically removes code blocks from the code."""
+        # remove ```py\n```
+        if content.startswith('```') and content.endswith('```'):
+            return '\n'.join(content.split('\n')[1:-1])
+
+        # remove `foo`
+        return content.strip('` \n')
+
+    @commands.command(aliases=["pyeval"])
+    @commands.check(permissions.is_owner)
+    async def eval(self, ctx, *, body: str):
+        """Evaluates a code"""
+
+        env = {
+            'bot': self.bot,
+            'ctx': ctx,
+            'channel': ctx.channel,
+            'author': ctx.author,
+            'guild': ctx.guild,
+            'message': ctx.message,
+            '_': self._last_result
+        }
+
+        env.update(globals())
+
+        body = self.cleanup_code(body)
+        stdout = io.StringIO()
+
+        to_compile = f'async def func():\n{textwrap.indent(body, "  ")}'
+
+        try:
+            exec(to_compile, env)
+        except Exception as e:
+            return await ctx.send(f'```py\n{e.__class__.__name__}: {e}\n```')
+
+        func = env['func']
+        try:
+            with redirect_stdout(stdout):
+                ret = await func()
+        except Exception as e:
+            value = stdout.getvalue()
+            await ctx.send(f'```py\n{value}{traceback.format_exc()}\n```')
+        else:
+            value = stdout.getvalue()
+            try:
+                await ctx.message.add_reaction('\u2705')
+            except:
+                pass
+
+            if ret is None:
+                if value:
+                    await ctx.send(f'```py\n{value}\n```')
+            else:
+                self._last_result = ret
+                await ctx.send(f'```py\n{value}{ret}\n```')
 
     @commands.command()
     @commands.check(permissions.is_owner)
@@ -192,30 +264,30 @@ class Admin(commands.Cog):
     async def load(self, ctx, name: str):
         """ Loads an extension. """
         try:
-            self.bot.load_extension(f"cogs.{name}")
+            self.bot.load_extension(f"cogs.{name.title()}")
         except Exception as e:
             return await ctx.send(default.traceback_maker(e))
-        await ctx.send(f"Loaded extension **{name}.py**")
+        await ctx.send(f"Loaded extension **{name.title()}.py**")
 
     @commands.command()
     @commands.check(permissions.is_owner)
     async def unload(self, ctx, name: str):
         """ Unloads an extension. """
         try:
-            self.bot.unload_extension(f"cogs.{name}")
+            self.bot.unload_extension(f"cogs.{name.title()}")
         except Exception as e:
             return await ctx.send(default.traceback_maker(e))
-        await ctx.send(f"Unloaded extension **{name}.py**")
+        await ctx.send(f"Unloaded extension **{name.title()}.py**")
 
     @commands.command(aliases=["r"])
     @commands.check(permissions.is_owner)
     async def reload(self, ctx, name: str):
         """ Reloads an extension. """
         try:
-            self.bot.reload_extension(f"cogs.{name}")
+            self.bot.reload_extension(f"cogs.{name.title()}")
         except Exception as e:
             return await ctx.send(default.traceback_maker(e))
-        await ctx.send(f"Reloaded extension **{name}.py**")
+        await ctx.send(f"Reloaded extension **{name.title()}.py**")
 
     @commands.command(aliases=["ra"])
     @commands.check(permissions.is_owner)
@@ -452,7 +524,6 @@ class Admin(commands.Cog):
             self.filenum += 1
             os.rename(os.path.join(path, file), os.path.join(path, ''.join([str(self.filenum), '.jpg'])))
         await ctx.send(f"done\ncurrent limit is {self.filenum}")
-
 
 def setup(bot):
     bot.add_cog(Admin(bot))
