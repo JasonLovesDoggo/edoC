@@ -475,7 +475,7 @@ class MusicPlayer(commands.Cog, name='Music'):
     async def leave(self, ctx):
         """
         Disconnect the bot from the voice channel
-        `Ex:` s.leave
+        `Ex:` ~leave
         `Command:` leave()
         """
         if ctx.author.voice is not None and ctx.voice_client is not None:
@@ -483,8 +483,8 @@ class MusicPlayer(commands.Cog, name='Music'):
                 self.player[ctx.guild.id]['queue'].clear()
                 ctx.voice_client.stop()
                 return await ctx.voice_client.disconnect(), await ctx.message.add_reaction(emoji=self.checkmark)
-
-            return await ctx.voice_client.disconnect(), await ctx.message.add_reaction(emoji=self.checkmark)
+        #elif ctx.author.voice is not None and ctx.voice_client is not None and ctx.voice_client.channel.members
+        #    return await ctx.voice_client.disconnect(), await ctx.message.add_reaction(emoji=self.checkmark)
 
         if ctx.author.voice is None:
             return await ctx.send("You must be in the same voice channel as bot to disconnect it via command")
