@@ -290,7 +290,7 @@ class Events(commands.Cog):
             await self.bot.change_presence(
                 activity=discord.Game(
                     type=activity_type.get(activity, 2),
-                    name=f"Watching over {totalmembers} Members spread over {len(self.bot.guilds)} Guilds!"
+                    name=f"Watching over {totalmembers} Members spread over {len(self.bot.guilds)} Guilds!\nPrefix: ~"
                 ),
                 status=status_type.get(status, discord.Status.idle)
             )

@@ -6,7 +6,6 @@ from utils.data import Bot, MyNewHelp, get_prefix
 
 #TODO add a fully not erroring get_prefix
 config = default.config()
-config['edoc_all_logs']
 bot = Bot(
     command_prefix="~", prefix="~",
     owner_ids=config["owners"], case_insensitive=True, command_attrs=dict(hidden=True), help_command=MyNewHelp(),
