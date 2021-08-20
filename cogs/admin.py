@@ -1,11 +1,13 @@
 import asyncio
 import copy
+import inspect
 import logging
 import random
 import time
 import aiohttp
 from discord.ext.commands import ExtensionNotLoaded
 from jishaku.models import copy_context_with
+from jishaku.paginators import WrappedPaginator, PaginatorInterface
 
 import discord
 import importlib
@@ -36,6 +38,16 @@ class Admin(commands.Cog):
         self.filenum = 0
         self._last_result = None
         self.sessions = set()
+
+    @commands.command()
+    @commands.is_owner()
+    async def leave(self, ctx, *, guild_name):
+        guild = discord.utils.get(self.bot.guilds, name=guild_name)
+        if guild is None:
+            await ctx.send("I don't recognize that guild.")
+            return
+        await self.bot.leave_guild(guild)
+        await ctx.send(f":ok_hand: Left guild: {guild.name} ({guild.id})")
 
     @commands.command(hidden=True)
     async def do(self, ctx, times: int, *, command):
@@ -135,6 +147,70 @@ class Admin(commands.Cog):
         await git_command_ctx.command.invoke(git_command_ctx)
         await update_command_ctx.command.invoke(update_command_ctx)
         await self.shutdown()
+
+    @commands.group(aliases=["su"])
+    @commands.check(permissions.is_owner)
+    async def sudo(self, ctx: commands.Context, target: discord.User, *, command_string: str):
+        """
+        Run a command as someone else.
+
+        This will try to resolve to a Member, but will use a User if it can't find one.
+        """
+
+        if ctx.guild:
+            # Try to upgrade to a Member instance
+            # This used to be done by a Union converter, but doing it like this makes
+            #  the command more compatible with chaining, e.g. `~in .. ~su ..`
+            target = ctx.guild.get_member(target.id) or target
+
+        alt_ctx = await copy_context_with(ctx, author=target, content=ctx.prefix + command_string)
+
+        if alt_ctx.command is None:
+            if alt_ctx.invoked_with is None:
+                return await ctx.send('This bot has been hard-configured to ignore this user.')
+            return await ctx.send(f'Command "{alt_ctx.invoked_with}" is not found')
+
+        return await alt_ctx.command.invoke(alt_ctx)
+
+    @sudo.command(name="in")
+    @commands.check(permissions.is_owner)
+    async def edoC_in(self, ctx: commands.Context, channel: discord.TextChannel, *, command_string: str):
+        """
+        Run a command as if it were run in a different channel.
+        """
+
+        alt_ctx = await copy_context_with(ctx, channel=channel, content=ctx.prefix + command_string)
+
+        if alt_ctx.command is None:
+            return await ctx.send(f'Command "{alt_ctx.invoked_with}" is not found')
+
+        return await alt_ctx.command.invoke(alt_ctx)
+
+    @sudo.command(aliases=["src"])
+    @commands.check(permissions.is_owner)
+    async def source(self, ctx: commands.Context, *, command_name: str):
+        """
+        Displays the source code for a command.
+        """
+
+        command = self.bot.get_command(command_name)
+        if not command:
+            return await ctx.send(f"Couldn't find command `{command_name}`.")
+
+        try:
+            source_lines, _ = inspect.getsourcelines(command.callback)
+        except (TypeError, OSError):
+            return await ctx.send(f"Was unable to retrieve the source for `{command}` for some reason.")
+
+        # getsourcelines for some reason returns WITH line endings
+        source_lines = ''.join(source_lines).split('\n')
+
+        paginator = WrappedPaginator(prefix='```py', suffix='```', max_size=1985)
+        for line in source_lines:
+            paginator.add_line(line)
+
+        interface = PaginatorInterface(ctx.bot, paginator, owner=ctx.author)
+        await interface.send_to(ctx)
 
     @commands.command()
     @commands.check(permissions.is_owner)
@@ -264,30 +340,30 @@ class Admin(commands.Cog):
     async def load(self, ctx, name: str):
         """ Loads an extension. """
         try:
-            self.bot.load_extension(f"cogs.{name.title()}")
+            self.bot.load_extension(f"cogs.{name}")
         except Exception as e:
             return await ctx.send(default.traceback_maker(e))
-        await ctx.send(f"Loaded extension **{name.title()}.py**")
+        await ctx.send(f"Loaded extension **{name}.py**")
 
     @commands.command()
     @commands.check(permissions.is_owner)
     async def unload(self, ctx, name: str):
         """ Unloads an extension. """
         try:
-            self.bot.unload_extension(f"cogs.{name.title()}")
+            self.bot.unload_extension(f"cogs.{name}")
         except Exception as e:
             return await ctx.send(default.traceback_maker(e))
-        await ctx.send(f"Unloaded extension **{name.title()}.py**")
+        await ctx.send(f"Unloaded extension **{name}.py**")
 
     @commands.command(aliases=["r"])
     @commands.check(permissions.is_owner)
     async def reload(self, ctx, name: str):
         """ Reloads an extension. """
         try:
-            self.bot.reload_extension(f"cogs.{name.title()}")
+            self.bot.reload_extension(f"cogs.{name}")
         except Exception as e:
             return await ctx.send(default.traceback_maker(e))
-        await ctx.send(f"Reloaded extension **{name.title()}.py**")
+        await ctx.send(f"Reloaded extension **{name}.py**")
 
     @commands.command(aliases=["ra"])
     @commands.check(permissions.is_owner)

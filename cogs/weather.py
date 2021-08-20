@@ -42,7 +42,7 @@ class Weather(commands.Cog):
             e.add_field(name="Atmospheric Pressure(hPa)", value=f"{current_pressure}hPa", inline=False)
             e.set_footer(text=f"Requested by {ctx.author.name}")
             e.set_thumbnail(url="https://i.ibb.co/CMrsxdX/weather.png%22")
-            e.set_footer(text=f"Requested by {ctx.author.name}\n{embedfooter}", icon_url=ctx.message.author.avatar_url)
+            e.set_footer(text=f"Requested by {ctx.author.name}\n{embedfooter}", icon_url=ctx.message.author.avatar.url)
             await ctx.send(embed=e)
         else:
             await ErrorEmbed(ctx, "City Not Found")

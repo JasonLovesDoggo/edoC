@@ -1,17 +1,17 @@
-import asyncio
-import discord
-from discord.ext import commands
-from discord.ext.commands import errors
-from cogs.mod import BannedUsers, BannedU
-from utils import default
-from lib.db import db
-import os
-import psutil
-import logging
-from datetime import datetime
-import apscheduler.schedulers.asyncio
-from utils.vars import *
 import glob
+import logging
+import os
+from datetime import datetime
+
+import apscheduler.schedulers.asyncio
+import psutil
+from discord.ext import commands
+from discord.ext.commands import MissingPermissions, CheckFailure, MaxConcurrencyReached, CommandOnCooldown
+
+from cogs.mod import BannedUsers
+from lib.db import db
+from utils import default
+from utils.vars import *
 
 logging.getLogger("events")
 owners = default.config()["owners"]
@@ -68,12 +68,14 @@ class Events(commands.Cog):
         for f in files:
             os.remove(f)
 
-    async def erroremb(self, ctx, *, description: str, footer=None):
+    async def erroremb(self, ctx, *, description: str, footer=None, title=None):
         """@summary creates a discord embed so i can send it with x details easier"""
         embed = discord.Embed(
             description=description,
             color=colors["error"]
         )
+        if title:
+            embed.title = title
         if footer:
             embed.set_footer(text=footer)
         await ctx.send(embed=embed)
@@ -96,7 +98,7 @@ class Events(commands.Cog):
         await channel.send("Please do ~help to get started")
         await channel.send(
             "also if edoC fails it is because your servers guildID didn't get put into the database please contact the dev about it \n*(you can find him in ~info)")
-        annoy = member
+        print("hi ", member)
 
     # async def update_db(self):
     #    members = self.bot.get_all_members()
@@ -158,11 +160,25 @@ class Events(commands.Cog):
         if isinstance(err, commands.CommandNotFound):
             await self.erroremb(ctx,
                                 description=f'The command you have requested is not found. \nPlease make sure you typed it out right', )
+        elif isinstance(err, commands.BadArgument):
+            pass
+
+        elif isinstance(err, commands.NotOwner):
+            await self.erroremb(ctx,
+                                description=f"You must be the owner of`{ctx.me.display_name}` to use `{ctx.prefix}{ctx.command}`")
 
         elif isinstance(err, commands.MissingRequiredArgument):
             await self.erroremb(ctx,
                                 description=f"Invalid Command Format: {ctx.prefix}{ctx.command.qualified_name} {ctx.command.signature}",
                                 footer=f"Please use {ctx.prefix}help {ctx.command.qualified_name} for more info")
+            missing = f"{str(err.param).split(':')[0]}"
+            command = f"{ctx.prefix}{ctx.command}" #{ctx.command.signature}"
+
+            await self.erroremb(ctx,
+                                title="<:warn:877794045181714472> | MissingArguments",
+                                description=f"You forgot the `{missing}` parameter when using   `{command}`!",
+                                footer=f"Please use {ctx.prefix}help {ctx.command.qualified_name} for more info")
+
         elif isinstance(err, commands.TooManyArguments):
             await self.erroremb(ctx,
                                 description=f'You called the {ctx.command.qualified_name} command with too many arguments.')
@@ -189,15 +205,15 @@ class Events(commands.Cog):
             elif isinstance(original, discord.HTTPException):
                 await ctx.send('Somehow, an unexpected error occurred. Try again later?')
 
-        elif isinstance(err, errors.MissingPermissions):
-            await self.permsemb(ctx, permissions=f"{', '.join(err.missing_perms)}")
-        elif isinstance(err, errors.CheckFailure):
-            await self.permsemb(ctx, permissions=f"{err}")
-        elif isinstance(err, errors.MaxConcurrencyReached):
+        elif isinstance(err, MissingPermissions):
+            await self.permsemb(ctx, permissions=f"{', '.join(err.missing_permissions)}")
+        elif isinstance(err, CheckFailure):
+            await self.erroremb(ctx, description=f"One or more permission checks have failed\nif you think this is a bug please contact us at\nhttps://dsc.gg/edoc")
+        elif isinstance(err, MaxConcurrencyReached):
             await self.erroremb(ctx=ctx,
                                 description="You've reached max capacity of command usage at once, please finish the previous one...")
 
-        elif isinstance(err, errors.CommandOnCooldown):
+        elif isinstance(err, CommandOnCooldown):
             await self.erroremb(ctx=ctx,
                                 description=f"This command is on cooldown... try again in {err.retry_after:.2f} seconds.")
 
@@ -258,7 +274,7 @@ class Events(commands.Cog):
             self.ready = True
             self.scheduler.start()
             await logschannel.send(f"{self.bot.user} has been booted up")
-
+            self.bot.start_time = discord.utils.utcnow()
             if not hasattr(self.bot, "uptime"):
                 self.bot.uptime = datetime.utcnow()
 
@@ -337,13 +353,13 @@ class Events(commands.Cog):
 
             await noncritlogschannel.send(embed=embed)
 
-        if before.avatar_url != after.avatar_url:
+        if before.avatar.url != after.avatar.url:
             embed = discord.Embed(title="Avatar change",
                                   description="New image is below, old to the right.",
                                   colour=blue)
 
-            embed.set_thumbnail(url=before.avatar_url)
-            embed.set_image(url=after.avatar_url)
+            embed.set_thumbnail(url=before.avatar.url)
+            embed.set_image(url=after.avatar.url)
             embed.set_footer(
                 text=f"{before.name} {f'> {after.name}' if before.name != after.name else ''}\n fullname: {before}")
             await noncritlogschannel.send(embed=embed)
@@ -410,8 +426,13 @@ class Events(commands.Cog):
 
             for name, value, inline in fields:
                 embed.add_field(name=name, value=value, inline=inline)
-
-            await noncritlogschannel.send(embed=embed)
+            try:
+                await noncritlogschannel.send(embed=embed)
+            except discord.errors.HTTPException:
+                await noncritlogschannel.send(embed=discord.Embed(title="Message deletion",
+                                                                  description=f"Action by {message.author.display_name}.\nIn {message.channel}\nIn{message.channel.guild}",
+                                                                  colour=message.author.colour,
+                                                                  timestamp=datetime.utcnow()))
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, prev, cur):

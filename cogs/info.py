@@ -1,38 +1,39 @@
 import os
+import pathlib
 import platform
 import time
 from io import BytesIO
+from typing import List, Tuple
 
 import aiohttp
+# from utils.transwrapper import google_translator
+import googletrans
 import humanize
-import menus
 import psutil
-from discord.ext.commands import ColourConverter
-from discord.ext.menus import ListPageSource, MenuPages
-from pyshorteners import Shortener
-import discord
 from discord.ext import commands
+from discord.ext.commands import ColourConverter
+from discord.ext.menus import ListPageSource
+from googletrans import Translator
+from pyshorteners import Shortener
 
+from cogs.music import Paginator
+from lib.db import db
+from utils import default, permissions
+from utils.gets import *
 from utils.info import fetch_info
 from utils.vars import *
-from utils import default, permissions
-from lib.db import db
-import pathlib
-from utils.gets import *
-from PIL import Image
 
 
 class Menu(ListPageSource):
     def __init__(self, ctx, data):
         self.ctx = ctx
-
         super().__init__(data, per_page=3)
 
     async def write_page(self, fields=[]):
         embed = discord.Embed(title="Todo",
                               description="Welcome to the edoC Todo dialog!",
                               colour=self.ctx.author.colour)
-        embed.set_thumbnail(url=self.ctx.guild.me.avatar_url)
+        embed.set_thumbnail(url=self.ctx.guild.me.avatar.url)
         for name, value in fields:
             embed.add_field(name=name, value=value, inline=False)
 
@@ -41,9 +42,11 @@ class Menu(ListPageSource):
 
 # Hex to RGB
 def hex_to_rgb(value):
-    value = value.replace('#', '')
-    lv = len(value)
-    return tuple(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
+    print(value)
+    v = str(value)
+    v = v.replace('#', '')
+    lv = len(v)
+    return tuple(int(v[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
 
 
 def convert_all_to_hex(inputcolor):
@@ -57,9 +60,11 @@ class Info(commands.Cog):
         self.PADDING = 9
         self.process = psutil.Process(os.getpid())
         self.event = self.bot.get_cog("Events")
-
         self.oldcolorApiH = 'https://www.thecolorapi.com/id?hex='
-        self.ColorApi = 'https://api.color.pizza/v1/'
+        self.neweroldColorApi = 'https://api.color.pizza/v1/'
+        self.colorApi = 'https://api.popcatdev.repl.co/color/'
+        self.trans = googletrans.Translator()
+
         # @commands.command(aliases=["UIS", "UsersSpotify"])
         # async def UserInfoSpotify(ctx, user: discord.Member = None):
         #    if not user:
@@ -120,31 +125,131 @@ class Info(commands.Cog):
             await send(ctx, '\N{HEAVY EXCLAMATION MARK SYMBOL} Could not find color', ttl=3)
         await ctx.reply(data['hex'])"""
 
-    @commands.command(aliases=['CColour', 'CC'])
-    async def Ccolor(self, ctx, colorname: ColourConverter):
-        """Convert Color from HEX to RGB or simply search for webcolors."""
-        test = await ctx.send("Blank")
-        async with aiohttp.ClientSession() as cs:
-            await test.edit(content='1')
-            async with cs.get(self.ColorApi + str(colorname)) as api:
-                await test.edit(content='2')
-                data = await api.json()
-                await test.edit(content='3')
-                data = data['colors'][0]
-                await test.edit(content='4')
-        await ctx.send(self.ColorApi + str(colorname))
-        await test.edit(content='5')
-        await ctx.reply(data)
-        cdata = data['rgb']
-        r = cdata['r']
-        g = cdata['g']
-        b = cdata['b']
-        img = Image.new('RGB', (300, 250), (r, g, b))
-        img.save(fp=f'data/img/temp/{ctx.message.id}.png')
-        embed = discord.Embed(color=discord.Color.from_rgb(r=r, g=g, b=b), title=data['name'])
-        embed.set_footer(text=f"Distance from color {str(round(data['distance'], ndigits=2))}")
-        embed.set_image(url=f"attachment://data/img/temp/{ctx.message.id}.png")
+    async def create_embed(self, description, field: List[Tuple] = None):
+        embed_ = discord.Embed(description=description,
+                               colour=orange)
+        if field is not None:
+            for name, value, inline in field:
+                embed_.add_field(name=name, value=value, inline=inline)
+        return embed_
+
+    # @commands.command()
+    # async def translate(self, ctx, *, message: commands.clean_content = None):
+    #    """Translates a message to English using Google translate."""
+    #
+    #    loop = self.bot.loop
+    #    if message is None:
+    #        ref = ctx.message.reference
+    #        if ref and isinstance(ref.resolved, discord.Message):
+    #            message = ref.resolved.content
+    #        else:
+    #            return await ctx.send('Missing a message to translate')
+    #
+    #    #try:
+    #    ret = await loop.run_in_executor(None, self.trans.translate, message)
+    #    #except Exception as e:
+    #    #    return await ctx.send(f'An error occurred: {e.__class__.__name__}: {e}')
+    #
+    #    embed = discord.Embed(title='Translated', colour=0x4284F3)
+    #    src = googletrans.LANGUAGES.get(ret.src, '(auto-detected)').title()
+    #    dest = googletrans.LANGUAGES.get(ret.dest, 'Unknown').title()
+    #    embed.add_field(name=f'From {src}', value=ret.origin, inline=False)
+    #    embed.add_field(name=f'To {dest}', value=ret.text, inline=False)
+    #    await ctx.send(embed=embed)
+
+    @commands.command()
+    async def translate(self, ctx, *, text):
+        translator = Translator()
+        result = translator.translate(text)
+        language = translator.detect(text)
+        embed = discord.Embed(
+            description=f"```css\nText: {text}\nTranslated: {result.text}\nLanguage: {language.lang}```",
+            color=blue).set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
+
         await ctx.send(embed=embed)
+
+    # @commands.command(name='translate', aliases=['trans'])
+    # async def translates(self, ctx, *, text):
+    #    """``Translates a sentence into a specific language``"""
+    #    #src, dest = languages.split('-')
+    #    #trans = self.translator.translate(src=src, dest=dest, text=text)
+    #    #embed = await self.create_embed(description='', field=[(text, f'`{trans.text}`', False)])
+    #    #embed.set_footer(text=dest)
+    #    #await ctx.send(embed=embed)
+    #    translator = google_translator()
+    #    translate_text = translator.translate('สวัสดีจีน', lang_tgt='en')
+    #    await ctx.reply(translate_text)
+
+    @commands.command(brief="Shows the bot's uptime")
+    async def uptime(self, ctx):
+        """
+        Shows the bot's uptime in days | hours | minutes | seconds
+        """
+        em = discord.Embed(
+            description=f"{humanize.precisedelta(discord.utils.utcnow() - self.bot.start_time, format='%.0f')}",
+            colour=0x2F3136,
+        )
+        em.set_author(name="Uptime")
+        em.set_footer(text=f"Requested by {ctx.author}", icon_url=ctx.author.avatar.url)
+        await ctx.send(embed=em)
+    @commands.command(aliases=['RC', 'Rcolor', 'RandColor'])
+    async def RandomColor(self, ctx):
+        random_number = random.randint(0, 16777215)
+        hexhex = str(hex(random_number))
+        hex_number = hexhex[2:]
+
+        async with aiohttp.ClientSession() as cs:
+            async with cs.get(self.colorApi + hex_number) as api:
+                data = await api.json()
+        embed = discord.Embed(color=int(hexhex, 0))
+        embed.add_field(name='Name', value=data['name'], inline=False)
+        embed.add_field(name='Hex Code', value=data['hex'], inline=False)
+        embed.add_field(name='Rgb value', value=data['rgb'][3:], inline=False)
+        embed.set_thumbnail(url=f'https://api.popcatdev.repl.co/color/image/{hex_number}?width=100&height=100')
+        await ctx.send(embed=embed)
+
+    @commands.command(aliases=['C'])
+    async def Color(self, ctx, colorname: ColourConverter):
+        """
+        The following formats are accepted:
+
+        ```html
+        0x<hex>
+        #<hex>
+        0x#<hex>
+        rgb(<number>, <number>, <number>)
+        Any of the classmethod in Colour
+        The _ in the name can be optionally replaced with spaces.
+        Like CSS, <number> can be either 0-255 or 0-100% and <hex> can be either a 6 digit hex number or a 3 digit hex shortcut (e.g. #fff).
+        ```
+        """
+        strcolor = str(colorname).replace('#', "")
+        async with aiohttp.ClientSession() as cs:
+            async with cs.get(self.colorApi + strcolor) as api:
+                data = await api.json()
+        co = f'0x{strcolor}'
+        embed = discord.Embed(color=int(co, 0))
+        embed.add_field(name='Name', value=data['name'], inline=False)
+        embed.add_field(name='Hex Code', value=data['hex'], inline=False)
+        embed.add_field(name='Rgb value', value=data['rgb'][3:], inline=False)
+        embed.set_thumbnail(url=f'https://api.popcatdev.repl.co/color/image/{strcolor}?width=100&height=100')
+        await ctx.send(embed=embed)
+
+    @Color.error
+    async def Color_handler(self, ctx, error):
+        """A local Error Handler for our command do_repeat.
+        This will only listen for errors in Color.
+        The global on_command_error will still be invoked after.
+        """
+
+        # Check if our required argument inp is missing.
+        if isinstance(error, commands.BadArgument):
+            embed = discord.Embed(
+                description=f"Please do {ctx.prefix}help Color for more info",
+                color=colors["error"]
+            )
+            embed.set_footer(text='(hint check the accepted formats)')
+            await ctx.send(embed=embed)
 
     async def todomenu(self, ctx, command):
         embed = discord.Embed(title=f"TODO",
@@ -156,11 +261,33 @@ class Info(commands.Cog):
     @commands.command(aliases=["todomenu"])
     async def todo(self, ctx):
         """Shows this message."""
-        file = open("todo.txt", "r").readlines()
-        menu = MenuPages(source=Menu(ctx, list(file)),
-                         delete_message_after=True,
-                         timeout=60.0)
-        await menu.start(ctx)
+        file = open("todo.txt", "r")
+        embeds = []
+        if len(list(file)) <= 2000:
+            return await ctx.reply(embed=discord.Embed(
+                title="TodoPagination",
+                color=blue,
+                description=file.readlines()))
+        i = 0
+
+        while True:
+            filelines = len(file.readlines())
+            if len(list(file)) - i > 200:
+                embeds.append(discord.Embed(
+                    title="TodoPagination",
+                    description=list(file)[i:i + 1999],
+                    color=blue))
+            elif len(list(file)) - i <= 0:
+                break
+            else:
+                embeds.append(discord.Embed(
+                    title="TodoPagination",
+                    description=list(file)[i:len(list(file)) - 1],
+                    color=blue))
+                break
+            i += 1999
+
+        return await ctx.reply(embed=embeds[0], view=Paginator(ctx=ctx, embeds=embeds))
 
     @commands.command(aliases=['len'])
     async def length(self, ctx, *, word):
@@ -170,7 +297,7 @@ class Info(commands.Cog):
     async def shorten(self, ctx, *, url):
         s = Shortener()
         ShortenedUrl = s.owly.short(url)
-        await ctx.reply(embed=discord.Embed(description=ShortenedUrl, colour=random_color))
+        await ctx.reply(embed=discord.Embed(description=ShortenedUrl, colour=random_color()))
 
     @commands.command(aliases=["URLexpand"])
     async def expand(self, ctx, *, url):
@@ -178,8 +305,8 @@ class Info(commands.Cog):
         ExpandedUrl = s.owly.expand(url)
         await ctx.reply(embed=discord.Embed(description=ExpandedUrl, colour=random_color))
 
-    #@commands.command()
-    #async def time(self, ctx):
+    # @commands.command()
+    # async def time(self, ctx):
     #    """ Check what the time is for me (the bot) """
     #    time = datetime.utcnow().strftime("%d %B %Y, %H:%M")
     #    await ctx.send(f"Currently the time for me is **{time}**")
@@ -194,22 +321,25 @@ class Info(commands.Cog):
         p = ctx.prefix
         value_iterator = iter(sortdict.values())
         key_iterator = iter(sortdict.keys())
-        emby = discord.Embed(title='edoC command Stats', description=f'{self.bot.total_commands_ran} Commands ran this boot\n', color=random_color())
+        emby = discord.Embed(title='edoC command Stats',
+                             description=f'{self.bot.total_commands_ran} Commands ran this boot\n',
+                             color=random_color())
 
-        emby.add_field(name='Top 10 commandas ran', value=f'🥇:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                          f'🥈:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                          f'🥉:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                          f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                          f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                          f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                          f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                          f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                          f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                          f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n')
+        emby.add_field(name='Top 10 commands ran', value=f'🥇:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                         f'🥈:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                         f'🥉:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                         f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                         f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                         f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                         f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                         f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                         f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                         f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n')
 
-        emby.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+        emby.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
 
         await ctx.reply(embed=emby)
+
     @commands.command(aliases=["stats", "status", "botinfo", "in"])
     async def about(self, ctx):
         proc = psutil.Process()
@@ -217,7 +347,6 @@ class Info(commands.Cog):
 
         with proc.oneshot():
             mem = proc.memory_full_info()
-            cpu = proc.cpu_percent() / psutil.cpu_count()
 
             e = discord.Embed(
                 title="Information about edoC",
@@ -241,12 +370,13 @@ class Info(commands.Cog):
             pmem = humanize.naturalsize(mem.rss)
             vmem = humanize.naturalsize(mem.vms)
             cmds = self.bot.total_commands_ran
+            uptime = humanize.naturaldelta(discord.utils.utcnow() - self.bot.start_time)
             e.add_field(
                 name="__:gear: Usage__",
                 value=
                 f"**{pmem}** physical memory\n"
                 f"**{vmem}** virtual memory\n"
-                f"**{cpu}**% CPU\n"
+                f"**{uptime}** Uptime\n"
                 f"**{cmds}** Commands ran this boot\n",
                 inline=True)
             e.add_field(
@@ -414,7 +544,7 @@ class Info(commands.Cog):
         avgmembers = sum(g.member_count for g in self.bot.guilds) / len(self.bot.guilds)
         totalmembers = sum(g.member_count for g in self.bot.guilds)
         embed = discord.Embed(colour=green)
-        embed.set_thumbnail(url=ctx.bot.user.avatar_url)
+        embed.set_thumbnail(url=ctx.bot.user.avatar.url)
         embed.add_field(name="Last boot", value=default.timeago(datetime.now() - self.bot.uptime), inline=True)
         embed.add_field(
             name=f"Developer (bio)[https://bio.link/edoc]",
@@ -491,6 +621,7 @@ class Info(commands.Cog):
     def top10(self):
         for key, v in self.items():
             return key
+
 
 def setup(bot):
     bot.add_cog(Info(bot))

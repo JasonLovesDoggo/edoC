@@ -1,13 +1,11 @@
-import requests
-from discord.ext.commands import CommandInvokeError
-
-import discord
 import wikipedia
-from wikipedia.exceptions import WikipediaException
 from discord.ext import commands
+from wikipedia.exceptions import WikipediaException
+
 from utils import default
 from utils.vars import *
-from cogs.events import Error
+
+
 # todo add a fuckton of elif's for the search commands so it just changes strings that the embed sends based off the cmd
 
 def urlamazon(ctx):

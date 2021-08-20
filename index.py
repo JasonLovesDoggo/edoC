@@ -6,6 +6,7 @@ from utils.data import Bot, MyNewHelp, get_prefix
 
 #TODO add a fully not erroring get_prefix
 config = default.config()
+config['edoc_all_logs']
 bot = Bot(
     command_prefix="~", prefix="~",
     owner_ids=config["owners"], case_insensitive=True, command_attrs=dict(hidden=True), help_command=MyNewHelp(),
@@ -16,7 +17,7 @@ bot = Bot(
         guilds=True, members=True, messages=True, reactions=True, presences=True, voice_states=True
     )
 )
-
+NO_LOAD_COG = ''
 
 async def process_commands(self, message):
     ctx = await self.get_context(message, cls=Context)
@@ -35,6 +36,9 @@ async def process_commands(self, message):
 try:
     bot.load_extension("jishaku")
     for file in os.listdir("cogs"):
+        if NO_LOAD_COG:
+            if file.startswith(NO_LOAD_COG):
+                continue
         if file.endswith(".py"):
             name = file[:-3]
             bot.load_extension(f"cogs.{name}")

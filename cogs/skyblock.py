@@ -108,7 +108,7 @@ class Skyblock(commands.Cog):
                 )
 
                 # Contents of discord embed
-                embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
+                embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar.url)
                 embed.set_thumbnail(url=self.McHeads + name)
 
                 embed.timestamp = ctx.message.created_at
@@ -199,7 +199,7 @@ class Skyblock(commands.Cog):
         )
 
         # Contents of discord embed
-        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
+        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar.url)
         embed.set_thumbnail(url=self.McHeads + name)
 
         embed.timestamp = ctx.message.created_at
@@ -279,7 +279,7 @@ class Skyblock(commands.Cog):
         )
 
         # Contents of discord embed
-        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
+        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar.url)
         embed.set_thumbnail(url=self.McHeads + name)
         embed.timestamp = ctx.message.created_at
 
@@ -342,7 +342,7 @@ class Skyblock(commands.Cog):
         )
 
         # Contents of discord embed
-        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
+        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar.url)
         embed.set_thumbnail(url=self.McHeads + name)
 
         embed.timestamp = ctx.message.created_at
@@ -406,7 +406,7 @@ class Skyblock(commands.Cog):
         )
 
         # Contents of discord embed
-        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
+        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar.url)
         embed.set_thumbnail(url=self.McHeads + name)
 
         embed.timestamp = ctx.message.created_at
@@ -470,7 +470,7 @@ class Skyblock(commands.Cog):
         )
 
         # Contents of discord embed
-        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
+        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar.url)
         embed.set_thumbnail(url=self.McHeads + name)
 
         embed.timestamp = ctx.message.created_at
@@ -534,7 +534,7 @@ class Skyblock(commands.Cog):
         )
 
         # Contents of discord embed
-        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
+        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar.url)
         embed.set_thumbnail(url=self.McHeads + name)
 
         embed.timestamp = ctx.message.created_at
@@ -598,7 +598,7 @@ class Skyblock(commands.Cog):
         )
 
         # Contents of discord embed
-        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
+        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar.url)
         embed.set_thumbnail(url=self.McHeads + name)
 
         embed.timestamp = ctx.message.created_at
@@ -662,7 +662,7 @@ class Skyblock(commands.Cog):
         )
 
         # Contents of discord embed
-        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
+        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar.url)
         embed.set_thumbnail(url=self.McHeads + name)
 
         embed.timestamp = ctx.message.created_at
@@ -726,7 +726,7 @@ class Skyblock(commands.Cog):
         )
 
         # Contents of discord embed
-        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar_url)
+        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar.url)
         embed.set_thumbnail(url=self.McHeads + name)
 
         embed.timestamp = ctx.message.created_at
@@ -946,7 +946,7 @@ class Skyblock(commands.Cog):
         )
 
         # Contents of discord embed
-        embed.set_author(name=f'Requested by {ctx.message.author.display_name}.', icon_url=ctx.message.author.avatar_url)
+        embed.set_author(name=f'Requested by {ctx.message.author.display_name}.', icon_url=ctx.message.author.avatar.url)
         embed.set_thumbnail(url=self.McHeads + name)
         embed.timestamp = ctx.message.created_at
 

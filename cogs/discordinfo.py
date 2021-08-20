@@ -26,7 +26,7 @@ class Discord(commands.Cog):
     async def avatar(self, ctx, *, user: discord.Member = None):
         """ Get the avatar of you or someone else """
         user = user or ctx.author
-        await ctx.send(f"Avatar to **{user.name}**\n{user.avatar_url_as(size=1024)}")
+        await ctx.send(f"Avatar to **{user.name}**\n{user.avatar.url_as(size=1024)}")
 
     @commands.command()
     @commands.guild_only()
@@ -46,13 +46,6 @@ class Discord(commands.Cog):
             numofroles = len(str(len(ctx.guild.roles)))
             length = len(role.name)
             allroles += f"[{str(num).zfill(numofroles)}] {role.id}\t{role.name}{spacefill(largest_name - length + 1)}[ Users: {len(role.members)}{spacefill(len(str(most_members - len(role.members) )))}]\r\n"
-        # """+ f"[ Users: {len(role.members)} ]\r\n"""
-        # full_roles = f"[{str(num).zfill(numofroles)}] {role.id}\t{role.name}\t[ Users: {len(role.members)} ]\r\n"
-        # thing = f"[{str(num).zfill(numofroles)}] {role.id}\t{role.name}\t"
-        # roles = f"[{str(num).zfill(numofroles)}] {role.id}\t{role.name}\t"
-        # allroles += f'{roles:{len(full_roles)}} [ Users: {len(role.members)} ]\r\n'.zfill(self)
-        # allroles += f"[{str(num).zfill(numofroles)}] {role.id}\t{role.name}\t".rjust(largest_one) + f"[ Users: {len(role.members)} ]\r\n"
-        # lenofword = len(f"[{str(num).zfill(numofroles)}] {role.id}\t{role.name}")
 
         data = BytesIO(allroles.encode("utf-8"))
         await ctx.send(content=f"Roles in **{ctx.guild.name}**",
@@ -65,7 +58,7 @@ class Discord(commands.Cog):
         user = user or ctx.author
 
         embed = discord.Embed(colour=user.top_role.colour.value)
-        embed.set_thumbnail(url=user.avatar_url)
+        embed.set_thumbnail(url=user.avatar.url)
         embed.description = f"**{user}** joined **{ctx.guild.name}**\n{default.date(user.joined_at)}"
         await ctx.send(embed=embed)
 
@@ -121,7 +114,7 @@ class Discord(commands.Cog):
         """ Get the current server icon """
         if not ctx.guild.icon:
             return await ctx.send("This server does not have a avatar...")
-        await ctx.send(f"Avatar of **{ctx.guild.name}**\n{ctx.guild.icon_url_as(size=1024)}")
+        await ctx.send(embed=discord.Embed(description=f"Avatar of **{ctx.guild.name}**", ).set_image(url=ctx.guild.icon))
 
     @server.command(name="banner")
     async def server_banner(self, ctx):
@@ -142,7 +135,7 @@ class Discord(commands.Cog):
         ) if len(user.roles) > 1 else "None"
         join_position = sorted(ctx.guild.members, key=lambda m: m.joined_at).index(user) + 1
         embed = discord.Embed(colour=user.top_role.colour.value)
-        embed.set_thumbnail(url=user.avatar_url)
+        embed.set_thumbnail(url=user.avatar.url)
 
         embed.add_field(name="Full name", value=user, inline=True)
         embed.add_field(name="Nickname", value=user.nick if hasattr(user, "nick") else "None", inline=True)
@@ -157,3 +150,7 @@ class Discord(commands.Cog):
         self.bot.remove_command("roles")
 def setup(bot):
     bot.add_cog(Discord(bot))
+
+
+class Embed(discord.Embed):
+    pass
