@@ -7,7 +7,7 @@ import humanfriendly
 
 from discord.ext import commands
 from datetime import datetime
-from utils.vars import blue, emojis
+from utils.vars import *
 
 music_ = DiscordUtils.Music()
 class Paginator(discord.ui.View):
@@ -58,16 +58,31 @@ def success_embed(title, description):
 class music(commands.Cog, description="Jam to some awesome tunes! ?"):
     def __init__(self, bot):
         self.check = '<a:checkmark:878104445702008842>'
+        self.off = 'https://i.imgur.com/fNksG3T.png'
+        self.on = 'https://i.imgur.com/xZGE55G.png'
+        self.onemoji = '<:on:878405331766624267>'
+        self.offemoji = '<:off:878405303866118214>'
         self.client = bot
         self.skip_votes = {}
 
     def error_msg(self, error):
         if error == 'not_in_voice_channel':
-            return f"{emojis['tick_no']}You need to join a voice channel first."
+            return f"{emojis['red_x']}You need to join a voice channel first."
         elif error == 'not_in_same_vc':
-            return f"{emojis['tick_no']}You need to be in the same voice channel as me."
+            return f"{emojis['red_x']}You need to be in the same voice channel as me."
         else:
             return "An error occured ._."
+
+    async def leavechnl(self, ctx):
+            player = music_.get_player(guild_id=ctx.guild.id)
+            if player:
+                try:
+                    await player.stop()
+                    await player.delete()
+                except Exception:
+                    pass
+            await ctx.voice_client.disconnect()
+            await ctx.message.add_reaction(self.check)
 
     def now_playing_embed(self, ctx, song):
         return discord.Embed(
@@ -80,8 +95,8 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
 **Channel:** [{song.channel}]({song.channel_url})
                         """
         ).set_image(url=song.thumbnail
-                    ).set_footer(text=f"Loop: {'?' if song.is_looping else '?'}",
-                                 icon_url=ctx.guild.icon.url if ctx.guild.icon is not None else 'https://cdn.discordapp.com/embed/avatars/1.png'
+                    ).set_footer(text=f"Loop: {'on' if song.is_looping else 'off'}",
+                                 icon_url=f'{self.on if song.is_looping else self.off}'
                                  ).set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
 
     @commands.command(help="I will join your voice channel.", aliases=['connect'])
@@ -122,7 +137,6 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
         return await ctx.send("**Please join the same voice channel as the bot to use the command**".title(), delete_after=30)
     @commands.command(help="I will leave your voice channel :c", aliases=['dc', 'disconnect'])
     @commands.cooldown(3, 5, commands.BucketType.user)
-    @commands.is_owner()
     async def leave(self, ctx: commands.Context):
         if not ctx.author.voice:
             ctx.command.reset_cooldown(ctx)
@@ -133,19 +147,15 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
         if ctx.author.voice.channel != ctx.guild.me.voice.channel:
             ctx.command.reset_cooldown(ctx)
             return await ctx.reply(self.error_msg("not_in_same_vc"))
-        if ctx.author.voice.channel != ctx.guild.me.voice.channel and len(ctx.guild.me.voice.channel.members) == 2 or ctx.author.guild_permissions.manage_channels:
-            await ctx.reply('blank')
-
-        player = music_.get_player(guild_id=ctx.guild.id)
-        if player:
-
-            try:
-                await player.stop()
-                await player.delete()
-            except Exception:
-                pass
-        await ctx.voice_client.disconnect()
-        await ctx.message.add_reaction(self.check)
+        if ctx.author.voice.channel == ctx.guild.me.voice.channel:
+            if len(ctx.guild.me.voice.channel.members) == 2:
+                await self.leavechnl(ctx)
+            elif ctx.author.guild_permissions.manage_channels:
+                await self.leavechnl(ctx)
+        else:
+            return await ctx.reply(embed=discord.Embed(
+                description=f'You need to either be alone with the bot or have manage channel permissions',
+                color=error))
 
     @commands.command(help="V I B E and play epik music!!!", aliases=['p'])
     @commands.cooldown(3, 10, commands.BucketType.user)
@@ -185,8 +195,8 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
             ).set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url
                          ).set_thumbnail(url=song.thumbnail
                                          ).set_footer(
-                text=f"Song added to queue | Loop: {'?' if song.is_looping else '?'}",
-                icon_url=ctx.guild.icon.url if ctx.guild.icon is not None else 'https://cdn.discordapp.com/embed/avatars/1.png'))
+                text=f"Song added to queue | Loop: {'on' if song.is_looping else 'off'}",
+                icon_url=f'{self.on if song.is_looping else self.off}'))
 
     @commands.command(help="Check the current playing song.", aliases=['np'])
     @commands.cooldown(3, 10, commands.BucketType.user)
@@ -286,11 +296,11 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
         except DiscordUtils.NotPlaying:
             return await ctx.reply("I am not playing any songs ._.")
         if song.is_looping:
-            await ctx.reply(f"? Looping `{song.name}`.")
+            await ctx.reply(embed=discord.Embed(description=f"{self.onemoji} Looping `{song.name}`", color=green))
         else:
-            await ctx.reply("? Loop disabled.")
+            await ctx.reply(embed=discord.Embed(description=f"{self.offemoji} Loop disabled.", color=error))
 
-    @commands.command(help="Check the song queue!", aliases=['q'])
+    @commands.command(help="Check the song queue!", aliases=['q', 'que'])
     async def queue(self, ctx):
         if not ctx.author.voice:
             ctx.command.reset_cooldown(ctx)

@@ -1,21 +1,12 @@
 import os
 import discord
 from discord.ext.commands.context import Context
-from utils import default
-from utils.data import Bot, MyNewHelp, get_prefix
-
+from utils.default import edoC, config
+config = config()
 #TODO add a fully not erroring get_prefix
-config = default.config()
-bot = Bot(
-    command_prefix="~", prefix="~",
-    owner_ids=config["owners"], case_insensitive=True, command_attrs=dict(hidden=True), help_command=MyNewHelp(),
-    description='Relatively simply awesome bot. Developed by Jake CEO of annoyance#1904',
-    allowed_mentions=discord.AllowedMentions(roles=True, users=True, everyone=False, replied_user=True),
-    intents=discord.Intents(
-        # kwargs found at https://discordpy.readthedocs.io/en/latest/api.html?highlight=intents#discord.Intents
-        guilds=True, members=True, messages=True, reactions=True, presences=True, voice_states=True
-    )
-)
+bot = edoC()
+
+
 NO_LOAD_COG = ''
 
 async def process_commands(self, message):

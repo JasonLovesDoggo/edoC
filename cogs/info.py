@@ -179,6 +179,17 @@ class Info(commands.Cog):
     #    translator = google_translator()
     #    translate_text = translator.translate('สวัสดีจีน', lang_tgt='en')
     #    await ctx.reply(translate_text)
+    @commands.group()
+    @commands.cooldown(rate=1, per=43200, type=commands.BucketType.user)
+    async def report(self, ctx):
+        """USAGE
+        ```yaml
+        ~report guild (reason)
+        ~report user (reason)
+        ~report bug (bug)
+        ```"""
+        if ctx.invoked_subcommand is None:
+            await ctx.send_help(str(ctx.command))
 
     @commands.command(brief="Shows the bot's uptime")
     async def uptime(self, ctx):
@@ -208,7 +219,7 @@ class Info(commands.Cog):
         embed.set_thumbnail(url=f'https://api.popcatdev.repl.co/color/image/{hex_number}?width=100&height=100')
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=['C'])
+    @commands.command(aliases=['C', 'Colour'])
     async def Color(self, ctx, colorname: ColourConverter):
         """
         The following formats are accepted:
@@ -313,7 +324,7 @@ class Info(commands.Cog):
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~
     @commands.command()
-    @commands.cooldown(rate=2, per=200, type=commands.BucketType.guild)
+    @commands.cooldown(rate=1, per=300, type=commands.BucketType.guild)
     async def CmdStats(self, ctx):
         cmdsran = self.bot.commands_ran
         marklist = sorted(cmdsran.items(), key=lambda x: x[1], reverse=True)
@@ -439,14 +450,14 @@ class Info(commands.Cog):
 
     # ~~~
     @commands.command(aliases=["SAF"])
-    @permissions.has_permissions(attach_files=True)
+    @commands.has_permissions(attach_files=True)
     async def sendasfile(self, ctx, *, text: str):
         """ sends whatever the user sent as a file"""
         data = BytesIO(text.encode("utf-8"))
         await ctx.reply(file=discord.File(data, filename=f"{default.timetext('Text')}"))
 
     @commands.command(aliases=["SAFF"])
-    @permissions.has_permissions(attach_files=True)
+    @commands.has_permissions(attach_files=True)
     async def sendasformatedfile(self, ctx, filetype: str, *, text: str):
         """ sends whatever the user sent as a file BUT with a specified filetype"""
         data = BytesIO(text.encode("utf-8"))

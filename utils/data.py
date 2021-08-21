@@ -1,24 +1,10 @@
 import discord
 
-from utils import permissions, default, vars
-from discord.ext.commands import AutoShardedBot, when_mentioned_or
+from utils import vars
 from discord.ext import commands
-from lib.db import db
+#from lib.db import db
 
-config = default.config()
-
-class Bot(AutoShardedBot):
-    def __init__(self, *args, prefix=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.prefix = prefix
-
-    async def on_message(self, msg):
-        if not self.is_ready() or msg.author.bot or not permissions.can_handle(msg, "send_messages"):
-            return
-
-        await self.process_commands(msg)
-
-
+"""
 def get_prefix(bot, message):
     try:
         if not message.guild:
@@ -26,14 +12,14 @@ def get_prefix(bot, message):
         else:
             prefix = db.field("SELECT Prefix FROM guilds WHERE GuildID = ?", message.guild.id)
             if prefix:
-                return when_mentioned_or(prefix)(bot, message)
+                return commands.when_mentioned_or(prefix)(bot, message)
             else:
                 return config["default_prefix"]
     except AttributeError:
         return config["default_prefix"]
 
 
-"""
+
 class HelpFormat(DefaultHelpCommand):
     def get_destination(self, no_pm: bool = False):
         if no_pm:

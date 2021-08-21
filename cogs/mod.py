@@ -8,13 +8,10 @@ import discord
 import re
 import asyncio
 from discord.ext import commands
-from discord.ext.commands import converter, Converter, BadArgument
+from discord.ext.commands import Converter, BadArgument
 from utils import permissions, default
-from utils.data import get_prefix
 from lib.db import db
-from utils.gets import getChannel
 from utils.vars import *
-from utils.default import send
 log = logging.getLogger('LOG')
 
 class BannedUser(Converter):
@@ -88,11 +85,11 @@ class Mod(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.config = default.config()
-        self.prefix = get_prefix
+        self.prefix = self.bot.prefix
 
     @commands.command()
     @commands.guild_only()
-    @permissions.has_permissions(manage_emojis=True)
+    @commands.has_permissions(manage_emojis=True)
     async def emoji(self, ctx, emoji: discord.PartialEmoji, *roles: discord.Role):
         """This clones a specified emoji that only specified roles
         are allowed to use.
@@ -111,7 +108,7 @@ class Mod(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
-    @permissions.has_permissions(kick_members=True)
+    @commands.has_permissions(kick_members=True)
     async def kick(self, ctx, member: discord.Member, *, reason: str = None):
         """ Kicks a user from the current server. """
         if await permissions.check_priv(ctx, member):
@@ -125,7 +122,7 @@ class Mod(commands.Cog):
 
     # @commands.command(name="delprofanity", aliases=["delswears", "delcurses"])
     # @commands.guild_only
-    # @permissions.has_permissions(manage_guild=True)
+    # @commands.has_permissions(manage_guild=True)
     # async def remove_profanity(self, ctx, *words):
     #    with open("./data/profanity.txt", "r", encoding="utf-8") as f:
     #        stored = [w.strip() for w in f.readlines()]
@@ -138,7 +135,7 @@ class Mod(commands.Cog):
     #    await ctx.send("Action complete.")
     @commands.command(aliases=["nick"])
     @commands.guild_only()
-    @permissions.has_permissions(manage_nicknames=True)
+    @commands.has_permissions(manage_nicknames=True)
     async def nickname(self, ctx, member: discord.Member, *, name: str = None):
         """ Nicknames a user from the current server. """
         if await permissions.check_priv(ctx, member):
@@ -155,7 +152,7 @@ class Mod(commands.Cog):
 
     @commands.command(aliases=["massnick"])
     @commands.guild_only()
-    @permissions.has_permissions(manage_nicknames=True)
+    @commands.has_permissions(manage_nicknames=True)
     async def massnickname(self, ctx, *, name: str = None):
         """ Nicknames all the users from the current server. """
         for member in ctx.guild.members:
@@ -176,7 +173,7 @@ class Mod(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
-    @permissions.has_permissions(ban_members=True)
+    @commands.has_permissions(ban_members=True)
     async def ban(self, ctx, member: MemberID, *, reason: str = None):
         """ Bans a user from the current server. """
         m = ctx.guild.get_member(member)
@@ -184,20 +181,19 @@ class Mod(commands.Cog):
             return
 
         try:
-            await ctx.guild.ban(discord.Object(id=member), reason=default.responsible(ctx.author, reason))
+            await ctx.guild.ban(discord.Object(id=str(member)), reason=default.responsible(ctx.author, reason))
             await ctx.send(default.actionmessage("banned"))
         except Exception as e:
             await ctx.send(e)
 
     @commands.command()
     @commands.guild_only()
-    @commands.max_concurrency(1, per=commands.BucketType.user)
-    @permissions.has_permissions(ban_members=True)
+    @commands.has_permissions(ban_members=True)
     async def massban(self, ctx, reason: ActionReason, *members: MemberID):
         """ Mass bans multiple members from the server. """
         try:
             for member_id in members:
-                await ctx.guild.ban(discord.Object(id=member_id), reason=default.responsible(ctx.author, reason))
+                await ctx.guild.ban(discord.Object(id=str(member_id)), reason=default.responsible(ctx.author, reason))
             await ctx.send(default.actionmessage("massbans", mass=True))
         except Exception as e:
             await ctx.send(e)
@@ -205,12 +201,12 @@ class Mod(commands.Cog):
     @commands.command()
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.user)
-    @permissions.has_permissions(ban_members=True)
+    @commands.has_permissions(ban_members=True)
     async def massunban(self, ctx, *members: MemberID):
         """ Mass unbans multiple members from the server. """
         try:
             for member_id in members:
-                await ctx.guild.unban(discord.Object(id=member_id))
+                await ctx.guild.unban(discord.Object(id=str(member_id)))
             await ctx.send(default.actionmessage("massunbans", mass=True))
         except Exception as e:
             await ctx.send(e)
@@ -218,23 +214,23 @@ class Mod(commands.Cog):
     @commands.command()
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.user)
-    @permissions.has_permissions(kick_members=True)
+    @commands.has_permissions(kick_members=True)
     async def masskick(self, ctx, reason: ActionReason, *members: MemberID):
         """ Mass kicks multiple members from the server. """
         try:
             for member_id in members:
-                await ctx.guild.kick(discord.Object(id=member_id), reason=default.responsible(ctx.author, reason))
+                await ctx.guild.kick(discord.Object(id=str(member_id)), reason=default.responsible(ctx.author, reason))
             await ctx.send(default.actionmessage("masskickd", mass=True))
         except Exception as e:
             await ctx.send(e)
 
     @commands.command()
     @commands.guild_only()
-    @permissions.has_permissions(ban_members=True)
+    @commands.has_permissions(ban_members=True)
     async def unban(self, ctx, member: MemberID, *, reason: str = None):
         """ Unbans a user from the current server. """
         try:
-            await ctx.guild.unban(discord.Object(id=member), reason=default.responsible(ctx.author, reason))
+            await ctx.guild.unban(discord.Object(id=str(member)), reason=default.responsible(ctx.author, reason))
             await ctx.send(default.actionmessage("unbanned"))
         except Exception as e:
             await ctx.send(e)
@@ -317,7 +313,7 @@ class Mod(commands.Cog):
                 await edit(ctx, embed=e)"""
     @commands.command()
     @commands.guild_only()
-    @permissions.has_permissions(manage_roles=True)
+    @commands.has_permissions(manage_roles=True)
     async def mute(self, ctx, member: discord.Member, *, reason: str = None):
         """ Mutes a user from the current server. """
         if await permissions.check_priv(ctx, member):
@@ -337,7 +333,7 @@ class Mod(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
-    @permissions.has_permissions(manage_roles=True)
+    @commands.has_permissions(manage_roles=True)
     async def unmute(self, ctx, member: discord.Member, *, reason: str = None):
         """ Unmutes a user from the current server. """
         if await permissions.check_priv(ctx, member):
@@ -357,7 +353,7 @@ class Mod(commands.Cog):
 
     @commands.command(aliases=["ar"])
     @commands.guild_only()
-    @permissions.has_permissions(manage_roles=True)
+    @commands.has_permissions(manage_roles=True)
     async def announcerole(self, ctx, *, role: discord.Role):
         """ Makes a role mentionable and removes it whenever you mention the role """
         if role == ctx.guild.default_role:
@@ -396,7 +392,7 @@ class Mod(commands.Cog):
 
     @commands.group()
     @commands.guild_only()
-    @permissions.has_permissions(manage_messages=True)
+    @commands.has_permissions(manage_messages=True)
     async def find(self, ctx):
         """ Finds a user within your search term """
         if ctx.invoked_subcommand is None:
@@ -449,7 +445,7 @@ class Mod(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
-    @permissions.has_permissions(manage_roles=True)
+    @commands.has_permissions(manage_roles=True)
     async def lock(self, ctx):
         channel = ctx.channel
         overwrite = channel.overwrites_for(ctx.guild.default_role)
@@ -474,7 +470,7 @@ class Mod(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
-    @permissions.has_permissions(manage_roles=True)
+    @commands.has_permissions(manage_roles=True)
     async def unlock(self, ctx):
         channel = ctx.channel
         overwrite = channel.overwrites_for(ctx.guild.default_role)
@@ -513,7 +509,7 @@ class Mod(commands.Cog):
     @commands.group(aliases=["purge", "clr", "clear"])
     @commands.guild_only()
     @commands.max_concurrency(1, per=commands.BucketType.guild)
-    @permissions.has_permissions(manage_messages=True)
+    @commands.has_permissions(manage_messages=True)
     async def prune(self, ctx):
         """ Removes messages from the current server. """
         if ctx.invoked_subcommand is None:

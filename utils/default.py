@@ -1,16 +1,21 @@
 ﻿import asyncio
+import io
 import logging
 import time
 import json
+
+import aiohttp
 import discord
 import traceback
 import timeago as timesince
-
 from io import BytesIO
+from discord.ext import commands
 
-log = logging.getLogger(__name__)
+from utils.data import MyNewHelp
 
-
+def can_handle(ctx, permission: str):
+    """ Checks if bot has permissions or is in DMs right now """
+    return isinstance(ctx.channel, discord.DMChannel) or getattr(ctx.channel.permissions_for(ctx.guild.me), permission)
 def config(filename: str = "config"):
     """ Fetch default config file """
     try:
@@ -18,6 +23,66 @@ def config(filename: str = "config"):
             return json.load(data)
     except FileNotFoundError:
         raise FileNotFoundError("JSON file wasn't found")
+
+
+confi = config()
+log = logging.getLogger(__name__)
+description = 'Relatively simply awesome bot. Developed by Jake CEO of annoyance#1904'
+
+
+class edoC(commands.AutoShardedBot):
+    def __init__(self):
+        allowed_mentions = discord.AllowedMentions(roles=True, everyone=False, users=True)
+        intents = discord.Intents(
+            guilds=True,
+            members=True,
+            bans=True,
+            emojis=True,
+            voice_states=True,
+            messages=True,
+            reactions=True,
+            presences=True
+        )
+        super().__init__(command_prefix="~", description=description,
+                         pm_help=None, help_attrs=dict(hidden=True),
+                         chunk_guilds_at_startup=False, heartbeat_timeout=150.0,
+                         allowed_mentions=allowed_mentions, intents=intents,
+                         owner_ids=confi["owners"], case_insensitive=True,
+                         command_attrs=dict(hidden=True), help_command=MyNewHelp(), )
+        self.session = aiohttp.ClientSession(loop=self.loop)
+        self.prefix = '~'
+        #self.blacklist = Config('blacklist.json')
+    #async def on_guild_join(self, guild):
+    #    if guild.id in self.blacklist:
+    #        await guild.leave()
+
+    async def on_message(self, msg):
+        if not self.is_ready() or msg.author.bot or not can_handle(msg, "send_messages"):
+            return
+
+        await self.process_commands(msg)
+
+class Context(commands.Context):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def session(self):
+        return self.bot.session
+
+    async def safe_send(self, content, *, escape_mentions=True, **kwargs):
+        """Same as send except with some safe guards.
+        1) If the message is too long then it sends a file with the results instead.
+        2) If ``escape_mentions`` is ``True`` then it escapes mentions.
+        """
+        if escape_mentions:
+            content = discord.utils.escape_mentions(content)
+
+        if len(content) > 2000:
+            fp = io.BytesIO(content.encode())
+            kwargs.pop('file', None)
+            return await self.send(file=discord.File(fp, filename='message_too_long.txt'), **kwargs)
+        else:
+            return await self.send(content)
 
 
 def UpdateBlacklist(newblacklist, filename: str = "blacklist"):
@@ -42,14 +107,22 @@ def MakeBlackList(dict, filename: str = "blacklist", ):
     except FileNotFoundError:
         raise FileNotFoundError("JSON file wasn't found")
 
+
 def bold(text: str):
     return f'**{text}**'
+
+
 def italic(text: str):
     return f'*{text}*'
+
+
 def bolditalic(text: str):
     return f'***{text}***'
+
+
 def underline(text: str):
     return f'__{text}__'
+
 
 def traceback_maker(err, advance: bool = True):
     """ A way to debug your code anywhere """

@@ -306,18 +306,9 @@ class Events(commands.Cog):
                                      key=lambda z: z.position)[0]
                 except IndexError:
                     pass
-                try:
-                    invite_link = await to_send.create_invite(max_uses=1, unique=False, temporary=True)
-                    invite_link_cache += str(invite_link)
-                except discord.Forbidden:
-                    invite_link = "Invalid perms"
-                # if Server.id in guilds:
-                #    verified: bool = True
-                # else:
-                #   verified: bool = False
                 gprefix = db.field('SELECT Prefix FROM guilds WHERE GuildID = ?', Server.id)
                 print(
-                    f"{Server.id} ~ {Server} ~ {Server.owner} ~ {Server.member_count} ~ {invite_link if str(invite_link) not in invite_link_cache else 'Invalid perms'} ~ Prefix {gprefix}")
+                    f"{Server.id} ~ {Server} ~ {Server.owner} ~ {Server.member_count} ~ Prefix {gprefix}")
         else:
             print(f"{self.bot.user} Reconnected")
             await logschannel.send(f"{self.bot.user} has been reconnected")

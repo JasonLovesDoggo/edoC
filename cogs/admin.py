@@ -25,6 +25,7 @@ import io
 import textwrap
 import traceback
 from contextlib import redirect_stdout
+
 on = False
 
 
@@ -39,13 +40,27 @@ class Admin(commands.Cog):
         self._last_result = None
         self.sessions = set()
 
-    @commands.command()
+    @commands.command(aliases=['ExitGuild'])
     @commands.is_owner()
-    async def leave(self, ctx, *, guild_name):
+    async def LeaveGuild(self, ctx, *, guild_name):
         guild = discord.utils.get(self.bot.guilds, name=guild_name)
         if guild is None:
             await ctx.send("I don't recognize that guild.")
             return
+        confirmcode = random.randint(0, 99999)
+        confirm_msg = await ctx.send(f"Type `{confirmcode}` within 30s to confirm this choice\n")
+
+        def check_confirm(m):
+            if m.author == ctx.author and m.channel == ctx.channel:
+                if m.content.startswith(str(confirmcode)):
+                    return True
+            return False
+
+        try:
+             user = await self.bot.wait_for('message', timeout=30.0, check=check_confirm)
+        except asyncio.TimeoutError:
+            return await confirm_msg.edit(
+                content=f"~~{confirm_msg.clean_content}~~\n\nStopped process...")
         await self.bot.leave_guild(guild)
         await ctx.send(f":ok_hand: Left guild: {guild.name} ({guild.id})")
 
@@ -70,7 +85,7 @@ class Admin(commands.Cog):
         return content.strip('` \n')
 
     @commands.command(aliases=["pyeval"])
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def eval(self, ctx, *, body: str):
         """Evaluates a code"""
 
@@ -118,19 +133,22 @@ class Admin(commands.Cog):
                 await ctx.send(f'```py\n{value}{ret}\n```')
 
     @commands.command()
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def rules(self, ctx):
         emb = discord.Embed(title="edoC Support Server Rules\nPlease Read Carefully",
                             color=white
                             )
         emb.set_author(name="Jason", url="https://bio.link/edoC", icon_url="https://i.imgur.com/LOJhKuN.png")
         emb.description = rules
-        emb.set_footer(text="Saying that you’re joking isn’t an excuse for breaking rules.\nThese rules are subject to change at anytime without prior notice.")
+        emb.set_footer(
+            text="Saying that you’re joking isn’t an excuse for breaking rules.\nThese rules are subject to change at anytime without prior notice.")
         emb.set_thumbnail(url="https://i.imgur.com/yww1r5E.jpeg")
-        await ctx.send(allowed_mentions=discord.AllowedMentions(roles=True, users=True, everyone=True, replied_user=True), embed=emb)
+        await ctx.send(
+            allowed_mentions=discord.AllowedMentions(roles=True, users=True, everyone=True, replied_user=True),
+            embed=emb)
 
     @commands.command()
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def update(self, ctx):
         sh = "jsk sh"
 
@@ -149,7 +167,7 @@ class Admin(commands.Cog):
         await self.shutdown()
 
     @commands.group(aliases=["su"])
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def sudo(self, ctx: commands.Context, target: discord.User, *, command_string: str):
         """
         Run a command as someone else.
@@ -173,7 +191,7 @@ class Admin(commands.Cog):
         return await alt_ctx.command.invoke(alt_ctx)
 
     @sudo.command(name="in")
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def edoC_in(self, ctx: commands.Context, channel: discord.TextChannel, *, command_string: str):
         """
         Run a command as if it were run in a different channel.
@@ -187,7 +205,7 @@ class Admin(commands.Cog):
         return await alt_ctx.command.invoke(alt_ctx)
 
     @sudo.command(aliases=["src"])
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def source(self, ctx: commands.Context, *, command_name: str):
         """
         Displays the source code for a command.
@@ -213,7 +231,7 @@ class Admin(commands.Cog):
         await interface.send_to(ctx)
 
     @commands.command()
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def change_config_value(self, value: str, changeto: str):
         """ Change a value from the configs """
         config_name = "config.json"
@@ -239,7 +257,7 @@ class Admin(commands.Cog):
         await ctx.send(f"no, heck off {ctx.author.name}")
 
     @commands.command(aliases=["botusers", "botmembers", "thepeoplemybothaspowerover"])
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def users(self, ctx):
         """ Gets all users """
         allusers = ""
@@ -256,20 +274,20 @@ class Admin(commands.Cog):
             return await ctx.send("Couldn\'t find that user.")
 
     @commands.command()  # idk i wanted this
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def print(self, what_they_said: str):
         """ prints to console said text"""
         print(what_they_said)
 
     @commands.command()
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def say(self, ctx, *, what_to_say: str):
         """ says text """
         await ctx.message.delete()
         await ctx.send(f'{what_to_say}')
 
     @commands.command()
-    @permissions.has_permissions(manage_guild=True)
+    @commands.has_permissions(manage_guild=True)
     async def prefix(self, ctx, next_prefix: str):
         """
          Change the value of prefix for the guild and insert it into the guilds table
@@ -281,7 +299,7 @@ class Admin(commands.Cog):
         return cur.lastrowid
 
     @commands.command(aliases=["rp", "saymore"])
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def saymany(self, ctx, times: int, *, content='repeating...'):
         """Repeats a message multiple times."""
         saidtimes = 0
@@ -291,20 +309,20 @@ class Admin(commands.Cog):
             await asyncio.sleep(1.0)
 
     @commands.group()
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def file(self, ctx):
         if ctx.invoked_subcommand is None:
             await ctx.send_help(str(ctx.command))
 
     @file.command(name="send")
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def file_send(self, ctx, filename: str):
         """ sends the filename file """
         file = discord.File(f"C:/Users/Jason/edoC/cogs/Texts/{filename}.txt")
         await ctx.send(file=file)
 
     @file.command(name="read", aliases=["sayscript", "readscript"])
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def file_read(self, ctx, filename: str):
         """ Reads the file specified and sends it"""
         await ctx.send(f'Why you madman why dare try to open {filename}')
@@ -318,7 +336,7 @@ class Admin(commands.Cog):
             await asyncio.sleep(1.2)
 
     @file.command(name="write", aliases=["writescript"])
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def file_write(self, ctx, filename: str, *, everythin_else):
         """ Writes a file from discord to the pc/server """
         message = await ctx.send('starting...')
@@ -330,13 +348,13 @@ class Admin(commands.Cog):
         await message.edit(content="Done!")
 
     @commands.command(aliases=["bban"])
-    @commands.check(permissions.is_owner or permissions.is_mod)
+    @commands.is_owner()
     async def botban(self, ctx, userid: MemberID, *, reason: str):
         await BanUser(ctx, userid, reason)
         await ctx.send(f"banned {userid} for {reason}")
 
     @commands.command(aliases=["l"])
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def load(self, ctx, name: str):
         """ Loads an extension. """
         try:
@@ -346,7 +364,7 @@ class Admin(commands.Cog):
         await ctx.send(f"Loaded extension **{name}.py**")
 
     @commands.command()
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def unload(self, ctx, name: str):
         """ Unloads an extension. """
         try:
@@ -356,7 +374,7 @@ class Admin(commands.Cog):
         await ctx.send(f"Unloaded extension **{name}.py**")
 
     @commands.command(aliases=["r"])
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def reload(self, ctx, name: str):
         """ Reloads an extension. """
         try:
@@ -366,7 +384,7 @@ class Admin(commands.Cog):
         await ctx.send(f"Reloaded extension **{name}.py**")
 
     @commands.command(aliases=["ra"])
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def reloadall(self, ctx):
         """ Reloads all extensions. """
         error_collection = []
@@ -390,7 +408,7 @@ class Admin(commands.Cog):
         await ctx.send("Successfully reloaded all extensions")
 
     @commands.command(aliases=["ru"])
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def reloadutils(self, ctx, name: str):
         """ Reloads a utils module. """
         name_maker = f"utils/{name}.py"
@@ -405,7 +423,7 @@ class Admin(commands.Cog):
         await ctx.send(f"Reloaded module **{name_maker}**")
 
     @commands.command()
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def shutdown(self, ctx):
         """ shut down the bot """
         await ctx.send("Shuting down now...")
@@ -418,7 +436,7 @@ class Admin(commands.Cog):
         sys.exit("Bot shut down")
 
     @commands.command()
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def todoadd(self, ctx, *, message: str):
         """Dumps the message into todo.txt"""
         todofile = open("todo.txt", "a")
@@ -427,7 +445,7 @@ class Admin(commands.Cog):
         todofile.close()
 
     @commands.command()
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def clearfile(self, ctx, filename: str):
         """clears the specified filename file"""
         file2 = open(filename, "w+")
@@ -436,7 +454,7 @@ class Admin(commands.Cog):
         file2.close
 
     @commands.command(pass_context=True)
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def massrole(self, ctx, role_id: discord.Role = None):
         """ Gives all the members of the server said role """
         if role_id is None:
@@ -457,7 +475,7 @@ class Admin(commands.Cog):
                        file=discord.File(data, filename=f"{default.timetext('AddedUsers')}"))
 
     @commands.command(aliases=["trole", "ToggleRole"])
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def role(self, ctx, *, role: discord.Role = None):
         """
         Toggle whether or not you have a role. Usage: `~role CoolDudes`. Can take roles with spaces.
@@ -478,7 +496,7 @@ class Admin(commands.Cog):
                                   .format(role, ctx.message.author.mention))
 
     @commands.command()
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def dm(self, ctx, user_id: int, *, message: str):
         """ DM the user of your choice """
         user = self.bot.get_user(user_id)
@@ -492,13 +510,13 @@ class Admin(commands.Cog):
             await ctx.send("This user might be having DMs blocked or it's a bot account...")
 
     @commands.group()
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def change(self, ctx):
         if ctx.invoked_subcommand is None:
             await ctx.send_help(str(ctx.command))
 
     @change.command(name="playing")
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def change_playing(self, ctx, *, playing: str):
         """ Change playing status. """
         status = self.config["status_type"].lower()
@@ -521,7 +539,7 @@ class Admin(commands.Cog):
             await ctx.send(e)
 
     @change.command(name="username")
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def change_username(self, ctx, *, name: str):
         """ Change username. """
         try:
@@ -531,7 +549,7 @@ class Admin(commands.Cog):
             await ctx.send(err)
 
     @change.command(name="nickname")
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def change_nickname(self, ctx, *, name: str = None):
         """ Change nickname. """
         try:
@@ -544,7 +562,7 @@ class Admin(commands.Cog):
             await ctx.send(err)
 
     @change.command(name="avatar")
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     async def change_avatar(self, ctx, url: str = None):
         """ Change avatar. """
         if url is None and len(ctx.message.attachments) == 1:
@@ -581,7 +599,7 @@ class Admin(commands.Cog):
                 pass
         self.filenum = self.highest_num
 
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     @commands.command(aliases=["RDPN"])
     async def ResetDogPhotoNames(self, ctx):
         path = self.DoggoPath
@@ -590,7 +608,7 @@ class Admin(commands.Cog):
             os.rename(os.path.join(path, file), os.path.join(path, ''.join(f"{random.random()}.jpg")))
         await ctx.send(f"done")
 
-    @commands.check(permissions.is_owner)
+    @commands.is_owner()
     @commands.command(aliases=["FDP"])
     async def FormatDogPhotos(self, ctx):
         """ Function to rename all the doggo files """
@@ -600,6 +618,7 @@ class Admin(commands.Cog):
             self.filenum += 1
             os.rename(os.path.join(path, file), os.path.join(path, ''.join([str(self.filenum), '.jpg'])))
         await ctx.send(f"done\ncurrent limit is {self.filenum}")
+
 
 def setup(bot):
     bot.add_cog(Admin(bot))

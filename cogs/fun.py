@@ -91,7 +91,7 @@ class Fun(commands.Cog):
         emb.set_image(url=api)
         await ctx.send(embed=emb)
 
-    @commands.command(pass_context=True, aliases=['identify', 'captcha', 'whatis'])
+    @commands.command(aliases=['identify', 'captcha', 'whatis'])
     async def i(self, ctx, *, url: str):
         """Identify an image/gif using Microsofts Captionbot API"""
         with aiohttp.ClientSession() as session:
@@ -101,7 +101,6 @@ class Fun(commands.Cog):
         load = await self.get_json("https://www.captionbot.ai/api/message?waterMark=&conversationId=FPrBPK2gAJj")
         msg = '`{0}`'.format(json.loads(load)['BotMessages'][-1])
         await ctx.send(msg)
-
 
     @commands.command(aliases=["rfact", "rf"])
     @commands.cooldown(rate=1, per=1.3, type=commands.BucketType.user)
@@ -252,7 +251,6 @@ class Fun(commands.Cog):
         await ctx.send(tosend)
 
     @commands.group()
-    @commands.check(permissions.is_owner)
     async def math(self, ctx):
         if ctx.invoked_subcommand is None:
             await ctx.send_help(str(ctx.command))
@@ -319,6 +317,7 @@ class Fun(commands.Cog):
 
     @commands.command(hidden=True)
     @commands.check(permissions.is_taco)
+    @commands.is_nsfw()
     async def img(self, ctx, imgtype: str):
         try:
             await ctx.reply(nekos.img(target=imgtype))
@@ -329,32 +328,6 @@ class Fun(commands.Cog):
     async def test(self, ctx):
         """ Test command for testing """
         await ctx.send(f"**{ctx.author.name}** has done the **Test** command Oo")
-
-    @commands.command()
-    @commands.cooldown(rate=1, per=2.0, type=commands.BucketType.user)
-    async def urban(self, ctx, *, search: commands.clean_content):
-        """ Find the 'best' definition to your words """
-        async with ctx.channel.typing():
-            try:
-                url = await http.get(f"https://api.urbandictionary.com/v0/define?term={search}", res_method="json")
-            except Exception:
-                return await ctx.send("Urban API returned invalid data... might be down atm.")
-
-            if not url:
-                return await ctx.send("I think the API broke...")
-
-            if not len(url["list"]):
-                return await ctx.send("Couldn't find your search in the dictionary...")
-
-            result = sorted(url["list"], reverse=True, key=lambda g: int(g["thumbs_up"]))[0]
-
-            definition = result["definition"]
-            if len(definition) >= 1000:
-                definition = definition[:1000]
-                definition = definition.rsplit(" ", 1)[0]
-                definition += "..."
-
-            await ctx.send(f"📚 Definitions for **{result['word']}**```fix\n{definition}```")
 
     @commands.command()
     async def reverse(self, ctx, *, text: str):

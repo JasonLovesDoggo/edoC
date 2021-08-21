@@ -1,5 +1,4 @@
 from discord.ext import commands
-from utils.permissions import is_owner, is_mod
 from utils import default
 import psutil
 import os
