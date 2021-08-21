@@ -8,7 +8,7 @@
 
 
 ## Requirements
-- Python 3.6 and up - https://www.python.org/downloads/
+- Python 3.8 and up - https://www.python.org/downloads/
 - git - https://git-scm.com/download/
 
 ### Docker
