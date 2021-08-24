@@ -21,6 +21,7 @@ from cogs.mod import BanUser, MemberID
 from lib.db import db
 from lib.db.db import cur
 from utils import default, http
+from utils.default import is_admin
 from utils.vars import *
 
 on = False
@@ -60,17 +61,6 @@ class Admin(commands.Cog):
                 content=f"~~{confirm_msg.clean_content}~~\n\nStopped process...")
         await self.bot.leave_guild(guild)
         await ctx.send(f":ok_hand: Left guild: {guild.name} ({guild.id})")
-
-    @commands.command(hidden=True)
-    async def do(self, ctx, times: int, *, command):
-        """Repeats a command a specified number of times."""
-        msg = copy.copy(ctx.message)
-        msg.content = ctx.prefix + command
-
-        new_ctx = await self.bot.get_context(msg, cls=type(ctx))
-
-        for i in range(times):
-            await new_ctx.reinvoke()
 
     def cleanup_code(self, content):
         """Automatically removes code blocks from the code."""

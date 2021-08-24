@@ -4,16 +4,16 @@ import json
 import os
 import secrets
 import sys
+from asyncio import sleep
 from io import BytesIO
 
 import aiohttp
 import nekos
 from discord.ext import commands
 from bs4 import BeautifulSoup
-from jishaku.models import copy_context_with
 from nekos import InvalidArgument
 
-from utils import permissions, http, default
+from utils import checks, http, default
 from utils.gets import getEmote
 from utils.vars import *
 import pyfiglet
@@ -163,14 +163,21 @@ class Fun(commands.Cog):
             else:
                 await ctx.send(embed=discord.Embed(title='Random Dog').set_image(url=url))
 
-    @commands.command(aliases=["cate", "kat"])
+    @commands.group()
+    @commands.cooldown(3, 7, type=commands.BucketType.user)
     async def cat(self, ctx):
-        """Gives you a random cat pic."""
-        async with self.bot.session.get('https://api.thecatapi.com/v1/images/search') as resp:
+        """Gives you a random cat."""
+        base_url = 'https://cataas.com'
+        async with ctx.session.get('https://cataas.com/cat?json=true') as resp:
             if resp.status != 200:
                 return await ctx.send('No cat found :(')
             js = await resp.json()
-            await ctx.send(embed=discord.Embed(title='Random Cat').set_image(url=js[0]['url']))
+            await ctx.send(embed=discord.Embed(title='Meow!', url=base_url + js['url']).set_image(url=base_url + js['url']))
+
+    @cat.command(aliases=['hello'])
+    async def hi(self, ctx):
+        url = 'https://cataas.com/cat/says/hello?size=50&color=white'
+        await ctx.send(embed=discord.Embed(title='Hi!').set_image(url=url))
 
     @commands.command(aliases=['lizzyboi'])
     @commands.cooldown(1, 2, type=commands.BucketType.user)
@@ -324,9 +331,11 @@ class Fun(commands.Cog):
         await ctx.reply(nekos.why())
 
     @commands.command(hidden=True)
-    @commands.check(permissions.is_taco)
     @commands.is_nsfw()
     async def img(self, ctx, imgtype: str):
+        peeps = {709086074537771019, 511724576674414600}
+        if ctx.author.id not in peeps:
+            return
         try:
             await ctx.reply(nekos.img(target=imgtype))
         except InvalidArgument:
@@ -394,6 +403,23 @@ class Fun(commands.Cog):
         """ Rates what you desire """
         rate_amount = random.uniform(0.0, 100.0)
         await ctx.send(f"I'd rate `{thing}` a **{round(rate_amount, 4)} / 100**")
+
+    @commands.command(aliases=['cd'])
+    async def countdown(self, ctx, times: int = 3, *, tosay: str = "Go Go Go"):
+        """Counts down max of 10
+        but with a default of 3"""
+
+        if times > 10:
+            return await ctx.reply(embed=discord.Embed(color=error, description='The number must be between 0 and 10'))
+
+        msg = await ctx.reply(times)
+        countdown = times - 1
+        await sleep(1)
+        for i in range(countdown):
+            await msg.edit(content=countdown - i)
+            await sleep(1)
+
+        await msg.edit(f'**{tosay}**')
 
     @commands.command()
     async def ship(self, ctx, person1: commands.clean_content, person2: commands.clean_content):

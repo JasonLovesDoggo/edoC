@@ -1,4 +1,5 @@
 import unicodedata
+from asyncio import sleep
 from collections import Counter
 from typing import Union
 
@@ -45,6 +46,23 @@ class Discord(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.config = default.config()
+
+    async def say_permissions(self, ctx, member, channel):
+        permissions = channel.permissions_for(member)
+        e = discord.Embed(colour=member.colour)
+        avatar = member.avatar.with_static_format('png')
+        e.set_author(name=str(member), icon_url=avatar)
+        allowed, denied = [], []
+        for name, value in permissions:
+            name = name.replace('_', ' ').replace('guild', 'server').title()
+            if value:
+                allowed.append(name)
+            else:
+                denied.append(name)
+
+        e.add_field(name='Allowed', value='\n'.join(allowed))
+        e.add_field(name='Denied', value='\n'.join(denied))
+        await ctx.send(embed=e)
 
     @commands.command()
     async def charinfo(self, ctx, *, characters: str):
@@ -105,6 +123,12 @@ class Discord(commands.Cog):
         embed.set_thumbnail(url=user.avatar.url)
         embed.description = f"**{user}** joined **{ctx.guild.name}**\n{default.date(user.joined_at)}"
         await ctx.send(embed=embed)
+
+    @commands.command(aliases=["joinme", "inviteme", "botinvite"])
+    async def invite(self, ctx):
+        """Joins a server."""
+        perms = discord.Permissions.all()
+        await ctx.send(f'<{discord.utils.oauth_url(self.bot.client_id, permissions=perms)}>')
 
     @commands.command()
     @commands.guild_only()
@@ -234,9 +258,7 @@ class Discord(commands.Cog):
                 emoji_stats['regular'] += 1
                 emoji_stats['disabled'] += not emoji.available
                 gel = guild.emoji_limit
-                fmt = f'Regular: {emoji_stats["regular"]}/{gel}\n' \
-                      f'Animated: {emoji_stats["animated"]}/{gel}\n' \
- \
+                fmt = f'Regular: {emoji_stats["regular"]}/{gel}\nAnimated: {emoji_stats["animated"]}/{gel}\n'
                 if emoji_stats['disabled'] or emoji_stats['animated_disabled']:
                     fmt = f'{fmt}Disabled: {emoji_stats["disabled"]} regular, {emoji_stats["animated_disabled"]} animated\n'
 
@@ -304,6 +326,58 @@ class Discord(commands.Cog):
             e.set_footer(text='This member is not in this server.')
 
         await ctx.send(embed=e)
+
+    @commands.command()
+    @commands.guild_only()
+    async def permissions(self, ctx, member: discord.Member = None, channel: discord.TextChannel = None):
+        """Shows a member's permissions in a specific channel.
+        If no channel is given then it uses the current one.
+        You cannot use this in private messages. If no member is given then
+        the info returned will be yours.
+        """
+        channel = channel or ctx.channel
+        if member is None:
+            member = ctx.author
+
+        await self.say_permissions(ctx, member, channel)
+
+    @commands.command()
+    @commands.guild_only()
+    @default.mod_or_permissions(manage_roles=True)
+    async def botpermissions(self, ctx, *, channel: discord.TextChannel = None):
+        """Shows the bot's permissions in a specific channel.
+        If no channel is given then it uses the current one.
+        This is a good way of checking if the bot has the permissions needed
+        to execute the commands it wants to execute.
+        To execute this command you must have Manage Roles permission.
+        You cannot use this in private messages.
+        """
+        channel = channel or ctx.channel
+        member = ctx.guild.me
+        await self.say_permissions(ctx, member, channel)
+
+    @commands.command(aliases=['Dp'])
+    @commands.is_owner()
+    async def debugpermissions(self, ctx, guild_id: int, channel_id: int, author_id: int = None):
+        """Shows permission resolution for a channel and an optional author."""
+
+        guild = self.bot.get_guild(guild_id)
+        if guild is None:
+            return await ctx.send('Guild not found?')
+
+        channel = guild.get_channel(channel_id)
+        if channel is None:
+            return await ctx.send('Channel not found?')
+
+        if author_id is None:
+            member = guild.me
+        else:
+            member = await self.bot.get_or_fetch_member(guild, author_id)
+
+        if member is None:
+            return await ctx.send('Member not found?')
+
+        await self.say_permissions(ctx, member, channel)
 
     @commands.command(aliases=['Se'])
     @commands.guild_only()

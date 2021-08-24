@@ -1,26 +1,18 @@
 import os
 import pathlib
 import platform
-import time
-from io import BytesIO
 from typing import List, Tuple
 
-import aiohttp
-# from utils.transwrapper import google_translator
-import discord
 import googletrans
 import humanize
 import psutil
-from discord.ext import commands
 from discord.ext.commands import ColourConverter
 from discord.ext.menus import ListPageSource
-from googletrans import Translator
 from pyshorteners import Shortener
 
 from cogs.music import Paginator
 from lib.db import db
-from utils import default, permissions
-from utils.default import toggle_role
+from utils.default import *
 from utils.gets import *
 from utils.info import fetch_info
 from utils.vars import *
@@ -51,14 +43,10 @@ def hex_to_rgb(value):
     return tuple(int(v[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
 
 
-def convert_all_to_hex(inputcolor):
-    pass
-
-
 class Info(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.config = default.config()
+        self.config = config()
         self.PADDING = 9
         self.process = psutil.Process(os.getpid())
         self.event = self.bot.get_cog("Events")
@@ -119,17 +107,6 @@ class Info(commands.Cog):
         embed.add_field(name=f'To {dest}', value=ret.text, inline=False)
         await ctx.reply(embed=embed)
 
-    # @commands.command(name='translate', aliases=['trans'])
-    # async def translates(self, ctx, *, text):
-    #    """``Translates a sentence into a specific language``"""
-    #    #src, dest = languages.split('-')
-    #    #trans = self.translator.translate(src=src, dest=dest, text=text)
-    #    #embed = await self.create_embed(description='', field=[(text, f'`{trans.text}`', False)])
-    #    #embed.set_footer(text=dest)
-    #    #await ctx.send(embed=embed)
-    #    translator = google_translator()
-    #    translate_text = translator.translate('สวัสดีจีน', lang_tgt='en')
-    #    await ctx.reply(translate_text)
     @commands.group()
     @commands.cooldown(rate=1, per=43200, type=commands.BucketType.user)
     async def report(self, ctx):
@@ -425,14 +402,14 @@ class Info(commands.Cog):
     async def sendasfile(self, ctx, *, text: str):
         """ sends whatever the user sent as a file"""
         data = BytesIO(text.encode("utf-8"))
-        await ctx.reply(file=discord.File(data, filename=f"{default.timetext('Text')}"))
+        await ctx.reply(file=discord.File(data, filename=f"{timetext('Text')}"))
 
     @commands.command(aliases=["SAFF"])
     @commands.has_permissions(attach_files=True)
     async def sendasformatedfile(self, ctx, filetype: str, *, text: str):
         """ sends whatever the user sent as a file BUT with a specified filetype"""
         data = BytesIO(text.encode("utf-8"))
-        await ctx.reply(file=discord.File(data, filename=f"{default.CustomTimetext(filetype, 'Text')}"))
+        await ctx.reply(file=discord.File(data, filename=f"{CustomTimetext(filetype, 'Text')}"))
 
     @commands.command()
     async def ping(self, ctx):
@@ -483,14 +460,6 @@ class Info(commands.Cog):
         e.set_footer(text=f"Requested by {ctx.author.name}\n{embedfooter}")
         await ctx.send(embed=e)
 
-    @commands.command(aliases=["joinme", "inviteme", "botinvite"])
-    async def invite(self, ctx):
-        """Sends you the bot invite link."""
-        perms = discord.Permissions.none()
-        perms.administrator = True
-        await ctx.reply(
-            f"**{ctx.author.name}**, use this URL to invite me\n<{discord.utils.oauth_url(self.bot.user.id, perms)}>")
-
     @commands.command()
     async def changehelp(self, ctx):
         """ Give Info on ~change """
@@ -527,7 +496,7 @@ class Info(commands.Cog):
         totalmembers = sum(g.member_count for g in self.bot.guilds)
         embed = discord.Embed(colour=green)
         embed.set_thumbnail(url=ctx.bot.user.avatar.url)
-        embed.add_field(name="Last boot", value=default.timeago(datetime.now() - self.bot.uptime), inline=True)
+        embed.add_field(name="Last boot", value=timeago(datetime.now() - self.bot.uptime), inline=True)
         embed.add_field(
             name=f"Developer (bio)[https://bio.link/edoc]",
             value=", ".join([str(self.bot.get_user(x)) for x in self.config["owners"]]),

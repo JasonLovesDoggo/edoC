@@ -1,28 +1,7 @@
-import discord
-from discord.ext import commands
-from discord.ext.commands import (
-    NotOwner, check,
-)
 from utils.default import config
 
 config = config()
 owners = config["owners"]
-
-peeps = {709086074537771019, 511724576674414600}
-
-
-def is_taco(ctx):
-    return ctx.author.id in peeps
-
-
-async def check_permissions(ctx, perms, *, check=all):
-    """ Checks if author has permissions to a permission """
-    if ctx.author.id in owners:
-        return True
-
-    resolved = ctx.channel.permissions_for(ctx.author)
-    return check(getattr(resolved, name, None) == value for name, value in perms.items())
-
 
 async def check_priv(ctx, member):
     """ Custom (weird) way to check permissions when handling moderation commands """
