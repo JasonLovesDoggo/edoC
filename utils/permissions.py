@@ -9,8 +9,11 @@ config = config()
 owners = config["owners"]
 
 peeps = {709086074537771019, 511724576674414600}
+
+
 def is_taco(ctx):
     return ctx.author.id in peeps
+
 
 async def check_permissions(ctx, perms, *, check=all):
     """ Checks if author has permissions to a permission """
@@ -19,15 +22,6 @@ async def check_permissions(ctx, perms, *, check=all):
 
     resolved = ctx.channel.permissions_for(ctx.author)
     return check(getattr(resolved, name, None) == value for name, value in perms.items())
-
-
-def Has_permissions(*, check=all, **perms):
-    """ discord.Commands method to check if author has permissions """
-
-    async def pred(ctx):
-        return await check_permissions(ctx, perms, check=check)
-
-    return commands.check(pred)
 
 
 async def check_priv(ctx, member):

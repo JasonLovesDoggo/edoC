@@ -1,21 +1,111 @@
 ﻿import asyncio
-import io
+import functools
 import logging
 import time
 import json
+from datetime import datetime
 
-import aiohttp
 import discord
 import traceback
 import timeago as timesince
 from io import BytesIO
 from discord.ext import commands
+from discord.ext.commands import NoPrivateMessage, when_mentioned_or
 
 from utils.data import MyNewHelp
+from utils.http import HTTPSession
+
+
+async def toggle_role(ctx, role_id):
+    if any(r.id == role_id for r in ctx.author.roles):
+        try:
+            await ctx.author.remove_roles(discord.Object(id=role_id))
+        except:
+            await ctx.message.add_reaction('\N{NO ENTRY SIGN}')
+        else:
+            await ctx.message.add_reaction('\N{HEAVY MINUS SIGN}')
+        finally:
+            return
+
+    try:
+        await ctx.author.add_roles(discord.Object(id=role_id))
+    except:
+        await ctx.message.add_reaction('\N{NO ENTRY SIGN}')
+    else:
+        await ctx.message.add_reaction('\N{HEAVY PLUS SIGN}')
+
+
+async def check_guild_permissions(ctx, perms, *, check=all):
+    is_owner = await ctx.bot.is_owner(ctx.author)
+    if is_owner:
+        return True
+
+    if ctx.guild is None:
+        return False
+
+    resolved = ctx.author.guild_permissions
+    return check(getattr(resolved, name, None) == value for name, value in perms.items())
+
+
+def is_dj_or_perms(**perms):
+    # will first check for dj role then perms
+    perms['deafen_members'] = True
+    perms['manage_channels'] = True
+    perms['move_members'] = True
+    perms['mute_members'] = True
+    perms['priority_speaker'] = True
+    roles = 'dj', 'Dj', 'DJ'
+
+    async def predicate(ctx):
+        if ctx.guild is None:
+            raise NoPrivateMessage()
+
+        getter = functools.partial(discord.utils.get, ctx.author.roles)
+        if any(getter(id=role) is not None if isinstance(role, int) else getter(name=role) is not None for role in
+               roles):
+            return True
+        return await check_guild_permissions(ctx, perms, check=any)
+
+    return commands.check(predicate)
+
+
+def is_mod():
+    async def pred(ctx):
+        return await check_guild_permissions(ctx, {'manage_guild': True})
+
+    return commands.check(pred)
+
+
+def is_admin():
+    async def pred(ctx):
+        return await check_guild_permissions(ctx, {'administrator': True})
+
+    return commands.check(pred)
+
+
+def mod_or_permissions(**perms):
+    perms['manage_guild'] = True
+
+    async def predicate(ctx):
+        return await check_guild_permissions(ctx, perms, check=any)
+
+    return commands.check(predicate)
+
+
+def admin_or_permissions(**perms):
+    perms['administrator'] = True
+
+    async def predicate(ctx):
+        return await check_guild_permissions(ctx, perms, check=any)
+
+    return commands.check(predicate)
+
 
 def can_handle(ctx, permission: str):
     """ Checks if bot has permissions or is in DMs right now """
     return isinstance(ctx.channel, discord.DMChannel) or getattr(ctx.channel.permissions_for(ctx.guild.me), permission)
+
+
 def config(filename: str = "config"):
     """ Fetch default config file """
     try:
@@ -30,6 +120,40 @@ log = logging.getLogger(__name__)
 description = 'Relatively simply awesome bot. Developed by Jake CEO of annoyance#1904'
 
 
+class Context(commands.Context):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    @property
+    def session(self):
+        return self.bot.session
+
+    def tick(self, opt, label=None):
+        lookup = {
+            True: '<a:b_yes:879161311353778247>',
+            False: '<a:no:879146899322601495>',
+            None: '<:graytick:879146777842962454>',
+        }
+        emoji = lookup.get(opt, '<a:no:879146899322601495>')
+        if label is not None:
+            return f'{emoji}: {label}'
+        return emoji
+
+    async def safe_send(self, content, *, escape_mentions=True, **kwargs):
+        """Same as send except with some safe guards.
+        1) If the message is too long then it sends a file with the results instead.
+        2) If ``escape_mentions`` is ``True`` then it escapes mentions.
+        """
+        if escape_mentions:
+            content = discord.utils.escape_mentions(content)
+
+        if len(content) > 2000:
+            fp = BytesIO(content.encode())
+            kwargs.pop('file', None)
+            return await self.send(file=discord.File(fp, filename='message_too_long.txt'), **kwargs)
+        else:
+            return await self.send(content)
+
 class edoC(commands.AutoShardedBot):
     def __init__(self):
         allowed_mentions = discord.AllowedMentions(roles=True, everyone=False, users=True)
@@ -43,16 +167,17 @@ class edoC(commands.AutoShardedBot):
             reactions=True,
             presences=True
         )
-        super().__init__(command_prefix="~", description=description,
+        super().__init__(command_prefix=when_mentioned_or('~'), description=description,
                          pm_help=None, help_attrs=dict(hidden=True),
                          chunk_guilds_at_startup=False, heartbeat_timeout=150.0,
                          allowed_mentions=allowed_mentions, intents=intents,
                          owner_ids=confi["owners"], case_insensitive=True,
                          command_attrs=dict(hidden=True), help_command=MyNewHelp(), )
-        self.session = aiohttp.ClientSession(loop=self.loop)
+        self.session = HTTPSession(loop=self.loop)
         self.prefix = '~'
-        #self.blacklist = Config('blacklist.json')
-    #async def on_guild_join(self, guild):
+        # self.blacklist = Config('blacklist.json')
+
+    # async def on_guild_join(self, guild):
     #    if guild.id in self.blacklist:
     #        await guild.leave()
 
@@ -62,27 +187,16 @@ class edoC(commands.AutoShardedBot):
 
         await self.process_commands(msg)
 
-class Context(commands.Context):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    async def on_ready(self):
+        if not hasattr(self, 'uptime'):
+            self.uptime = discord.utils.utcnow()
 
-    def session(self):
-        return self.bot.session
+    async def close(self):
+        await super().close()
+        await self.session.close()
 
-    async def safe_send(self, content, *, escape_mentions=True, **kwargs):
-        """Same as send except with some safe guards.
-        1) If the message is too long then it sends a file with the results instead.
-        2) If ``escape_mentions`` is ``True`` then it escapes mentions.
-        """
-        if escape_mentions:
-            content = discord.utils.escape_mentions(content)
-
-        if len(content) > 2000:
-            fp = io.BytesIO(content.encode())
-            kwargs.pop('file', None)
-            return await self.send(file=discord.File(fp, filename='message_too_long.txt'), **kwargs)
-        else:
-            return await self.send(content)
+    async def get_context(self, message, *, cls=Context):
+        return await super().get_context(message, cls=cls)
 
 
 def UpdateBlacklist(newblacklist, filename: str = "blacklist"):

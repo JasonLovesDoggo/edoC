@@ -5,6 +5,7 @@ from datetime import datetime
 
 import apscheduler.schedulers.asyncio
 import psutil
+from discord import HTTPException
 from discord.ext import commands
 from discord.ext.commands import MissingPermissions, CheckFailure, MaxConcurrencyReached, CommandOnCooldown
 
@@ -158,8 +159,9 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx, err):
         if isinstance(err, commands.CommandNotFound):
-            await self.erroremb(ctx,
-                                description=f'The command you have requested is not found. \nPlease make sure you typed it out right', )
+            if not ctx.guild.id == 336642139381301249:
+                await self.erroremb(ctx,
+                                    description=f'The command you have requested is not found. \nPlease make sure you typed it out right')
         elif isinstance(err, commands.BadArgument):
             pass
 
@@ -168,14 +170,14 @@ class Events(commands.Cog):
                                 description=f"You must be the owner of`{ctx.me.display_name}` to use `{ctx.prefix}{ctx.command}`")
 
         elif isinstance(err, commands.MissingRequiredArgument):
-            await self.erroremb(ctx,
-                                description=f"Invalid Command Format: {ctx.prefix}{ctx.command.qualified_name} {ctx.command.signature}",
-                                footer=f"Please use {ctx.prefix}help {ctx.command.qualified_name} for more info")
+            # await self.erroremb(ctx,
+            #                    description=f"Invalid Command Format: {ctx.prefix}{ctx.command.qualified_name} {ctx.command.signature}",
+            #                    footer=f"Please use {ctx.prefix}help {ctx.command.qualified_name} for more info")
             missing = f"{str(err.param).split(':')[0]}"
-            command = f"{ctx.prefix}{ctx.command}" #{ctx.command.signature}"
+            command = f"{ctx.prefix}{ctx.command}"  # {ctx.command.signature}"
 
             await self.erroremb(ctx,
-                                title="<:warn:877794045181714472> | MissingArguments",
+                                title=f"\N{WARNING SIGN} | MissingArguments",
                                 description=f"You forgot the `{missing}` parameter when using   `{command}`!",
                                 footer=f"Please use {ctx.prefix}help {ctx.command.qualified_name} for more info")
 
@@ -208,7 +210,8 @@ class Events(commands.Cog):
         elif isinstance(err, MissingPermissions):
             await self.permsemb(ctx, permissions=f"{', '.join(err.missing_permissions)}")
         elif isinstance(err, CheckFailure):
-            await self.erroremb(ctx, description=f"One or more permission checks have failed\nif you think this is a bug please contact us at\nhttps://dsc.gg/edoc")
+            await self.erroremb(ctx,
+                                description=f"One or more permission checks have failed\nif you think this is a bug please contact us at\nhttps://dsc.gg/edoc")
         elif isinstance(err, MaxConcurrencyReached):
             await self.erroremb(ctx=ctx,
                                 description="You've reached max capacity of command usage at once, please finish the previous one...")
@@ -222,7 +225,7 @@ class Events(commands.Cog):
             await self.erroremb(ctx, description="Sorry but this is an unknown error the devs has been notified!")
             critlogschannel = self.bot.get_channel(self.critlogschannel)
             await critlogschannel.send(
-                f"{ctx.message.author.mention} [in {ctx.message.guild.id}, #{ctx.message.channel}] made an error typing a command.\n{err}")
+                f"{ctx.message.author.mention} [in {ctx.message.guild.id}, #{ctx.message.channel}] made an error typing a command.```py\n{err}```")
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild):
@@ -401,15 +404,17 @@ class Events(commands.Cog):
 
                 for name, value, inline in fields:
                     embed.add_field(name=name, value=value, inline=inline)
-
-                await noncritlogschannel.send(embed=embed)
+                try:
+                    await noncritlogschannel.send(embed=embed)
+                except HTTPException:
+                    pass
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
         noncritlogschannel = self.bot.get_channel(self.noncritlogschannel)
         if not message.author.bot:
             embed = discord.Embed(title="Message deletion",
-                                  description=f"Action by {message.author.display_name}.\nIn {message.channel}\nIn{message.channel.guild}",
+                                  description=f"Action by {message.author.display_name}.\nIn {message.channel}\nIn {message.channel.guild}",
                                   colour=message.author.colour,
                                   timestamp=datetime.utcnow())
 

@@ -1,4 +1,5 @@
 import asyncio
+import io
 import json
 import os
 import secrets
@@ -12,13 +13,13 @@ from bs4 import BeautifulSoup
 from jishaku.models import copy_context_with
 from nekos import InvalidArgument
 
-import discord
 from utils import permissions, http, default
 from utils.gets import getEmote
 from utils.vars import *
 import pyfiglet
 
 dogphotospath = os.listdir("C:/Users/Jason/edoC/data/img/Dog Picks")
+
 
 class Fun(commands.Cog):
     def __init__(self, bot):
@@ -50,7 +51,7 @@ class Fun(commands.Cog):
     @commands.command(aliases=["roll", "dice"])
     async def rolldice(self, ctx, guess):
         answer = random.randint(1, 6)
-        await ctx.reply(embed=discord.Embed(color={green if guess == answer else red},
+        await ctx.reply(embed=discord.Embed(color=green if guess == answer else red,
                                             description=f"{'True' if guess == answer else 'False'} your guess was {guess} and the answer was {answer}"))
 
     @commands.command()
@@ -90,17 +91,6 @@ class Fun(commands.Cog):
         emb = discord.Embed(color=random_color())
         emb.set_image(url=api)
         await ctx.send(embed=emb)
-
-    @commands.command(aliases=['identify', 'captcha', 'whatis'])
-    async def i(self, ctx, *, url: str):
-        """Identify an image/gif using Microsofts Captionbot API"""
-        with aiohttp.ClientSession() as session:
-            async with session.post("https://www.captionbot.ai/api/message",
-                                    data={"conversationId": "FPrBPK2gAJj", "waterMark": "", "userMessage": url}) as r:
-                pass
-        load = await self.get_json("https://www.captionbot.ai/api/message?waterMark=&conversationId=FPrBPK2gAJj")
-        msg = '`{0}`'.format(json.loads(load)['BotMessages'][-1])
-        await ctx.send(msg)
 
     @commands.command(aliases=["rfact", "rf"])
     @commands.cooldown(rate=1, per=1.3, type=commands.BucketType.user)
@@ -144,30 +134,50 @@ class Fun(commands.Cog):
         """ Posts a random coffee """
         await self.randomimageapi(ctx, "https://coffee.alexflipnote.dev/random.json", "file")
 
-    @commands.command(aliases=["doggo"])
-    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
+    # @commands.command(aliases=["doggo"])
+    # @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
+    # async def dog(self, ctx):
+    #    """ Posts a random dog """
+    #    await self.randomimageapi(ctx, "https://random.dog/woof.json", "url")
+    @commands.command()
     async def dog(self, ctx):
-        """ Posts a random dog """
-        await self.randomimageapi(ctx, "https://random.dog/woof.json", "url")
+        """Gives you a random dog."""
+        async with self.bot.session.get('https://random.dog/woof') as resp:
+            if resp.status != 200:
+                return await ctx.send('No dog found :(')
+
+            filename = await resp.text()
+            url = f'https://random.dog/{filename}'
+            filesize = ctx.guild.filesize_limit if ctx.guild else 8388608
+            if filename.endswith(('.mp4', '.webm')):
+                async with ctx.typing():
+                    async with self.bot.session.get(url) as other:
+                        if other.status != 200:
+                            return await ctx.send('Could not download dog video :(')
+
+                        if int(other.headers['Content-Length']) >= filesize:
+                            return await ctx.send(f'Video was too big to upload... See it here: {url} instead.')
+
+                        fp = io.BytesIO(await other.read())
+                        await ctx.send(file=discord.File(fp, filename=filename))
+            else:
+                await ctx.send(embed=discord.Embed(title='Random Dog').set_image(url=url))
 
     @commands.command(aliases=["cate", "kat"])
-    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
     async def cat(self, ctx):
-        """ Posts a random cat """
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get(f"https://api.thecatapi.com/v1/images/search?api_key={self.config['cat_key']}") as api:
-                data = await api.json()
-            emb = discord.Embed(title="Kate",
-                                color=white)
-            emb.set_image(url=data[0]["url"])
-            await ctx.reply(embed=emb)
+        """Gives you a random cat pic."""
+        async with self.bot.session.get('https://api.thecatapi.com/v1/images/search') as resp:
+            if resp.status != 200:
+                return await ctx.send('No cat found :(')
+            js = await resp.json()
+            await ctx.send(embed=discord.Embed(title='Random Cat').set_image(url=js[0]['url']))
 
-    @commands.command()
+    @commands.command(aliases=['lizzyboi'])
     @commands.cooldown(1, 2, type=commands.BucketType.user)
     async def lizard(self, ctx):
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get('https://nekos.life/api/v2/img/lizard') as api:
-                data = await api.json()
+        """Gives you a random Lizard pic."""
+        async with self.bot.session.get('https://nekos.life/api/v2/img/lizard') as api:
+            data = await api.json()
         emb = discord.Embed(title="Lizard",
                             color=green)
         emb.set_image(url=data['url'])
@@ -195,20 +205,18 @@ class Fun(commands.Cog):
     async def topic(self, ctx):
         """ Generates a random topic to start a conversation up"""
         url = "https://www.conversationstarters.com/generator.php"
-        async with aiohttp.ClientSession() as s:
-            async with s.get(url) as r:
-                output = await r.read()
-                soup = BeautifulSoup(output, 'html5lib')
-                topics = soup.find("div", {"id": "random"})
-                topic = topics.contents[1]
+        async with self.bot.session.get(url) as r:
+            output = await r.read()
+            soup = BeautifulSoup(output, 'html5lib')
+            topics = soup.find("div", {"id": "random"})
+            topic = topics.contents[1]
         await ctx.send(f"**{topic}**")
 
     @commands.command(aliases=["ie"])
     async def iseven(self, ctx, num: int):
         """ checks if a number is even or not"""
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get(f'https://api.isevenapi.xyz/api/iseven/{num}/') as api:
-                data = await api.json()
+        async with self.bot.session.get(f'https://api.isevenapi.xyz/api/iseven/{num}/') as api:
+            data = await api.json()
         if data["iseven"]:
             color = green
             answer = "Yes"
@@ -388,7 +396,7 @@ class Fun(commands.Cog):
         await ctx.send(f"I'd rate `{thing}` a **{round(rate_amount, 4)} / 100**")
 
     @commands.command()
-    async def ship(self, ctx, person1: commands, person2: commands):
+    async def ship(self, ctx, person1: commands.clean_content, person2: commands.clean_content):
         """ Rates what you desire """
         ship_amount = random.uniform(0.0, 100.0)
         if "jake" or "jason" or "edoc" in person1.lower() or person2.lower():
@@ -437,12 +445,12 @@ class Fun(commands.Cog):
         r = random.randint(1, 100)
         hot = r / 1.17
 
-        if hot > 25:
-            emoji = "❤"
+        if hot > 75:
+            emoji = "💞"
         elif hot > 50:
             emoji = "💖"
-        elif hot > 75:
-            emoji = "💞"
+        elif hot > 25:
+            emoji = "❤"
         else:
             emoji = "💔"
 

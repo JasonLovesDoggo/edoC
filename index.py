@@ -1,27 +1,26 @@
 import os
-import discord
-from discord.ext.commands.context import Context
-from utils.default import edoC, config
-config = config()
-#TODO add a fully not erroring get_prefix
-bot = edoC()
 
+from utils.default import edoC, config, Context
+
+config = config()
+# TODO add a fully not erroring get_prefix
+bot = edoC()
+os.environ["JISHAKU_HIDE"] = "True"
 
 NO_LOAD_COG = ''
-
-async def process_commands(self, message):
-    ctx = await self.get_context(message, cls=Context)
-
-    if ctx.command is not None and ctx.guild is not None:
-        if message.author.id in self.banlist:
-            await ctx.send("You are banned from using commands.")
-
-        elif not self.ready:
-            await ctx.send("I'm not ready to receive commands. Please wait a few seconds.")
-
-        else:
-            await self.invoke(ctx)
-
+#async def process_commands(self, message):
+#    ctx = await self.get_context(message, cls=Context)
+#
+#    if ctx.command is not None and ctx.guild is not None:
+#        if message.author.id in self.banlist:
+#            await ctx.send("You are banned from using commands.")
+#
+#        elif not self.ready:
+#            await ctx.send("I'm not ready to receive commands. Please wait a few seconds.")
+#
+#        else:
+#            await self.invoke(ctx)
+#
 
 try:
     bot.load_extension("jishaku")
@@ -34,7 +33,6 @@ try:
             bot.load_extension(f"cogs.{name}")
 except Exception:
     raise ChildProcessError("Problem with one of the cogs/utils")
-
 
 try:
     bot.run(config["token"], reconnect=True)

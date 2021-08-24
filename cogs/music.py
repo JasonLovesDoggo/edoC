@@ -1,25 +1,28 @@
+from datetime import datetime
 from typing import List
 
-import aiohttp
-import discord
 import DiscordUtils
+import aiohttp
 import humanfriendly
-
 from discord.ext import commands
-from datetime import datetime
+
+from utils.default import is_dj_or_perms
 from utils.vars import *
 
 music_ = DiscordUtils.Music()
+
+
 class Paginator(discord.ui.View):
     def __init__(self, ctx: commands.Context, embeds: List[discord.Embed]):
         super().__init__(timeout=None)
         self.ctx = ctx
         self.embeds = embeds
         self.current = 0
+        self.LeaveIn = 240
 
     async def edit(self, msg, pos):
         em = self.embeds[pos]
-        em.set_footer(text=f"Page: {pos+1}")
+        em.set_footer(text=f"Page: {pos + 1}")
         await msg.edit(embed=em)
 
     @discord.ui.button(emoji='??', style=discord.ButtonStyle.blurple)
@@ -45,6 +48,7 @@ class Paginator(discord.ui.View):
             return True
         await interaction.response.send_message("Not your command ._.", ephemeral=True)
 
+
 # i wrote this cog while sleeping
 # dont ask
 def success_embed(title, description):
@@ -57,12 +61,12 @@ def success_embed(title, description):
 
 class music(commands.Cog, description="Jam to some awesome tunes! ?"):
     def __init__(self, bot):
+        self.bot = bot
         self.check = '<a:checkmark:878104445702008842>'
         self.off = 'https://i.imgur.com/fNksG3T.png'
         self.on = 'https://i.imgur.com/xZGE55G.png'
         self.onemoji = '<:on:878405331766624267>'
         self.offemoji = '<:off:878405303866118214>'
-        self.client = bot
         self.skip_votes = {}
 
     def error_msg(self, error):
@@ -71,18 +75,18 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
         elif error == 'not_in_same_vc':
             return f"{emojis['red_x']}You need to be in the same voice channel as me."
         else:
-            return "An error occured ._."
+            return "An error occurred ._."
 
     async def leavechnl(self, ctx):
-            player = music_.get_player(guild_id=ctx.guild.id)
-            if player:
-                try:
-                    await player.stop()
-                    await player.delete()
-                except Exception:
-                    pass
-            await ctx.voice_client.disconnect()
-            await ctx.message.add_reaction(self.check)
+        player = music_.get_player(guild_id=ctx.guild.id)
+        if player:
+            try:
+                await player.stop()
+                await player.delete()
+            except Exception:
+                pass
+        await ctx.voice_client.disconnect()
+        await ctx.message.add_reaction(self.check)
 
     def now_playing_embed(self, ctx, song):
         return discord.Embed(
@@ -115,8 +119,9 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
             ctx.command.reset_cooldown(ctx)
             return await ctx.reply(
                 "I wasn't able to connect to your voice channel.\nPlease make sure I have enough permissions.")
-    @commands.has_permissions(manage_channels=True)
+
     @commands.command(aliases=['vol'])
+    @is_dj_or_perms()
     async def volume(self, ctx, vol: int):
         """
         Change the volume of the bot
@@ -133,29 +138,31 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
                 if ctx.voice_client.channel == ctx.author.voice.channel and ctx.voice_client.is_playing() is True:
                     ctx.voice_client.source.volume = vol
                     return await ctx.message.add_reaction(self.check)
+        return await ctx.send("**Please join the same voice channel as the bot to use the command**".title(),
+                              delete_after=30)
 
-        return await ctx.send("**Please join the same voice channel as the bot to use the command**".title(), delete_after=30)
     @commands.command(help="I will leave your voice channel :c", aliases=['dc', 'disconnect'])
     @commands.cooldown(3, 5, commands.BucketType.user)
+    @is_dj_or_perms()
     async def leave(self, ctx: commands.Context):
         if not ctx.author.voice:
             ctx.command.reset_cooldown(ctx)
             return await ctx.reply(self.error_msg('not_in_voice_channel'))
-        if not ctx.guild.me.voice:
+        elif not ctx.guild.me.voice:
             ctx.command.reset_cooldown(ctx)
             return await ctx.reply("I am not in a voice channel ._.")
-        if ctx.author.voice.channel != ctx.guild.me.voice.channel:
+        elif ctx.author.voice.channel != ctx.guild.me.voice.channel:
             ctx.command.reset_cooldown(ctx)
             return await ctx.reply(self.error_msg("not_in_same_vc"))
-        if ctx.author.voice.channel == ctx.guild.me.voice.channel:
+        elif ctx.author.voice.channel == ctx.guild.me.voice.channel:
             if len(ctx.guild.me.voice.channel.members) == 2:
                 await self.leavechnl(ctx)
             elif ctx.author.guild_permissions.manage_channels:
                 await self.leavechnl(ctx)
-        else:
-            return await ctx.reply(embed=discord.Embed(
-                description=f'You need to either be alone with the bot or have manage channel permissions',
-                color=error))
+            else:
+                return await ctx.reply(embed=discord.Embed(
+                    description=f'You need to either be alone with the bot or have manage channel permissions',
+                    color=error))
 
     @commands.command(help="V I B E and play epik music!!!", aliases=['p'])
     @commands.cooldown(3, 10, commands.BucketType.user)
@@ -168,7 +175,7 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
             ctx.command.reset_cooldown(ctx)
             return await ctx.reply(self.error_msg('not_in_voice_channel'))
         if not ctx.guild.me.voice:
-            await ctx.invoke(self.client.get_command('join'))
+            await ctx.invoke(self.bot.get_command('join'))
         player = music_.get_player(guild_id=ctx.guild.id)
         if not player:
             player = music_.create_player(ctx, ffmpeg_error_betterfix=True)
@@ -333,6 +340,13 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
             nice
         ))
 
+    @commands.command()
+    @is_dj_or_perms()
+    async def remove(self, ctx, index):
+        player = music_.get_player(guild_id=ctx.guild.id)
+        song = await player.remove_from_queue(int(index))
+        await ctx.send(f"Removed {song.name} from queue")
+
     @commands.command(help="Skip a song.", aliases=['voteskip'])
     @commands.cooldown(3, 30, commands.BucketType.user)
     async def skip(self, ctx):
@@ -396,39 +410,39 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
             current_song = player.now_playing()
             song = current_song.name
         embeds = []
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get(f'https://some-random-api.ml/lyrics?title={song.lower().replace(" ", "")}') as r:
-                rj = await r.json()
-                if "error" in rj:
-                    return await ctx.reply(rj['error'])
-                if len(rj['lyrics']) <= 4000:
-                    return await ctx.reply(embed=discord.Embed(
+        async with self.bot.session.get(
+                f'https://some-random-api.ml/lyrics?title={song.lower().replace(" ", "")}') as r:
+            rj = await r.json()
+            if "error" in rj:
+                return await ctx.reply(rj['error'])
+            if len(rj['lyrics']) <= 4000:
+                return await ctx.reply(embed=discord.Embed(
+                    title=rj['title'],
+                    url=rj['links']['genius'],
+                    description=rj['lyrics'],
+                    color=blue
+                ).set_thumbnail(url=rj['thumbnail']['genius']))
+            i = 0
+            while True:
+                if len(rj['lyrics']) - i > 4000:
+                    embeds.append(discord.Embed(
                         title=rj['title'],
                         url=rj['links']['genius'],
-                        description=rj['lyrics'],
+                        description=rj['lyrics'][i:i + 3999],
                         color=blue
                     ).set_thumbnail(url=rj['thumbnail']['genius']))
-                i = 0
-                while True:
-                    if len(rj['lyrics']) - i > 4000:
-                        embeds.append(discord.Embed(
-                            title=rj['title'],
-                            url=rj['links']['genius'],
-                            description=rj['lyrics'][i:i + 3999],
-                            color=blue
-                        ).set_thumbnail(url=rj['thumbnail']['genius']))
-                    elif len(rj['lyrics']) - i <= 0:
-                        break
-                    else:
-                        embeds.append(discord.Embed(
-                            title=rj['title'],
-                            url=rj['links']['genius'],
-                            description=rj['lyrics'][i:len(rj['lyrics']) - 1],
-                            color=blue
-                        ).set_thumbnail(url=rj['thumbnail']['genius']))
-                        break
-                    i += 3999
-                return await ctx.reply(embed=embeds[0], view=Paginator(ctx=ctx, embeds=embeds))
+                elif len(rj['lyrics']) - i <= 0:
+                    break
+                else:
+                    embeds.append(discord.Embed(
+                        title=rj['title'],
+                        url=rj['links']['genius'],
+                        description=rj['lyrics'][i:len(rj['lyrics']) - 1],
+                        color=blue
+                    ).set_thumbnail(url=rj['thumbnail']['genius']))
+                    break
+                i += 3999
+            return await ctx.reply(embed=embeds[0], view=Paginator(ctx=ctx, embeds=embeds))
 
 
 def setup(bot):

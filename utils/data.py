@@ -1,8 +1,10 @@
 import discord
 
-from utils import vars
 from discord.ext import commands
-#from lib.db import db
+
+from utils.vars import *
+
+# from lib.db import db
 
 """
 def get_prefix(bot, message):
@@ -58,7 +60,12 @@ class MyNewHelp(commands.MinimalHelpCommand):
         destination = self.get_destination()
         try:
             for page in self.paginator.pages:
-                emby = discord.Embed(description=page, color=vars.random_color())
+                emby = discord.Embed(description=page, color=random_color())
                 await destination.send(embed=emby)
         except discord.Forbidden:
             await destination.send("Couldn't send help to you due to blocked DMs...")
+
+    async def send_error_message(self, err):
+        embed = discord.Embed(title="Error", description=err, color=error)
+        channel = self.get_destination()
+        await channel.send(embed=embed)

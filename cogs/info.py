@@ -7,6 +7,7 @@ from typing import List, Tuple
 
 import aiohttp
 # from utils.transwrapper import google_translator
+import discord
 import googletrans
 import humanize
 import psutil
@@ -19,6 +20,7 @@ from pyshorteners import Shortener
 from cogs.music import Paginator
 from lib.db import db
 from utils import default, permissions
+from utils.default import toggle_role
 from utils.gets import *
 from utils.info import fetch_info
 from utils.vars import *
@@ -84,47 +86,6 @@ class Info(commands.Cog):
         #                embed.set_footer(text="Song started at {}".format(activity.created_at.strftime("%H:%M")))
         #                await ctx.send(embed=embed)
 
-    # @commands.group()
-    # async def color(self, ctx, colorC):
-    #    """ blank """
-    #    if ctx.invoked_subcommand is None:
-    #        basecolor = str(Color(colorC).hex).replace('#', '')
-    #        im = Image.new("RGB", (100, 100), colorC)
-    #        im.
-    #        #img = discord.File(fp=im, filename=f'{basecolor}.png')
-    #        Cemb = discord.Embed(title=colorC, color=red)
-    #        Cemb.set_image(url=im)
-    #        await ctx.send(embed=Cemb)
-
-    # @color.command()
-    # async def help(self, ctx):
-    #    await ctx.reply("Please use ~help color")
-
-    # @color.command()
-    # async def list(self, ctx):
-    #    await ctx.send(f"```py\n{ValidDefColors}\n```")
-
-    """        async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.colorApiH + color) as api:
-                data = await api.json()
-        if color is None:
-            role = getRole(ctx, color)
-            if role:
-                color = getColor(str(role.color))
-        if color:
-            value = Color(color).hex_l.strip('#')
-
-            e = discord.Embed(title=Color(color).web.title(), colour=int(value, 16))
-            e.url = f'http://www.colorhexa.com/{value}'
-            e.add_field(name='HEX', value=Color(color).hex_l)
-            e.add_field(name='RGB', value=Color(color).rgb)
-            e.add_field(name='HSL', value=Color(color).hsl)
-            e.set_image(url=f'http://www.colorhexa.com/{value}.png')
-            await send(ctx, embed=e)
-        else:
-            await send(ctx, '\N{HEAVY EXCLAMATION MARK SYMBOL} Could not find color', ttl=3)
-        await ctx.reply(data['hex'])"""
-
     async def create_embed(self, description, field: List[Tuple] = None):
         embed_ = discord.Embed(description=description,
                                colour=orange)
@@ -133,40 +94,30 @@ class Info(commands.Cog):
                 embed_.add_field(name=name, value=value, inline=inline)
         return embed_
 
-    # @commands.command()
-    # async def translate(self, ctx, *, message: commands.clean_content = None):
-    #    """Translates a message to English using Google translate."""
-    #
-    #    loop = self.bot.loop
-    #    if message is None:
-    #        ref = ctx.message.reference
-    #        if ref and isinstance(ref.resolved, discord.Message):
-    #            message = ref.resolved.content
-    #        else:
-    #            return await ctx.send('Missing a message to translate')
-    #
-    #    #try:
-    #    ret = await loop.run_in_executor(None, self.trans.translate, message)
-    #    #except Exception as e:
-    #    #    return await ctx.send(f'An error occurred: {e.__class__.__name__}: {e}')
-    #
-    #    embed = discord.Embed(title='Translated', colour=0x4284F3)
-    #    src = googletrans.LANGUAGES.get(ret.src, '(auto-detected)').title()
-    #    dest = googletrans.LANGUAGES.get(ret.dest, 'Unknown').title()
-    #    embed.add_field(name=f'From {src}', value=ret.origin, inline=False)
-    #    embed.add_field(name=f'To {dest}', value=ret.text, inline=False)
-    #    await ctx.send(embed=embed)
+    @commands.command(aliases=['trans'])
+    async def translate(self, ctx, *, message: commands.clean_content = None):
+        """Translates a message to English using Google translate."""
 
-    @commands.command()
-    async def translate(self, ctx, *, text):
-        translator = Translator()
-        result = translator.translate(text)
-        language = translator.detect(text)
-        embed = discord.Embed(
-            description=f"```css\nText: {text}\nTranslated: {result.text}\nLanguage: {language.lang}```",
-            color=blue).set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
+        loop = self.bot.loop
+        if message is None:
+            ref = ctx.message.reference
+            if ref and isinstance(ref.resolved, discord.Message):
+                message = ref.resolved.content
+            else:
+                return await ctx.reply(embed=discord.Embed(description='Missing a message to translate', color=error))
 
-        await ctx.send(embed=embed)
+        try:
+            ret = await loop.run_in_executor(None, self.trans.translate, message)
+        except Exception as e:
+            return await ctx.send(f'An error occurred: {e.__class__.__name__}: {e}')
+
+        embed = discord.Embed(colour=blue)
+        src = googletrans.LANGUAGES.get(ret.src, '(auto-detected)').title()
+        dest = googletrans.LANGUAGES.get(ret.dest, 'Unknown').title()
+        embed.set_author(name='Translated', icon_url='https://i.imgur.com/kqYmKR6.png')
+        embed.add_field(name=f'From {src}', value=ret.origin, inline=False)
+        embed.add_field(name=f'To {dest}', value=ret.text, inline=False)
+        await ctx.reply(embed=embed)
 
     # @commands.command(name='translate', aliases=['trans'])
     # async def translates(self, ctx, *, text):
@@ -203,15 +154,15 @@ class Info(commands.Cog):
         em.set_author(name="Uptime")
         em.set_footer(text=f"Requested by {ctx.author}", icon_url=ctx.author.avatar.url)
         await ctx.send(embed=em)
+
     @commands.command(aliases=['RC', 'Rcolor', 'RandColor'])
     async def RandomColor(self, ctx):
         random_number = random.randint(0, 16777215)
         hexhex = str(hex(random_number))
         hex_number = hexhex[2:]
 
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.colorApi + hex_number) as api:
-                data = await api.json()
+        async with self.bot.session.get(self.colorApi + hex_number) as api:
+            data = await api.json()
         embed = discord.Embed(color=int(hexhex, 0))
         embed.add_field(name='Name', value=data['name'], inline=False)
         embed.add_field(name='Hex Code', value=data['hex'], inline=False)
@@ -235,9 +186,8 @@ class Info(commands.Cog):
         ```
         """
         strcolor = str(colorname).replace('#', "")
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.colorApi + strcolor) as api:
-                data = await api.json()
+        async with self.bot.session.get(self.colorApi + strcolor) as api:
+            data = await api.json()
         co = f'0x{strcolor}'
         embed = discord.Embed(color=int(co, 0))
         embed.add_field(name='Name', value=data['name'], inline=False)
@@ -351,7 +301,22 @@ class Info(commands.Cog):
 
         await ctx.reply(embed=emby)
 
-    @commands.command(aliases=["stats", "status", "botinfo", "in"])
+    @commands.command(hidden=True)
+    @commands.cooldown(rate=2, per=300, type=commands.BucketType.user)
+    async def Yellow(self, ctx):
+        """Allows you to Toggle having the yellow role"""
+        await toggle_role(ctx, 879084837451993099)
+
+    @commands.command(aliases=['credits'])
+    async def contributors(self, ctx):
+        emb = discord.Embed(title=f'Contributors Of edoC', color=random_color(), description='')
+        emb.set_footer(text='Created by Jake CEO of annoyance#1904',
+                       icon_url=self.bot.get_user(id=511724576674414600).avatar.url)
+        for k, v in contributors.items():
+            emb.add_field(name=f'***{k}***', value=f'{v}', inline=False)
+        await ctx.send(embed=emb)
+
+    @commands.command(aliases=["stats", "status", "botinfo"])
     async def about(self, ctx):
         proc = psutil.Process()
         infos = fetch_info()
@@ -382,6 +347,7 @@ class Info(commands.Cog):
             vmem = humanize.naturalsize(mem.vms)
             cmds = self.bot.total_commands_ran
             uptime = humanize.naturaldelta(discord.utils.utcnow() - self.bot.start_time)
+            totalmembers = sum(g.member_count for g in self.bot.guilds)
             e.add_field(
                 name="__:gear: Usage__",
                 value=
@@ -402,7 +368,7 @@ class Info(commands.Cog):
             )
             e.add_field(
                 name="__Members count__",
-                value=str(len(list(self.bot.get_all_members()))),
+                value=totalmembers,
                 inline=True,
             )
 
@@ -449,6 +415,11 @@ class Info(commands.Cog):
         await ctx.send(embed=e)
 
     # ~~~
+    @commands.command(name='in')
+    async def _in(self, ctx):
+        """ 4th rewrite of the info cmd"""
+        embed = discord.Embed(color=random_color())
+
     @commands.command(aliases=["SAF"])
     @commands.has_permissions(attach_files=True)
     async def sendasfile(self, ctx, *, text: str):

@@ -1,14 +1,11 @@
 import base64
 import binascii
 import codecs
-
-import aiohttp
-
-import discord
-
 from io import BytesIO
+
 from discord.ext import commands
 from discord.ext.commands.errors import BadArgument
+
 from utils import default, http
 from utils.vars import *
 
@@ -245,7 +242,9 @@ class Encryption(commands.Cog):
                     content=f"📑 **Text -> Morse** ",
                     file=discord.File(data, filename=default.CustomTimetext("fix", "morsecode")))
             except discord.HTTPException:
-                return await ctx.reply(embed=discord.Embed(description=f"❌ The file I returned was over 8 MB, sorry {ctx.author.name}...", colour=red))
+                return await ctx.reply(
+                    embed=discord.Embed(description=f"❌ The file I returned was over 8 MB, sorry {ctx.author.name}...",
+                                        colour=red))
 
     @decode.command(name='morse')
     async def decode_from_morse(self, ctx, *, text: commands.clean_content = None):
@@ -272,7 +271,9 @@ class Encryption(commands.Cog):
                     content=f"📑 **Morse -> Text** ",
                     file=discord.File(data, filename=default.CustomTimetext("fix", "morsecode")))
             except discord.HTTPException:
-                return await ctx.reply(embed=discord.Embed(description=f"❌ The file I returned was over 8 MB, sorry {ctx.author.name}...", colour=red))
+                return await ctx.reply(
+                    embed=discord.Embed(description=f"❌ The file I returned was over 8 MB, sorry {ctx.author.name}...",
+                                        colour=red))
 
     @decode.command(name='all')
     async def decode_all(self, ctx, *, text=None):

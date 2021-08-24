@@ -1,30 +1,27 @@
 import asyncio
 import copy
-import inspect
-import logging
-import random
-import time
-import aiohttp
-from discord.ext.commands import ExtensionNotLoaded
-from jishaku.models import copy_context_with
-from jishaku.paginators import WrappedPaginator, PaginatorInterface
-
-import discord
 import importlib
+import inspect
+import io
+import json
+import logging
 import os
 import sys
-import json
-from discord.ext import commands
-from lib.db import db
-from lib.db.db import cur
-from utils import permissions, default, http
-from io import BytesIO
-from cogs.mod import BanUser, MemberID
-from utils.vars import *
-import io
 import textwrap
 import traceback
 from contextlib import redirect_stdout
+from io import BytesIO
+
+import aiohttp
+from discord.ext import commands
+from jishaku.models import copy_context_with
+from jishaku.paginators import WrappedPaginator, PaginatorInterface
+
+from cogs.mod import BanUser, MemberID
+from lib.db import db
+from lib.db.db import cur
+from utils import default, http
+from utils.vars import *
 
 on = False
 
@@ -57,7 +54,7 @@ class Admin(commands.Cog):
             return False
 
         try:
-             user = await self.bot.wait_for('message', timeout=30.0, check=check_confirm)
+            user = await self.bot.wait_for('message', timeout=30.0, check=check_confirm)
         except asyncio.TimeoutError:
             return await confirm_msg.edit(
                 content=f"~~{confirm_msg.clean_content}~~\n\nStopped process...")
@@ -249,12 +246,15 @@ class Admin(commands.Cog):
         # Please do not remove this part.
         # I would love to be credited as the original creator of the source code.
         #   -- Jason
-        if ctx.author.id == 511724576674414600:
-            return await ctx.send(f"Well kinda **{ctx.author.name}**.. you own the source code")
-        if ctx.author.id in self.config["owners"]:
-            return await ctx.send(f"Yes **{ctx.author.name}** you are an admin! ✅")
+        auth = ctx.author
+        if auth.id == 511724576674414600:
+            return await ctx.send(f"Well kinda **{auth.name}**.. you own the source code")
+        elif auth.id == 86477779717066752:
+            return await ctx.send(f"Well kinda **{auth.name}**.. you own the core source code")
+        if auth.id in self.config["owners"]:
+            return await ctx.send(f"Yes **{auth.name}** you are an admin! ✅")
 
-        await ctx.send(f"no, heck off {ctx.author.name}")
+        await ctx.send(f"no, heck off {auth.name}")
 
     @commands.command(aliases=["botusers", "botmembers", "thepeoplemybothaspowerover"])
     @commands.is_owner()
@@ -353,7 +353,10 @@ class Admin(commands.Cog):
         await BanUser(ctx, userid, reason)
         await ctx.send(f"banned {userid} for {reason}")
 
-    @commands.command(aliases=["l"])
+    @commands.command(aliases=["l"],
+                      brief='Loads an Extension',
+                      description='The command is used to load the Extensions into the Bot.'
+                      )
     @commands.is_owner()
     async def load(self, ctx, name: str):
         """ Loads an extension. """
@@ -427,13 +430,9 @@ class Admin(commands.Cog):
     async def shutdown(self, ctx):
         """ shut down the bot """
         await ctx.send("Shuting down now...")
-        # logs it to a file
-        logging.basicConfig(filename="log.txt",
-                            format='%(asctime)s %(message)s',
-                            filemode='w+')
         logging.warning('Shutting down now')
         await asyncio.sleep(2)
-        sys.exit("Bot shut down")
+        await self.bot.close()
 
     @commands.command()
     @commands.is_owner()
@@ -451,7 +450,7 @@ class Admin(commands.Cog):
         file2 = open(filename, "w+")
         file2.truncate(0)
         await ctx.send(f'{filename} purged ')
-        file2.close
+        file2.close()
 
     @commands.command(pass_context=True)
     @commands.is_owner()
@@ -495,16 +494,17 @@ class Admin(commands.Cog):
             return await ctx.send("**{}** role has been removed from {}."
                                   .format(role, ctx.message.author.mention))
 
-    @commands.command()
+    @commands.command(aliases=['pm'])
     @commands.is_owner()
     async def dm(self, ctx, user_id: int, *, message: str):
         """ DM the user of your choice """
-        user = self.bot.get_user(user_id)
+        user = self.bot.get_user(user_id) or (await self.bot.fetch_user(user_id))
         if not user:
             return await ctx.send(f"Could not find any UserID matching **{user_id}**")
-
+        fmt = message + '\n\n*This is a DM sent because you had previously requested feedback or I found a bug' \
+                        ' in a command you used, I do not monitor this DM.*'
         try:
-            await user.send(message)
+            await user.send(fmt)
             await ctx.send(f"✉️ Sent a DM to **{user_id}**")
         except discord.Forbidden:
             await ctx.send("This user might be having DMs blocked or it's a bot account...")
