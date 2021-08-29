@@ -1,6 +1,6 @@
 psutil~=5.8.0
 timeago==1.0.13
-aiohttp~=3.6.3
+aiohttp>=3.7.4
 apscheduler~=3.7.0
 requests~=2.25.1
 
