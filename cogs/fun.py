@@ -40,6 +40,26 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
         self.logschannel = self.bot.get_channel(self.config["edoc_logs"])
         self.dogphotospath = dogphotospath
 
+    async def alexflipnote(self, ctx, url: str, endpoint: str, token: str = None):
+        try:
+            r = await get(
+                url, res_method="json", no_cache=True,
+                headers={"Authorization": token} if token else None
+            )
+            r = await r.json()
+        except ClientConnectorError:
+            return await ctx.send("The API seems to be down...")
+        except ContentTypeError:
+            return await ctx.send("The API returned an error or didn't return JSON...")
+        await ctx.send(r[endpoint])
+
+    @commands.command()
+    async def supreme(self, ctx, *, text: str):
+        embed = discord.Embed(title=f"Rendered by {ctx.author.display_name} VIA {ctx.guild.me.display_name}", color=invis).set_image(url="attachment://supreme.png")
+        image = discord.File(await (await self.bot.alex_api.supreme(text=text)).read(), "supreme.png")
+        await ctx.send(embed=embed, file=image)
+
+
     @commands.command(aliases=["sayagain", 'repeat'])
     async def echo(self, ctx, *, what_to_say: commands.clean_content):
         """ repeats text """
@@ -116,19 +136,6 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
         fact = random.choice(random_facts)
         emb = discord.Embed(description=fact, color=random.choice(ColorsList))
         await ctx.reply(embed=emb, mention_author=False)
-
-    async def randomimageapi(self, ctx, url: str, endpoint: str, token: str = None):
-        try:
-            r = await get(
-                url, res_method="json", no_cache=True,
-                headers={"Authorization": token} if token else None
-            )
-        except ClientConnectorError:
-            return await ctx.send("The API seems to be down...")
-        except ContentTypeError:
-            return await ctx.send("The API returned an error or didn't return JSON...")
-        await ctx.send(r[endpoint])
-
     async def api_img_creator(self, ctx, url: str, filename: str, content: str = None):
         async with ctx.channel.typing():
             req = await get(url, res_method="read")
@@ -144,13 +151,13 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
     @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
     async def duck(self, ctx):
         """ Posts a random duck """
-        await self.randomimageapi(ctx, "https://random-d.uk/api/v1/random", "url")
+        await self.alexflipnote(ctx, "https://random-d.uk/api/v1/random", "url")
 
     @commands.command()
     @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
     async def coffee(self, ctx):
         """ Posts a random coffee """
-        await self.randomimageapi(ctx, "https://coffee.alexflipnote.dev/random.json", "file")
+        await self.alexflipnote(ctx, "https://coffee.alexflipnote.dev/random.json", "file")
 
     # @commands.command(aliases=["doggo"])
     # @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)

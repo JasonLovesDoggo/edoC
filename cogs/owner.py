@@ -115,7 +115,6 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
         final_url = f'<{source_url}/blob/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}>'
         await ctx.send(final_url)
 
-
     @commands.command(aliases=["pyeval"])
     @commands.is_owner()
     async def eval(self, ctx, *, body: str):
@@ -399,7 +398,7 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
             return await ctx.send(default.traceback_maker(e))
         await ctx.send(f"Loaded extension **{name}.py**")
 
-    @commands.command()
+    @commands.command(aliases=['ul'])
     @commands.is_owner()
     async def unload(self, ctx, name: str):
         """ Unloads an extension. """

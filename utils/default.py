@@ -18,6 +18,7 @@ from glob import glob
 from io import BytesIO
 from os import getpid, remove
 
+import alexflipnote
 import apscheduler.schedulers.asyncio
 import discord
 import timeago as timesince
@@ -259,6 +260,8 @@ class edoC(commands.AutoShardedBot):
         self.ready = False
         self.scheduler = apscheduler.schedulers.asyncio.AsyncIOScheduler()
         self.total_commands_ran = 0
+        self.alex_api = alexflipnote.Client(confi['alexflipnote_api'],
+                                       loop=self.loop)  # just a example, the client doesn't have to be under bot and loop kwarg is optional
         # self.blacklist = Config('blacklist.json')
 
     # async def on_guild_join(self, guild):

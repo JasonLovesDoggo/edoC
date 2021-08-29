@@ -32,10 +32,26 @@ SbColors = {
 class SkyblockUpdatedError(BaseException):
     pass
 
+
+def get_profile(data, pname):
+    target_profile = None
+    for profile in data["profiles"].values():
+        if pname is None:
+            if profile['current']:
+                target_profile = profile
+                pname = profile['cute_name']
+                break
+        elif pname.lower() == profile['cute_name'].lower():
+            target_profile = profile
+            pname = profile['cute_name']
+            break
+    return pname, target_profile
+
+
 class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related commands'):
     def __init__(self, bot):
         self.bot = bot
-        
+
         self.separator = '{:,}'
         self.target_profile = None
         self.MojangUrl = 'https://api.mojang.com/users/profiles/minecraft/'
@@ -71,21 +87,71 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
 
     """ SKILLS """
 
+    def get_name(self, name):
+        return requests.get(self.MojangUrl + name).json()['name']
+
+    def get_uuid(self, name):
+        return requests.get(self.MojangUrl + name).json()['id']
+
+    async def edget_name(self, uuid):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f'https://api.mojang.com/user/profiles/{uuid}/names') as r:
+                r.raise_for_status()
+                if r.status == 200:
+                    j = await r.json()
+                    return j[-1]['name']
+                else:
+                    return None
+
+    async def erget_uuid(self, ign):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"https://api.mojang.com/users/profiles/minecraft/{ign}") as r:
+                r.raise_for_status()
+                if r.status == 200:
+                    j = await r.json()
+                    return j['id']
+                elif r.status == 204:
+                    return None
+
+    @commands.command(aliases=['coins'])
+    async def balance(self, ctx, name, pname=None):
+        name = self.get_name(name)
+        async with ctx.session.get("https://sky.shiiyu.moe/api/v2/coins/" + name) as api:
+            data = await api.json()
+        async with ctx.session.get(self.SkyV2 + name) as api:
+            pdata = await api.json()
+        target_profile = None
+        # latest profile finder
+        for profile in pdata["profiles"].values():
+            if pname is None:
+                if profile['current']:
+                    target_profile = profile
+                    pname = profile['profile_id']
+                    break
+            elif pname.lower() == profile['cute_name'].lower():
+                target_profile = profile
+                pname = profile['profile_id']
+                break
+        if target_profile is None:
+            raise CommandInvokeError
+
+        embed = discord.Embed(
+            title="Balance for " + name,
+            color=discord.Colour.blue()
+        )
+        embed.set_thumbnail(url="https://mc-heads.net/avatar/" + name)
+        num = round(data['profiles'][pname]['purse'], 2)
+
+        embed.add_field(name="Purse", value=f"$ {num:,}")
+        await ctx.send(embed=embed)
+
     @commands.command(name='taming', description='Shows your Taming statistics.')
     async def taming(self, ctx, name, pname=None):
-        nameApi = requests.get(self.MojangUrl + name).json()
+        nameApi = self.get_name(name)
+
         async with ctx.session.get(self.SkyV2 + name) as api:
             data = await api.json()
-            for profile in data["profiles"].values():
-                if pname is None:
-                    if profile['current']:
-                        target_profile = profile
-                        pname = profile['cute_name']
-                        break
-                elif pname.lower() == profile['cute_name'].lower():
-                    target_profile = profile
-                    pname = profile['cute_name']
-                    break
+            pname, target_profile = get_profile(data, pname)
             if target_profile is None:
                 raise CommandInvokeError
             print(
@@ -102,7 +168,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
             if xpMax <= 0:
                 xpMax = 0
             embed = discord.Embed(
-                title='Taming Level for ' + nameApi['name'] + ' On Profile ' + pname,
+                title='Taming Level for ' + nameApi + ' On Profile ' + pname,
                 url=f'{self.SkyShiiyuStats}{name}/{pname}',
                 description='**Total Taming EXP: ** ' + self.separator.format(round(int(xpForMax))),
                 color=self.TamingColor
@@ -121,25 +187,14 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
                             value=self.separator.format(int(target_profile['data']['levels']['taming']['rank'])))
             embed.add_field(name='**Xp Required for Max Level**', value=self.separator.format(round(int(of))))
             await ctx.send(embed=embed)
+
     @commands.command(name='farming', description='Shows your Farming statistics.')
     async def farming(self, ctx, name, pname=None):
-        nameApi = requests.get(self.MojangUrl + name).json()
-
+        nameApi = self.get_name(name)
         async with ctx.session.get(self.SkyV2 + name) as api:
             data = await api.json()
 
-        for profile in data["profiles"].values():
-            if pname is None:
-                if profile['current']:
-                    target_profile = profile
-                    pname = profile['cute_name']
-                    break
-            elif pname.lower() == profile['cute_name'].lower():
-                target_profile = profile
-                pname = profile['cute_name']
-                break
-        if not target_profile:
-            raise SkyblockUpdatedError
+        pname, target_profile = get_profile(data, pname)
 
         levelCap = target_profile['data']['level_caps']['farming']
 
@@ -187,7 +242,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
 
         # Start of the embed
         embed = discord.Embed(
-            title='Farming Level for ' + nameApi['name'] + ' On Profile ' + pname,
+            title='Farming Level for ' + nameApi + ' On Profile ' + pname,
             url=f'{self.SkyShiiyuStats}{name}/{pname}',
             description='**Total Farming EXP: ** ' + self.separator.format(round(int(xpForMax))),
             color=self.FarmingColor
@@ -228,23 +283,12 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
 
     @commands.command(name='mining', description='Shows your Mining statistics.')
     async def mining(self, ctx, name, pname=None):
-        nameApi = requests.get(self.MojangUrl + name).json()
+        nameApi = self.get_name(name)
 
         async with ctx.session.get(self.SkyV2 + name) as api:
             data = await api.json()
 
-        for profile in data["profiles"].values():
-            if pname is None:
-                if profile['current']:
-                    target_profile = profile
-                    pname = profile['cute_name']
-                    break
-            elif pname.lower() == profile['cute_name'].lower():
-                target_profile = profile
-                pname = profile['cute_name']
-                break
-        if not target_profile:
-            raise SkyblockUpdatedError
+        pname, target_profile = get_profile(data, pname)
 
         print(
             f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] looked at {name}'s {pname} Mining stats.")
@@ -266,7 +310,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
 
         # Start of the embed
         embed = discord.Embed(
-            title='Mining Level for ' + nameApi['name'] + ' On Profile ' + pname,
+            title='Mining Level for ' + nameApi + ' On Profile ' + pname,
             url=f'{self.SkyShiiyuStats}{name}/{pname}',
             description='**Total Mining EXP: ** ' + self.separator.format(round(int(xpForMax))),
             color=self.MiningColor
@@ -291,23 +335,12 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
 
     @commands.command(name='combat', description='Shows your Combat statistics.')
     async def combat(self, ctx, name, pname=None):
-        nameApi = requests.get(self.MojangUrl + name).json()
+        nameApi = self.get_name(name)
 
         async with ctx.session.get(self.SkyV2 + name) as api:
             data = await api.json()
 
-        for profile in data["profiles"].values():
-            if pname is None:
-                if profile['current']:
-                    target_profile = profile
-                    pname = profile['cute_name']
-                    break
-            elif pname.lower() == profile['cute_name'].lower():
-                target_profile = profile
-                pname = profile['cute_name']
-                break
-        if target_profile is None:
-            raise SkyblockUpdatedError
+        pname, target_profile = get_profile(data, pname)
 
         print(
             f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] looked at {name}'s {pname} Combat stats.")
@@ -328,7 +361,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
             xpMax = 0
 
         embed = discord.Embed(
-            title='Combat Level for ' + nameApi['name'] + ' On Profile ' + pname,
+            title='Combat Level for ' + nameApi + ' On Profile ' + pname,
             url=f'{self.SkyShiiyuStats}{name}/{pname}',
             description='**Total Combat EXP: ** ' + self.separator.format(round(int(xpForMax))),
             color=self.CombatColor
@@ -354,23 +387,12 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
 
     @commands.command(name='foraging', description='Shows your Foraging statistics.')
     async def foraging(self, ctx, name, pname=None):
-        nameApi = requests.get(self.MojangUrl + name).json()
+        nameApi = self.get_name(name)
 
         async with ctx.session.get(self.SkyV2 + name) as api:
             data = await api.json()
 
-        for profile in data["profiles"].values():
-            if pname is None:
-                if profile['current']:
-                    target_profile = profile
-                    pname = profile['cute_name']
-                    break
-            elif pname.lower() == profile['cute_name'].lower():
-                target_profile = profile
-                pname = profile['cute_name']
-                break
-        if target_profile is None:
-            raise SkyblockUpdatedError
+        pname, target_profile = get_profile(data, pname)
 
         print(
             f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] looked at {name}'s {pname} Foraging stats.")
@@ -391,7 +413,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
             xpMax = 0
 
         embed = discord.Embed(
-            title='Foraging Level for ' + nameApi['name'] + ' On Profile ' + pname,
+            title='Foraging Level for ' + nameApi + ' On Profile ' + pname,
             url=f'{self.SkyShiiyuStats}{name}/{pname}',
             description='**Total Foraging EXP: ** ' + self.separator.format(round(int(xpForMax))),
             color=self.ForagingColor
@@ -417,23 +439,12 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
 
     @commands.command(description='Shows your Fishing statistics.')
     async def fishing(self, ctx, name, pname=None):
-        nameApi = requests.get(self.MojangUrl + name).json()
+        nameApi = self.get_name(name)
 
-        async with ctx.session.get(self.SkyV2 + name) as api:
+        async with ctx.session.get(self.SkyV2 + str(name)) as api:
             data = await api.json()
 
-        for profile in data["profiles"].values():
-            if pname is None:
-                if profile['current']:
-                    target_profile = profile
-                    pname = profile['cute_name']
-                    break
-            elif pname.lower() == profile['cute_name'].lower():
-                target_profile = profile
-                pname = profile['cute_name']
-                break
-        if target_profile is None:
-            raise SkyblockUpdatedError
+        pname, target_profile = get_profile(data, pname)
 
         print(
             f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] looked at {name}'s {pname} Fishing stats.")
@@ -454,7 +465,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
             xpMax = 0
 
         embed = discord.Embed(
-            title='Fishing Level for ' + nameApi['name'] + ' On Profile ' + pname,
+            title='Fishing Level for ' + nameApi + ' On Profile ' + pname,
             url=f'{self.SkyShiiyuStats}{name}/{pname}',
             description='**Total Fishing EXP: ** ' + self.separator.format(round(int(xpForMax))),
             color=self.FishingColor
@@ -480,23 +491,12 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
 
     @commands.command(aliases=['ench'], description='Shows your Enchanting statistics.')
     async def enchanting(self, ctx, name, pname=None):
-        nameApi = requests.get(self.MojangUrl + name).json()
+        nameApi = self.get_name(name)
 
         async with ctx.session.get(self.SkyV2 + name) as api:
             data = await api.json()
 
-        for profile in data["profiles"].values():
-            if pname is None:
-                if profile['current']:
-                    target_profile = profile
-                    pname = profile['cute_name']
-                    break
-            elif pname.lower() == profile['cute_name'].lower():
-                target_profile = profile
-                pname = profile['cute_name']
-                break
-        if target_profile is None:
-            raise SkyblockUpdatedError
+        pname, target_profile = get_profile(data, pname)
 
         print(
             f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] looked at {name}'s {pname} Enchanting stats.")
@@ -517,7 +517,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
             xpMax = 0
 
         embed = discord.Embed(
-            title='Enchanting Level for ' + nameApi['name'] + ' On Profile ' + pname,
+            title='Enchanting Level for ' + nameApi + ' On Profile ' + pname,
             url=f'{self.SkyShiiyuStats}{name}/{pname}',
             description='**Total Enchanting EXP: ** ' + self.separator.format(round(int(xpForMax))),
             color=self.EnchantingColor
@@ -543,23 +543,12 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
 
     @commands.command(aliases=['alch'], description='Shows your Alchemy statistics.')
     async def alchemy(self, ctx, name, pname=None):
-        nameApi = requests.get(self.MojangUrl + name).json()
+        nameApi = self.get_name(name)
 
         async with ctx.session.get(self.SkyV2 + name) as api:
             data = await api.json()
 
-        for profile in data["profiles"].values():
-            if pname is None:
-                if profile['current']:
-                    target_profile = profile
-                    pname = profile['cute_name']
-                    break
-            elif pname.lower() == profile['cute_name'].lower():
-                target_profile = profile
-                pname = profile['cute_name']
-                break
-        if target_profile is None:
-            raise SkyblockUpdatedError
+        pname, target_profile = get_profile(data, pname)
 
         print(
             f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] looked at {name}'s {pname} Alchemy stats.")
@@ -580,7 +569,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
             xpMax = 0
 
         embed = discord.Embed(
-            title='Alchemy Level for ' + nameApi['name'] + ' On Profile ' + pname,
+            title='Alchemy Level for ' + nameApi + ' On Profile ' + pname,
             url=f'{self.SkyShiiyuStats}{name}/{pname}',
             description='**Total Alchemy EXP: ** ' + self.separator.format(round(int(xpForMax))),
             color=self.AlchemyColor
@@ -606,23 +595,12 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
 
     @commands.command(name='carpentry', description='Shows your Carpentry statistics.')
     async def carpentry(self, ctx, name, pname=None):
-        nameApi = requests.get(self.MojangUrl + name).json()
+        nameApi = self.get_name(name)
 
         async with ctx.session.get(self.SkyV2 + name) as api:
             data = await api.json()
 
-        for profile in data["profiles"].values():
-            if pname is None:
-                if profile['current']:
-                    target_profile = profile
-                    pname = profile['cute_name']
-                    break
-            elif pname.lower() == profile['cute_name'].lower():
-                target_profile = profile
-                pname = profile['cute_name']
-                break
-        if target_profile is None:
-            raise SkyblockUpdatedError
+        pname, target_profile = get_profile(data, pname)
 
         print(
             f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] looked at {name}'s {pname} Carpentry stats.")
@@ -643,7 +621,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
             xpMax = 0
 
         embed = discord.Embed(
-            title='Carpentry Level for ' + nameApi['name'] + ' On Profile ' + pname,
+            title='Carpentry Level for ' + nameApi + ' On Profile ' + pname,
             url=f'{self.SkyShiiyuStats}{name}/{pname}',
             description='**Total Carpentry EXP: ** ' + self.separator.format(round(int(xpForMax))),
             color=self.CarpentryColor
@@ -669,23 +647,12 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
 
     @commands.command(name='runecrafting', description='Shows your Runecrafting statistics.')
     async def runecrafting(self, ctx, name, pname=None):
-        nameApi = requests.get(self.MojangUrl + name).json()
+        nameApi = self.get_name(name)
 
         async with ctx.session.get(self.SkyV2 + name) as api:
             data = await api.json()
 
-        for profile in data["profiles"].values():
-            if pname is None:
-                if profile['current']:
-                    target_profile = profile
-                    pname = profile['cute_name']
-                    break
-            elif pname.lower() == profile['cute_name'].lower():
-                target_profile = profile
-                pname = profile['cute_name']
-                break
-        if target_profile is None:
-            raise SkyblockUpdatedError
+        pname, target_profile = get_profile(data, pname)
 
         print(
             f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] looked at {name}'s {pname} Runecrafting stats.")
@@ -706,7 +673,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
             xpMax = 0
 
         embed = discord.Embed(
-            title='Runecrafting Level for ' + nameApi['name'] + ' On Profile ' + pname,
+            title='Runecrafting Level for ' + nameApi + ' On Profile ' + pname,
             url=f'{self.SkyShiiyuStats}{name}/{pname}',
             description='**Total Runecrafting EXP: ** ' + self.separator.format(round(int(xpForMax))),
             color=self.RunecraftingColor
@@ -735,24 +702,12 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
     @commands.command(name='dungeons', aliases=['dungeon', 'catacombs', 'cata'],
                       description='Shows your Dungeoneering statistics.')
     async def dungeons(self, ctx, name, pname=None):
-        nameApi = requests.get(f'{self.MojangUrl}{name}').json()
-        target_profile = None
+        name = self.get_name(name)
 
         async with ctx.session.get(self.SkyV2 + name) as api:
             data = await api.json()
 
-        for profile in data["profiles"].values():
-            if pname is None:
-                if profile['current']:
-                    target_profile = profile
-                    pname = profile['cute_name']
-                    break
-            elif pname.lower() == profile['cute_name'].lower():
-                target_profile = profile
-                pname = profile['cute_name']
-                break
-        if target_profile is None:
-            raise CommandInvokeError
+        pname, target_profile = get_profile(data, pname)
 
         healer = target_profile['data']['dungeons']['classes']['healer']['experience']['level']
         mage = target_profile['data']['dungeons']['classes']['mage']['experience']['level']
@@ -812,7 +767,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
             f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] looked at {name}'s {pname} Dungeons stats.")
 
         embed = discord.Embed(
-            title='Dungeon Stats For ' + nameApi['name'] + ' On Profile ' + pname,
+            title='Dungeon Stats For ' + name + ' On Profile ' + pname,
             url=f'{self.SkyShiiyuStats}{name}/{pname}',
             description='**Total Dungeon EXP:** ' + (
                 str(round(target_profile['data']['dungeons']['catacombs']['level']['xp'], 2))),
@@ -848,29 +803,17 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
                         inline=False)
 
         await ctx.send(embed=embed)
+
     """ SLAYERS """
 
     @commands.command(name='slayer', aliases=['slayers'],
                       description='Shows all of your Zombie, Spider, Wolf and Enderman Slayer statistics.')
     async def slayers(self, ctx, name, pname=None):
-        nameApi = requests.get(self.MojangUrl + name).json()
-        target_profile = None
+        nameApi = self.get_name(name)
 
         async with ctx.session.get(self.SkyV2 + name) as api:
             data = await api.json()
-
-        for profile in data["profiles"].values():
-            if pname is None:
-                if profile['current']:
-                    target_profile = profile
-                    pname = profile['cute_name']
-                    break
-            elif pname.lower() == profile['cute_name'].lower():
-                target_profile = profile
-                pname = profile['cute_name']
-                break
-        if target_profile is None:
-            raise CommandInvokeError
+            pname, target_profile = get_profile(data, pname)
 
         t1eman = target_profile['data']['slayers']['enderman']['kills']['1'] if '1' in \
                                                                                 target_profile['data']['slayers'][
@@ -907,22 +850,16 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
         t4tara = target_profile['data']['slayers']['spider']['kills']['4'] if '4' in target_profile['data']['slayers'][
             'spider']['kills'] else 0
 
-        t1reve = target_profile['data']['slayers']['zombie']['kills']['1'] if '1' in target_profile['data']['slayers'][
-            'zombie']['kills'] else 0
-        t2reve = target_profile['data']['slayers']['zombie']['kills']['2'] if '2' in target_profile['data']['slayers'][
-            'zombie']['kills'] else 0
-        t3reve = target_profile['data']['slayers']['zombie']['kills']['3'] if '3' in target_profile['data']['slayers'][
-            'zombie']['kills'] else 0
-        t4reve = target_profile['data']['slayers']['zombie']['kills']['4'] if '4' in target_profile['data']['slayers'][
-            'zombie']['kills'] else 0
-        t5reve = target_profile['data']['slayers']['zombie']['kills']['5'] if '5' in target_profile['data']['slayers'][
-            'zombie']['kills'] else 0
+        t1reve = target_profile['data']['slayers']['zombie']['kills']['1'] if '1' in target_profile['data']['slayers']['zombie']['kills'] else 0
+        t2reve = target_profile['data']['slayers']['zombie']['kills']['2'] if '2' in target_profile['data']['slayers']['zombie']['kills'] else 0
+        t3reve = target_profile['data']['slayers']['zombie']['kills']['3'] if '3' in target_profile['data']['slayers']['zombie']['kills'] else 0
+        t4reve = target_profile['data']['slayers']['zombie']['kills']['4'] if '4' in target_profile['data']['slayers']['zombie']['kills'] else 0
+        t5reve = target_profile['data']['slayers']['zombie']['kills']['5'] if '5' in target_profile['data']['slayers']['zombie']['kills'] else 0
 
-        print(
-            f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] looked at {name}'s {pname} Slayers stats.")
+        print(f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] looked at {name}'s {pname} Slayers stats.")
 
         embed = discord.Embed(
-            title='Slayer Information for ' + nameApi['name'],
+            title='Slayer Information for ' + nameApi,
             url=f'{self.SkyShiiyuStats}{name}/{pname}',
             description='**Total Slayer EXP:** ' + self.separator.format(int(target_profile['data'][
                                                                                  'slayer_xp'])) + 'XP' + '\n ***Total Coins Spent on Slayers: ***' + self.separator.format(
@@ -931,7 +868,8 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
         )
 
         # Contents of discord embed
-        embed.set_author(name=f'Requested by {ctx.message.author.display_name}.', icon_url=ctx.message.author.display_avatar.url)
+        embed.set_author(name=f'Requested by {ctx.message.author.display_name}.',
+                         icon_url=ctx.message.author.display_avatar.url)
         embed.set_thumbnail(url=self.McHeads + name)
         embed.timestamp = ctx.message.created_at
 
@@ -981,6 +919,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
                         value='```prolog\nT1: ' + str(t1eman) + '\nT2: ' + str(t2eman) + '\nT3: ' + str(
                             t3eman) + '\nT4: ' + str(t4eman) + '```', inline=False)
         await ctx.send(embed=embed)
+
 
 def setup(bot):
     bot.add_cog(Skyblock(bot))
