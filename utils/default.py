@@ -331,10 +331,10 @@ class edoC(commands.AutoShardedBot):
 
             await self.change_presence(
                 activity=discord.Game(
-                    type=activity_type.get(activity, 2),
+                    type=activity_type.get(activity, 3),
                     name=f"Watching over {totalmembers} Members spread over {len(self.guilds)} Guilds!\nPrefix: ~"
                 ),
-                status=status_type.get(status, discord.Status.idle)
+                status=status_type.get(status, discord.Status.online)
             )
             # Indicate that the bot has successfully booted up
             print(

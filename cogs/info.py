@@ -420,19 +420,39 @@ class Info(commands.Cog, description='Informational and useful commands'):
     @commands.command(name='in')
     async def _in(self, ctx):
         """ 4th rewrite of the info cmd"""
+        lines = fetch_info()
+        avgmembers = sum(g.member_count for g in self.bot.guilds) / len(self.bot.guilds)
+        comments = lines.get('total_python_comments')
+        coro = lines.get('total_python_coroutines')
+        func = lines.get('total_python_functions')
+        clas = lines.get('total_python_class')
+        tlines = lines.get('total_lines')
+        files = lines.get('file_amount')
+        pyfiles = lines.get('python_file_amount')
+        lang = 'ahk'
+        chancount = str(len(list(self.bot.get_all_channels())))
         infos = {}
         infos[f'{emoji("dev")}Developer'] = f'ini\n{version_info["dev"]}'
         infos[f'{status(str(ctx.guild.me.status))} Uptime'] = precisedelta(discord.utils.utcnow() - self.bot.start_time, format='%.0f')
         infos[f'System'] = system()
-        infos['Commands Count'] = len(list())
+        infos['Commands Loaded'] = len([x.name for x in self.bot.commands])
+        infos['Stats'] = f'{lang}\nMember Count: {sum(g.member_count for g in self.bot.guilds)}\nChannel Count: {chancount}\nGuild Count: {len(self.bot.guilds)}\nAvg users/server: {avgmembers:,.2f}'
+        infos['Lines'] = f"""{lang}\n
+Python Files: {pyfiles}
+Files: {files}
+Lines: {tlines}
+Classes: {clas}
+Functions: {func}
+Coroutines: {coro}
+Comments: {comments}"""
         infemb = discord.Embed(color=invis)
         async with ctx.channel.typing():
             infemb.set_author(name=ctx.guild.me.name, icon_url=ctx.guild.me.avatar)
             infemb.set_thumbnail(url=ctx.guild.me.avatar)
             for k, v in infos.items():
                 infemb.add_field(name=k, value=f'```{v}```', inline=False)
-            cmdsran = self.bot.commands_ran
-
+            infemb.add_field(name='<:dpy:596577034537402378> Discord.py version', value=f'```{discord.__version__}```')
+            infemb.add_field(name='<:python:868285625877557379> Python Version', value=f'```{python_version()}```')
         await ctx.reply(embed=infemb)
 
     @commands.command(aliases=["SAF"])
@@ -562,20 +582,6 @@ class Info(commands.Cog, description='Informational and useful commands'):
         em.set_footer(text="bot owners are excluded from command stats")
         await ctx.send(content=f"About **{ctx.bot.user}** | **{version_info['version']}**", embed=em)
         await ctx.send("||https://bio.link/edoC||")
-
-    @commands.command()
-    async def developer(self, ctx):
-        emb = discord.Embed(title="Jason",
-                            color=blue,
-                            timestamp=ctx.message.created_at
-                            )
-        devinfo = {}
-        devinfo["yes"] = "no"
-        for k, v in devinfo.items():
-            pad = ' ' * (self.PADDING - len(str(v)))
-            emb.description += f"`{pad}{v}`: **{k}**\n"
-
-        emb.set_footer(text="Please consider donating")
 
     @commands.guild_only()
     @commands.command()

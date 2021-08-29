@@ -197,6 +197,7 @@ version_info = {
     'info': 'Updated to discord.py 2.0 alpha 4 (BETA)',
     'version': 0.9,
     'dev': 'Jake CEO of annoyance#1904 (511724576674414600)'
+
 }
 
 
