@@ -370,7 +370,7 @@ Comments: {comments}"""
             infemb.add_field(name='<:python:868285625877557379> Python Version', value=f'```{python_version()}```')
             infemb.add_field(name='<:edoC:874868276256202782> edoC Version', value=f'```{version_info["version"]}```')
             infemb.description += ":link: __Links__ \n" \
-                                  "| [dev links](https://bio.link/edoC) " \
+                                  "  [dev links](https://bio.link/edoC) " \
                                   "| [support me](https://www.buymeacoffee.com/edoC) " \
                                   "| [invite](https://discordapp.com/oauth2/authorize?cient_id=845186772698923029&scope=bot&permissions=8) "
             infemb.set_footer(text=f"Prefix in this server: {prefix}")
