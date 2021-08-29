@@ -311,13 +311,3 @@ class Paginator(discord.ui.View):
         if interaction.user == self.ctx.author:
             return True
         await interaction.response.send_message("Not your command ._.", ephemeral=True)
-
-
-# i wrote this cog while sleeping
-# dont ask
-def success_embed(title, description):
-    return discord.Embed(
-        title=title,
-        description=description,
-        color=blue
-    )

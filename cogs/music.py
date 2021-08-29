@@ -17,6 +17,14 @@ from utils.pagination import Paginator
 from utils.vars import *
 
 music_ = DiscordUtils.Music()
+# i wrote this cog while sleeping
+# dont ask
+def success_embed(title, description):
+    return discord.Embed(
+        title=title,
+        description=description,
+        color=blue
+    )
 
 class music(commands.Cog, description="Jam to some awesome tunes! ?"):
     def __init__(self, bot):
