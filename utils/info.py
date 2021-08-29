@@ -1,3 +1,11 @@
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#  Copyright (c) 2021. Jason Cameron                                                               +
+#  All rights reserved.                                                                            +
+#  This file is part of the edoC discord bot project ,                                             +
+#  and is released under the "MIT License Agreement". Please see the LICENSE                       +
+#  file that should have been included as part of this package.                                    +
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 import os
 import pathlib
 
@@ -48,7 +56,7 @@ def fetch_info():
             continue
         file_amount += 1
     return {
-        "total_lines": lines,
+        "total_lines": lines - 1110,
         "total_python_class": python_class,
         "total_python_functions": python_functions,
         "total_python_coroutines": python_coroutines,

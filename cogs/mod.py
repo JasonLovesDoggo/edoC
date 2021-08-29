@@ -1,3 +1,11 @@
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#  Copyright (c) 2021. Jason Cameron                                                               +
+#  All rights reserved.                                                                            +
+#  This file is part of the edoC discord bot project ,                                             +
+#  and is released under the "MIT License Agreement". Please see the LICENSE                       +
+#  file that should have been included as part of this package.                                    +
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 import argparse
 import copy
 import datetime
@@ -16,7 +24,7 @@ from discord.ext import commands
 from discord.ext.commands import Converter, BadArgument
 
 from cogs.discordinfo import format_relative, plural
-from utils import permissions, default
+from utils import checks, default
 from lib.db import db
 from utils.default import mod_or_permissions, is_admin
 from utils.vars import *
@@ -116,14 +124,13 @@ def can_mute():
             return False
 
         # This will only be used within this cog.
-        ctx.guild_config = config = await ctx.cog.get_guild_config(ctx.guild.id)
-        role = config and config.mute_role
+        role = next((g for g in ctx.guild.roles if g.name == "Muted"), None)
         if role is None:
             raise NoMuteRole()
         return ctx.author.top_role > role
     return commands.check(predicate)
 
-class Mod(commands.Cog):
+class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
     def __init__(self, bot):
         self.bot = bot
         self.config = default.config()
@@ -266,7 +273,7 @@ class Mod(commands.Cog):
     @commands.has_permissions(manage_nicknames=True)
     async def nickname(self, ctx, member: discord.Member, *, name: str = None):
         """ Nicknames a user from the current server. """
-        if await permissions.check_priv(ctx, member):
+        if await checks.check_priv(ctx, member):
             return
 
         try:
@@ -284,7 +291,7 @@ class Mod(commands.Cog):
     async def massnickname(self, ctx, *, name: str = None):
         """ Nicknames all the users from the current server. """
         for member in ctx.guild.members:
-            if await permissions.check_priv(ctx, member):
+            if await checks.check_priv(ctx, member):
                 return
             else:
                 if member.id == 845186772698923029 or 511724576674414600:
@@ -677,45 +684,67 @@ class Mod(commands.Cog):
         for i in range(times):
             await new_ctx.reinvoke()
 
-    @commands.command()
-    @commands.guild_only()
-    @commands.has_permissions(manage_roles=True)
-    async def mute(self, ctx, member: discord.Member, *, reason: str = None):
-        """ Mutes a user from the current server. """
-        if await permissions.check_priv(ctx, member):
-            return
+    @commands.group(name='mute', invoke_without_command=True)
+    @can_mute()
+    async def _mute(self, ctx, members: commands.Greedy[discord.Member], *, reason: ActionReason = None):
+        """Mutes members using the configured mute role.
+        The bot must have Manage Roles permission and be
+        above the muted role in the hierarchy.
+        To use this command you need to be higher than the
+        mute role in the hierarchy and have Manage Roles
+        permission at the server level.
+        """
 
-        muted_role = next((g for g in ctx.guild.roles if g.name == "Muted"), None)
+        if reason is None:
+            reason = f'Action done by {ctx.author} (ID: {ctx.author.id})'
 
-        if not muted_role:
-            return await ctx.send(
-                "Are you sure you've made a role called **Muted**? Remember that it's case sensitive too...")
+        role = next((g for g in ctx.guild.roles if g.name == "Muted"), None)
+        total = len(members)
+        if total == 0:
+            return await ctx.send('Missing members to mute.')
 
-        try:
-            await member.add_roles(muted_role, reason=default.responsible(ctx.author, reason))
-            await ctx.send(default.actionmessage("muted"))
-        except Exception as e:
-            await ctx.send(e)
+        failed = 0
+        for member in members:
+            try:
+                await member.add_roles(role, reason=reason)
+            except discord.HTTPException:
+                failed += 1
 
-    @commands.command()
-    @commands.guild_only()
-    @commands.has_permissions(manage_roles=True)
-    async def unmute(self, ctx, member: discord.Member, *, reason: str = None):
-        """ Unmutes a user from the current server. """
-        if await permissions.check_priv(ctx, member):
-            return
+        if failed == 0:
+            await ctx.send('\N{THUMBS UP SIGN}')
+        else:
+            await ctx.send(f'Muted [{total - failed}/{total}]')
 
-        muted_role = next((g for g in ctx.guild.roles if g.name == "Muted"), None)
+    @commands.command(name='unmute')
+    @can_mute()
+    async def _unmute(self, ctx, members: commands.Greedy[discord.Member], *, reason: ActionReason = None):
+        """Unmutes members using the configured mute role.
+        The bot must have Manage Roles permission and be
+        above the muted role in the hierarchy.
+        To use this command you need to be higher than the
+        mute role in the hierarchy and have Manage Roles
+        permission at the server level.
+        """
 
-        if not muted_role:
-            return await ctx.send(
-                "Are you sure you've made a role called **Muted**? Remember that it's case sensitive too...")
+        if reason is None:
+            reason = f'Action done by {ctx.author} (ID: {ctx.author.id})'
 
-        try:
-            await member.remove_roles(muted_role, reason=default.responsible(ctx.author, reason))
-            await ctx.send(default.actionmessage("unmuted"))
-        except Exception as e:
-            await ctx.send(e)
+        role = next((g for g in ctx.guild.roles if g.name == "Muted"), None)
+        total = len(members)
+        if total == 0:
+            return await ctx.send('Missing members to unmute.')
+
+        failed = 0
+        for member in members:
+            try:
+                await member.remove_roles(role, reason=reason)
+            except discord.HTTPException:
+                failed += 1
+
+        if failed == 0:
+            await ctx.send('\N{THUMBS UP SIGN}')
+        else:
+            await ctx.send(f'Unmuted [{total - failed}/{total}]')
 
     @commands.command(aliases=["ar"])
     @commands.guild_only()

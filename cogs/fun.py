@@ -1,36 +1,46 @@
-import asyncio
-import io
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#  Copyright (c) 2021. Jason Cameron                                                               +
+#  All rights reserved.                                                                            +
+#  This file is part of the edoC discord bot project ,                                             +
+#  and is released under the "MIT License Agreement". Please see the LICENSE                       +
+#  file that should have been included as part of this package.                                    +
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 import json
-import os
-import secrets
-import sys
+import random as rng
 from asyncio import sleep
+from collections import Counter
 from io import BytesIO
+from os import listdir
+from secrets import token_urlsafe
+from typing import Optional
 
-import aiohttp
-import nekos
-from discord.ext import commands
+import discord.ext.commands
+from aiohttp import ClientConnectorError, ContentTypeError
 from bs4 import BeautifulSoup
-from nekos import InvalidArgument
+from discord.ext import commands
+from nekos import InvalidArgument, why, owoify, img
+from pyfiglet import figlet_format
+from pyjokes import pyjokes
 
-from utils import checks, http, default
-from utils.gets import getEmote
+from cogs.discordinfo import plural
+from utils.default import config, CustomTimetext
+from utils.http import get
 from utils.vars import *
-import pyfiglet
 
-dogphotospath = os.listdir("C:/Users/Jason/edoC/data/img/Dog Picks")
+dogphotospath = listdir("C:/Users/Jason/edoC/data/img/Dog Picks")
 
 
-class Fun(commands.Cog):
+class Fun(commands.Cog, description='Fun and entertaining commands can be found below'):
     def __init__(self, bot):
         self.bot = bot
-        self.config = default.config()
+        self.config = config()
         self.alex_api_token = self.config["alexflipnote_api"]
-        self.DoggoPicsCount = len(os.listdir("C:/Users/Jason/edoC/data/img/Dog Picks"))
+        self.DoggoPicsCount = len(dogphotospath)
         self.logschannel = self.bot.get_channel(self.config["edoc_logs"])
         self.dogphotospath = dogphotospath
 
-    @commands.command(aliases=["sayagain"])
+    @commands.command(aliases=["sayagain", 'repeat'])
     async def echo(self, ctx, *, what_to_say: commands.clean_content):
         """ repeats text """
         await ctx.reply(f'🦜 {what_to_say}')
@@ -45,8 +55,12 @@ class Fun(commands.Cog):
 
     @commands.command(aliases=['asciiart'])
     async def ascii(self, ctx, *, value):
-        art = pyfiglet.figlet_format(f"{value}")
-        await ctx.send(f"```\n{art}```")
+        """ sends ascii style art """
+        art = figlet_format(f"{value}")
+        try:
+            await ctx.send(f"```\n{art}```")
+        except Exception:
+            await ctx.send('Thats a bit too long please try somthing shorter')
 
     @commands.command(aliases=["roll", "dice"])
     async def rolldice(self, ctx, guess):
@@ -56,6 +70,9 @@ class Fun(commands.Cog):
 
     @commands.command()
     async def rip(self, ctx, name: str = None, *, text: str = None):
+        """ Sends a tombstone with a name with x text under
+        E.g. ~rip (dev)Jason **FREE** *at last..*"""
+
         if name is None:
             name = ctx.message.author.name
         if len(ctx.message.mentions) >= 1:
@@ -86,34 +103,35 @@ class Fun(commands.Cog):
         t = txt.replace(' ', '+')
         a = author.replace(' ', '+')
         if len(txt) > 25:
-            return await ErrorEmbed(ctx, error="Please keep your message under 25 chars")
+            return await ErrorEmbed(ctx, err="Please keep your message under 25 chars")
         api = f'https://mcgen.herokuapp.com/a.php?i=2&h={a}&t={t}'
         emb = discord.Embed(color=random_color())
         emb.set_image(url=api)
         await ctx.send(embed=emb)
 
     @commands.command(aliases=["rfact", "rf"])
-    @commands.cooldown(rate=1, per=1.3, type=commands.BucketType.user)
+    @commands.cooldown(rate=1, per=2, type=commands.BucketType.user)
     async def RandomFact(self, ctx):
+        """ Legit just posts a random fact"""
         fact = random.choice(random_facts)
         emb = discord.Embed(description=fact, color=random.choice(ColorsList))
         await ctx.reply(embed=emb, mention_author=False)
 
     async def randomimageapi(self, ctx, url: str, endpoint: str, token: str = None):
         try:
-            r = await http.get(
+            r = await get(
                 url, res_method="json", no_cache=True,
                 headers={"Authorization": token} if token else None
             )
-        except aiohttp.ClientConnectorError:
+        except ClientConnectorError:
             return await ctx.send("The API seems to be down...")
-        except aiohttp.ContentTypeError:
+        except ContentTypeError:
             return await ctx.send("The API returned an error or didn't return JSON...")
         await ctx.send(r[endpoint])
 
     async def api_img_creator(self, ctx, url: str, filename: str, content: str = None):
         async with ctx.channel.typing():
-            req = await http.get(url, res_method="read")
+            req = await get(url, res_method="read")
 
             if not req:
                 return await ctx.send("I couldn't create the image ;-;")
@@ -158,26 +176,39 @@ class Fun(commands.Cog):
                         if int(other.headers['Content-Length']) >= filesize:
                             return await ctx.send(f'Video was too big to upload... See it here: {url} instead.')
 
-                        fp = io.BytesIO(await other.read())
+                        fp = BytesIO(await other.read())
                         await ctx.send(file=discord.File(fp, filename=filename))
             else:
                 await ctx.send(embed=discord.Embed(title='Random Dog').set_image(url=url))
 
-    @commands.group()
+    @commands.group(aliases=['cate', 'kat', 'kate', 'catoo'])
     @commands.cooldown(3, 7, type=commands.BucketType.user)
     async def cat(self, ctx):
         """Gives you a random cat."""
+        if ctx.invoked_subcommand is not None:
+            return
         base_url = 'https://cataas.com'
         async with ctx.session.get('https://cataas.com/cat?json=true') as resp:
             if resp.status != 200:
                 return await ctx.send('No cat found :(')
             js = await resp.json()
-            await ctx.send(embed=discord.Embed(title='Meow!', url=base_url + js['url']).set_image(url=base_url + js['url']))
+            feet = str(js['tags']).replace('[', '').replace(']', '').replace('\'', '')
+            await ctx.send(embed=discord.Embed(title='Meow!', url=base_url + js['url']).set_image(
+                url=base_url + js['url']).set_footer(text=f'Tags: {feet}' if len(feet) > 1 else ''))
+
+    @commands.command(aliases=['ac'])
+    async def othercat(self, ctx):
+        """Gives you a random cat."""
+        async with ctx.session.get('https://api.thecatapi.com/v1/images/search') as resp:
+            if resp.status != 200:
+                return await ctx.send('No cat found :(')
+            js = await resp.json()
+            await ctx.send(embed=discord.Embed(title='Random Cat').set_image(url=js[0]['url']))
 
     @cat.command(aliases=['hello'])
-    async def hi(self, ctx):
-        url = 'https://cataas.com/cat/says/hello?size=50&color=white'
-        await ctx.send(embed=discord.Embed(title='Hi!').set_image(url=url))
+    async def hi(self, ctx, color='white'):
+        url = f'https://cataas.com/cat/says/hello?size=50&color={color}'
+        await ctx.send(embed=discord.Embed(title='Hi!', url=url).set_image(url=url))
 
     @commands.command(aliases=['lizzyboi'])
     @commands.cooldown(1, 2, type=commands.BucketType.user)
@@ -192,20 +223,64 @@ class Fun(commands.Cog):
 
     @commands.command(aliases=["MyDoggo", "Bella", "Belz", "WhosAgudGurl"])
     async def MyDog(self, ctx):
-        img = random.choice(self.dogphotospath)  # change dir name to whatever
-        file = discord.File(f"C:/Users/Jason/edoC/data/img/Dog Picks/{img}")
+        """ Posts a random pic of my doggo Bella :) """
+        imge = random.choice(self.dogphotospath)  # change dir name to whatever
+        file = discord.File(f"C:/Users/Jason/edoC/data/img/Dog Picks/{imge}")
         try:
             await ctx.send(file=file)
         except discord.HTTPException:
             await ctx.send(
                 f"The file that i was going to send was too large this has been reported to the devs\ntry to run the cmd again")
-            await self.logschannel.send(f"{img} is too large to send <@&{self.config['dev_role']}>")
+            await self.logschannel.send(f"{imge} is too large to send <@&{self.config['dev_role']}>")
 
     @commands.command(aliases=["flip", "coin"])
     async def coinflip(self, ctx):
         """ Coinflip! """
         coinsides = ["Heads", "Tails"]
         await ctx.send(f"**{ctx.author.name}** flipped a coin and got **{random.choice(coinsides)}**!")
+
+    @commands.command(aliases=["flip", "coin"])
+    async def coinflip(self, ctx, *, toss='Heads'):
+        """ Coinflip! """
+        responses = ['Heads', 'Tails']
+        if len(toss) > 100:
+            return await ErrorEmbed(ctx=ctx, err='Please keep the length of your toss down')
+        value = random.randint(0, 0xffffff)
+        embed = discord.Embed(
+
+            colour=value,
+
+        )
+        embed.add_field(name=f'**User Side:** {toss}\n**Result:** {random.choice(responses)}',
+                        value="Someone is gonna go cry to mommy.", inline=False)
+
+        await ctx.send(embed=embed)
+
+    @commands.command(aliases=['Programmingjoke', 'pj'])
+    async def ProgrammerHumor(self, ctx):
+        """ Just run the command """
+        joke = pyjokes.get_joke()
+        await ctx.reply(joke)
+
+    @commands.command(aliases=['renamedchuckJokes', 'gudjokesherenoscam', 'CJ'])
+    async def ChuckJoke(self, ctx, person: commands.MemberConverter = 'Chuck Norris'):
+        """ChuckNorris is the only man to ever defeat a brick wall in a game of tennis."""
+        joke = random.choice(chuckjoke)
+        nj = joke.replace('Chuck Norris', person)
+        await ctx.reply(embed=discord.Embed(color=green, description=nj))
+
+    @commands.command()
+    async def ccjm(self, ctx):
+        joke = random.choice(chuckjoke)
+        nj = joke.replace('Chuck Norris', ctx.author.display_name)
+        await ctx.reply(embed=discord.Embed(color=green, description=nj))
+
+    @commands.command(aliases=['quote'])
+    async def inspire(self, ctx):
+        async with ctx.session.get("https://zenquotes.io/api/random") as api:
+            data = await api.read()
+        data2 = json.loads(data)
+        await ctx.send(embed=discord.Embed(description=data2[0]['q'], color=invis).set_author(name=data2[0]["a"]))
 
     @commands.command()
     @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
@@ -242,8 +317,66 @@ class Fun(commands.Cog):
         embed.set_footer(text=data["ad"])
         await ctx.send(embed=embed)
 
+    @commands.command(alises=['randint', 'rn'])
+    async def RandomNumber(self, ctx, minimum=0, maximum=100):
+        """Displays a random number within an optional range.
+        The minimum must be smaller than the maximum and the maximum number
+        accepted is 1000.
+        """
+
+        maximum = min(maximum, 1000)
+        if minimum >= maximum:
+            await ctx.send('Maximum is smaller than minimum.')
+            return
+
+        await ctx.send(rng.randint(minimum, maximum))
+
+    @commands.command(aliases=['random-lenny', 'rl'])
+    async def rlenny(self, ctx):
+        """Displays a random lenny face."""
+        lenny = rng.choice([
+            "( ͡° ͜ʖ ͡°)", "( ͠° ͟ʖ ͡°)", "ᕦ( ͡° ͜ʖ ͡°)ᕤ", "( ͡~ ͜ʖ ͡°)",
+            "( ͡o ͜ʖ ͡o)", "͡(° ͜ʖ ͡ -)", "( ͡͡ ° ͜ ʖ ͡ °)﻿", "(ง ͠° ͟ل͜ ͡°)ง",
+            "ヽ༼ຈل͜ຈ༽ﾉ"
+        ])
+        await ctx.send(lenny)
+
+    @commands.command(aliases=['pick'])
+    async def choose(self, ctx, *choices: commands.clean_content):
+        """Chooses between multiple choices.
+        To denote multiple choices, you should use double quotes.
+        """
+        if len(choices) < 2:
+            return await ctx.send('Not enough choices to pick from.')
+
+        await ctx.send(rng.choice(choices))
+
+    @commands.command(aliases=['CBO'])
+    async def choosebestof(self, ctx, times: Optional[int], *choices: commands.clean_content):
+        """Chooses between multiple choices N times.
+        To denote multiple choices, you should use double quotes.
+        You can only choose up to 10001 times and only the top 15 results are shown.
+        """
+        if len(choices) < 2:
+            return await ctx.send('Not enough choices to pick from.')
+
+        if times is None:
+            times = (len(choices) ** 2) + 1
+
+        times = min(10001, max(1, times))
+        results = Counter(rng.choice(choices) for i in range(times))
+        builder = []
+        if len(results) > 15:
+            builder.append('Only showing top 15 results...')
+        for index, (elem, count) in enumerate(results.most_common(15), start=1):
+            builder.append(f'{index}. {elem} ({plural(count):time}, {count / times:.2%})')
+        data = '\n'.join(builder)
+        data = BytesIO(data.encode("utf-8"))
+        await ctx.send(file=discord.File(data, filename=f"{CustomTimetext('prolog', 'output')}"))
+
     @commands.command()
-    async def clap(self, ctx, *, words: commands.clean_content = None):
+    async def clap(self, ctx, *, words: commands.clean_content):
+        """ Be a annoying karen with ~clap (DO IT)"""
         tosend = ""
         for word in words.split():
             tosend += f"👏 {word} "
@@ -252,6 +385,7 @@ class Fun(commands.Cog):
 
     @commands.command(aliases=['Rcap'])
     async def Mock(self, ctx, *, words):
+        """ alternate caps and non caps"""
         if ctx.author == ctx.guild.owner or 511724576674414600:
             await ctx.message.delete()
         tosend = ""
@@ -267,39 +401,37 @@ class Fun(commands.Cog):
 
     @commands.group()
     async def math(self, ctx):
+        """ math related cmds self explanatory don't ask why its in fun"""
         if ctx.invoked_subcommand is None:
             await ctx.send_help(str(ctx.command))
 
     @math.command(name="add", aliases=["addition"])
     async def math_add(self, ctx, num1: int, num2: int):
-        answer = num1 + num2
-        await ctx.send(answer)
+        await ctx.send(num1 + num2)
 
     @math.command(name="sub", aliases=["subtraction"])
     async def math_sub(self, ctx, num1: int, num2: int):
-        answer = num1 - num2
-        await ctx.send(answer)
+        await ctx.send(num1 - num2)
 
     @math.command(name="multi", aliases=["multiplication"])
     async def math_multi(self, ctx, num1: int, num2: int):
-        answer = num1 * num2
-        await ctx.send(answer)
+        await ctx.send(num1 * num2)
 
     @math.command(name="division", aliases=["divide"])
     async def math_divide(self, ctx, num1: int, num2: int):
-        answer = num1 // num2
-        await ctx.send(answer)
+        await ctx.send(num1 / num2)
 
-    @commands.command(aliases=["JumboEmoji"])
-    async def LargenEmoji(self, ctx, emoji):
-        """Display your favorite emotes in large."""
-        emote = getEmote(ctx, emoji)
-        if emote:
-            em = discord.Embed(colour=random_color())
-            em.set_image(url=emote.url)
-            await ctx.send(embed=em)
-        else:
-            await ctx.send(content='\N{HEAVY EXCLAMATION MARK SYMBOL} Only Emotes...')
+    # @commands.command(aliases=["JumboEmoji"])
+    # async def LargenEmoji(self, ctx, emoji):
+    #    """Display your favorite emotes in large. currently only works on local emojis"""
+    #    emote = commands.f(ctx, emoji)
+    #    if emote:
+    #        em = discord.Embed(colour=random_color())
+    #        em.set_image(url=emote.url)
+    #        await ctx.send(embed=em)
+    #    else:
+    #        await ctx.send(content='\N{HEAVY EXCLAMATION MARK SYMBOL} Only Local Emotes...')
+    # Currently works but only local ones
 
     @commands.command()
     async def f(self, ctx, *, text: commands.clean_content = None):
@@ -308,13 +440,7 @@ class Fun(commands.Cog):
         reason = f"for **{text}** " if text else ""
         await ctx.send(f"**{ctx.author.name}** has paid their respect {reason}{random.choice(hearts)}")
 
-    @commands.command()
-    async def pick(self, ctx, one: str, two: str):
-        """ picks between 2 things"""
-        answer = random.choice([one, two])
-        await ctx.send(f"**{answer}**")
-
-    @commands.command()
+    @commands.command(aliases=['ans'])
     async def answer(self, ctx):
         """ purely just says yes or no randomly """
         ans = random.choice(["yes", "no"])
@@ -323,12 +449,12 @@ class Fun(commands.Cog):
     @commands.command(aliases=["uwuify", "makeuwu", "makeowo"])
     async def owoify(self, ctx, *, text: commands.clean_content = None):
         """ "owoifes" the text"""
-        await ctx.reply(nekos.owoify(str(text)))
+        await ctx.reply(owoify(str(text)))
 
     @commands.command()
     async def why(self, ctx):
         """ why """
-        await ctx.reply(nekos.why())
+        await ctx.reply(why())
 
     @commands.command(hidden=True)
     @commands.is_nsfw()
@@ -337,7 +463,7 @@ class Fun(commands.Cog):
         if ctx.author.id not in peeps:
             return
         try:
-            await ctx.reply(nekos.img(target=imgtype))
+            await ctx.reply(img(target=imgtype))
         except InvalidArgument:
             await ctx.reply("Please put in the correct arguments ")
 
@@ -360,15 +486,15 @@ class Fun(commands.Cog):
     async def nuke(self, ctx):
         """ Joke cmd doesnt rly do anything except if the owner runs it"""
         message = await ctx.send("Making server backup then nuking")
-        await asyncio.sleep(.5)
+        await sleep(.5)
         await message.edit(content="Backup 33% complete")
-        await asyncio.sleep(.5)
+        await sleep(.5)
         await message.edit(content="Backup 64% complete")
-        await asyncio.sleep(.7)
+        await sleep(.7)
         await message.edit(content="Backup 86% complete")
-        await asyncio.sleep(.57)
+        await sleep(.57)
         await message.edit(content="Backup 93% complete")
-        await asyncio.sleep(2)
+        await sleep(2)
         await message.delete()
 
         if ctx.author == ctx.guild.owner or 511724576674414600:
@@ -380,7 +506,7 @@ class Fun(commands.Cog):
         else:
             channel = ctx.channel
         await channel.send("Backup 100% complete")
-        await asyncio.sleep(.5)
+        await sleep(.5)
         e = discord.Embed(title="**Nuking everything now**", colour=red)
         e.set_image(url="https://emoji.gg/assets/emoji/7102_NukeExplosion.gif")
         await channel.send(embed=e)
@@ -396,13 +522,14 @@ class Fun(commands.Cog):
             return await ctx.send("I only accept any numbers between 3-1400")
         if hasattr(ctx, "guild") and ctx.guild is not None:
             await ctx.send(f"Sending you a private message with your random generated password **{ctx.author.name}**")
-        await ctx.author.send(f"🎁 **Here is your password:**\n{secrets.token_urlsafe(nbytes)}")
+        await ctx.author.send(f"🎁 **Here is your password:**\n{token_urlsafe(nbytes)}")
 
     @commands.command()
     async def rate(self, ctx, *, thing: commands.clean_content):
         """ Rates what you desire """
-        rate_amount = random.uniform(0.0, 100.0)
-        await ctx.send(f"I'd rate `{thing}` a **{round(rate_amount, 4)} / 100**")
+        rateamount = abs(hash(thing))
+        re = abs(hash(thing[-1]))
+        await ctx.send(f"I'd rate `{thing}` a **{int(str(rateamount)[:2])}.{str(re)[:2]} / 100**")
 
     @commands.command(aliases=['cd'])
     async def countdown(self, ctx, times: int = 3, *, tosay: str = "Go Go Go"):
@@ -453,7 +580,7 @@ class Fun(commands.Cog):
             await msg.add_reaction("🍻")
             await self.bot.wait_for("raw_reaction_add", timeout=30.0, check=reaction_check)
             await msg.edit(content=f"**{user.name}** and **{ctx.author.name}** are enjoying a lovely beer together 🍻")
-        except asyncio.TimeoutError:
+        except TimeoutError:
             await msg.delete()
             await ctx.send(f"well, doesn't seem like **{user.name}** wanted a beer with you **{ctx.author.name}** ;-;")
         except discord.Forbidden:
@@ -463,13 +590,13 @@ class Fun(commands.Cog):
             await msg.edit(content=beer_offer)
 
     @commands.command(aliases=["howhot", "hot"])
-    async def hotcalc(self, ctx, *, user: discord.Member = None):
+    async def hotcalc(self, ctx, *, user: discord.Member):
         """ Returns a random percent for how hot is a discord user """
-        user = user or ctx.author
-
         random.seed(user.id)
         r = random.randint(1, 100)
         hot = r / 1.17
+        if user.id == 511724576674414600:
+            hot = 100
 
         if hot > 75:
             emoji = "💞"
@@ -483,22 +610,16 @@ class Fun(commands.Cog):
         await ctx.send(f"**{user.name}** is **{hot:.2f}%** hot {emoji}")
 
     @commands.command(aliases=["howgay", "gay"])
-    async def gaycalc(self, ctx, *, user: discord.Member = None):
+    async def gaycalc(self, ctx, *, user=None):
         """ Returns a random percent for how gay is a discord user """
         user = user or ctx.author
-
-        gay = random.randint(1, 100)
-
-        await ctx.send(f"**{user.name}** is **{gay:.2f}%** gay :rainbow_flag: ")
+        gay = abs(hash(user))
+        await ctx.send(f"**{user}** is **{int(str(gay)[:2]):.2f}%** gay :rainbow_flag: ")
 
     @commands.command(aliases=["noticemesenpai"])
     async def noticeme(self, ctx):
         """ Notice me senpai! owo """
-        if not permissions.can_handle(ctx, "attach_files"):
-            return await ctx.send("I cannot send images here ;-;")
-
-        bio = BytesIO(await http.get("https://i.alexflipnote.dev/500ce4.gif", res_method="read"))
-        await ctx.send(file=discord.File(bio, filename="noticeme.gif"))
+        await ctx.send(embed=discord.Embed(color=0xff6d7a).set_image(url='https://i.alexflipnote.dev/500ce4.gif'))
 
     @commands.command(aliases=["slots", "bet"])
     @commands.cooldown(rate=1, per=3.0, type=commands.BucketType.user)
@@ -511,7 +632,7 @@ class Fun(commands.Cog):
 
         slotmachine = f"**[ {a} {b} {c} ]\n{ctx.author.name}**,"
 
-        if (a == b == c):
+        if a == b == c:
             await ctx.send(f"{slotmachine} All matching, you won! 🎉")
         elif (a == b) or (a == c) or (b == c):
             await ctx.send(f"{slotmachine} 2 in a row, you won! 🎉")

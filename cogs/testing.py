@@ -1,7 +1,18 @@
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#  Copyright (c) 2021. Jason Cameron                                                               +
+#  All rights reserved.                                                                            +
+#  This file is part of the edoC discord bot project ,                                             +
+#  and is released under the "MIT License Agreement". Please see the LICENSE                       +
+#  file that should have been included as part of this package.                                    +
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 from urllib.parse import quote_plus
 
 import discord
+from discord import ButtonStyle
 from discord.ext import commands
+from discord.ui import Button
+
 
 
 class Counter(discord.ui.View):
@@ -35,21 +46,62 @@ class Google(discord.ui.View):
         self.add_item(discord.ui.Button(label='Click Here', url=url))
 
 
-class Test(commands.Cog):
+class Test(commands.Cog, description='Testing cog for... testing'):
     def __init__(self, bot):
         self.bot = bot
         self.bot.remove_command('google')
 
         @bot.command()
-        async def google(ctx: commands.Context, *, query: str):
+        async def google(ctx, *, query: str):
             """Returns a google link for a query"""
             await ctx.send(f'Google Result for: `{query}`', view=Google(query))
 
         @bot.command()
-        async def counter(ctx: commands.Context):
+        async def counter(ctx):
             """Starts a counter for pressing."""
             await ctx.send('Press!', view=Counter())
 
+        @bot.command()
+        async def top(ctx):
+            await ctx.reply("please wait ...")
+            from bs4 import BeautifulSoup
+            import requests
+            def GETC():
+                url = f'https://www.google.com/search?q=bitcoin+price'
+                HTML = requests.get(url)
+                soup = BeautifulSoup(HTML.text, 'html.parser')
+                text = soup.find('div', attrs={'class': 'BNeawe iBp4i AP7Wnd'}).find('div', attrs={
+                    'class': 'BNeawe iBp4i AP7Wnd'}).text
+                return text
+
+            def bitC():
+                url = f'https://www.google.com/search?q=bitcoin cash+price'
+                HTML = requests.get(url)
+                soup = BeautifulSoup(HTML.text, 'html.parser')
+                text = soup.find('div', attrs={'class': 'BNeawe iBp4i AP7Wnd'}).find('div', attrs={
+                    'class': 'BNeawe iBp4i AP7Wnd'}).text
+                return text
+
+            def LITE():
+                url = f'https://www.google.com/search?q=litecoin+price'
+                HTML = requests.get(url)
+                soup = BeautifulSoup(HTML.text, 'html.parser')
+                text = soup.find('div', attrs={'class': 'BNeawe iBp4i AP7Wnd'}).find('div', attrs={
+                    'class': 'BNeawe iBp4i AP7Wnd'}).text
+                return text
+
+            def ETH():
+                url = f'https://www.google.com/search?q=ethereum+price'
+                HTML = requests.get(url)
+                soup = BeautifulSoup(HTML.text, 'html.parser')
+                text = soup.find('div', attrs={'class': 'BNeawe iBp4i AP7Wnd'}).find('div', attrs={
+                    'class': 'BNeawe iBp4i AP7Wnd'}).text
+                return text
+            eth = ETH()
+            lite = LITE()
+            bitca = bitC()
+            bit = GETC()
+            await ctx.send(f'eth {eth}\nlite {lite}\nbitcoin cash {bitca}\nbitcoin {bit}')
 
 def setup(bot):
     bot.add_cog(Test(bot))

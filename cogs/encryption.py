@@ -1,3 +1,11 @@
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#  Copyright (c) 2021. Jason Cameron                                                               +
+#  All rights reserved.                                                                            +
+#  This file is part of the edoC discord bot project ,                                             +
+#  and is released under the "MIT License Agreement". Please see the LICENSE                       +
+#  file that should have been included as part of this package.                                    +
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 import base64
 import binascii
 import codecs
@@ -9,11 +17,7 @@ from discord.ext.commands.errors import BadArgument
 from utils import default, http
 from utils.vars import *
 
-
-# def urlify(in_string):
-#    return "%20".join(in_string.split())
-
-class Encryption(commands.Cog):
+class Encryption(commands.Cog, description='Need to send a super secret encrypted message we gotchu'):
     def __init__(self, bot):
         self.PADDING = 5
         self.bot = bot
@@ -53,25 +57,22 @@ class Encryption(commands.Cog):
         if not input:
             return await ctx.send(f"Aren't you going to give me anything to encode/decode **{ctx.author.name}**")
 
-        async with ctx.channel.typing():
-            if len(input) > 1900:
-                try:
-                    data = BytesIO(input.encode("utf-8"))
-                except AttributeError:
-                    data = BytesIO(input)
-
-                try:
-                    return await ctx.send(
-                        content=f"📑 **{convert}**",
-                        file=discord.File(data, filename=default.timetext("Encryption"))
-                    )
-                except discord.HTTPException:
-                    return await ctx.send(f"The file I returned was over 8 MB, sorry {ctx.author.name}...")
-
+        if len(input) > 1900:
             try:
-                await ctx.send(f"📑 **{convert}**```fix\n{input.decode('utf-8')}```")
+                data = BytesIO(input.encode("utf-8"))
             except AttributeError:
-                await ctx.send(f"📑 **{convert}**```fix\n{input}```")
+                data = BytesIO(input)
+            try:
+                return await ctx.send(
+                    content=f"📑 **{convert}**",
+                    file=discord.File(data, filename=default.timetext("Encryption"))
+                )
+            except discord.HTTPException:
+                return await ctx.send(f"The file I returned was over 8 MB, sorry {ctx.author.name}...")
+        try:
+            await ctx.send(f"📑 **{convert}**```fix\n{input.decode('utf-8')}```")
+        except AttributeError:
+            await ctx.send(f"📑 **{convert}**```fix\n{input}```")
 
     @encode.command(name="base32", aliases=["b32"])
     async def encode_base32(self, ctx, *, input: commands.clean_content = None):
@@ -199,20 +200,6 @@ class Encryption(commands.Cog):
         except Exception:
             await ctx.send("Invalid ASCII85...")
 
-    #    @encode.command(name="morse", aliases=["morsecode"])
-    #    async def encode_morse(self, ctx, *, input: commands.clean_content = None):
-    #        baseurl = "https://api.funtranslations.com/translate/morse.json?text="
-    #        urlinput = "%20".join(input.split())
-    #        print(baseurl + urlinput)
-    #        async with aiohttp.ClientSession() as cs:
-    #            async with cs.get(baseurl + urlinput) as api:
-    #                data = await api.json()
-    #        try:
-    #            output = data["contents"]["translated"]
-    #            await ctx.send(f"📑 Text -> morse ```fix\n {output}```")
-    #        except KeyError:
-    #            await ctx.send("sorry but that's some invalid text")
-
     @encode.command(name='morse')
     async def encode_to_morse(self, ctx, *, text: commands.clean_content = None):
         """ Encode in morse code """
@@ -275,32 +262,32 @@ class Encryption(commands.Cog):
                     embed=discord.Embed(description=f"❌ The file I returned was over 8 MB, sorry {ctx.author.name}...",
                                         colour=red))
 
-    @decode.command(name='all')
-    async def decode_all(self, ctx, *, text=None):
-        """ loops through all the encoding types and sends em all """
-        if not text:
-            text = await self.detect_file(ctx)
-        try:
-            data = BytesIO(text.encode("utf-8"))
-        except AttributeError:
-            data = BytesIO(text)
-        encyptions = {}
-        # b32 = base64.b32decode(text.encode())
-        # b64 = base64.b85encode(text.encode())
-        # a85 = base64.a85encode(text.encode())
-        # encyptions["Base32"] = b32
-        # encyptions["base85"] = b64[:-1]
-        # encyptions["Ascii85"] =a85[:-1]
-        encyptions["test"] = await self.encryptout(ctx, "base32 -> Text", base64.b32decode(text.encode("utf-8")))
-
-        emb = discord.Embed(title="Encryption Outputs",
-                            color=blue,
-                            description="")
-        for k, v in encyptions.items():
-            pad = ' ' * (self.PADDING - len(str(v)))
-            emb.description += f"`{pad}{v}`: **{k}**\n"
-        await ctx.reply(embed=emb)
-
+    #@decode.command(name='all')
+    #async def decode_all(self, ctx, *, text=None):
+    #    """ loops through all the encoding types and sends em all """
+    #    if not text:
+    #        text = await self.detect_file(ctx)
+    #    try:
+    #        data = BytesIO(text.encode("utf-8"))
+    #    except AttributeError:
+    #        data = BytesIO(text)
+    #    encyptions = {}
+    #    # b32 = base64.b32decode(text.encode())
+    #    # b64 = base64.b85encode(text.encode())
+    #    # a85 = base64.a85encode(text.encode())
+    #    # encyptions["Base32"] = b32
+    #    # encyptions["base85"] = b64[:-1]
+    #    # encyptions["Ascii85"] =a85[:-1]
+    #    encyptions["test"] = await self.encryptout(ctx, "base32 -> Text", base64.b32decode(text.encode("utf-8")))
+#
+    #    emb = discord.Embed(title="Encryption Outputs",
+    #                        color=blue,
+    #                        description="")
+    #    for k, v in encyptions.items():
+    #        pad = ' ' * (self.PADDING - len(str(v)))
+    #        emb.description += f"`{pad}{v}`: **{k}**\n"
+    #    await ctx.reply(embed=emb)
+#
 
 def setup(bot):
     bot.add_cog(Encryption(bot))

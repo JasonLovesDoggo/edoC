@@ -1,19 +1,24 @@
-import os
-import pathlib
-import platform
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#  Copyright (c) 2021. Jason Cameron                                                               +
+#  All rights reserved.                                                                            +
+#  This file is part of the edoC discord bot project ,                                             +
+#  and is released under the "MIT License Agreement". Please see the LICENSE                       +
+#  file that should have been included as part of this package.                                    +
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+from pathlib import Path
+from platform import python_version, system
 from typing import List, Tuple
 
-import googletrans
-import humanize
-import psutil
+from discord import HTTPException
 from discord.ext.commands import ColourConverter
 from discord.ext.menus import ListPageSource
+from googletrans import Translator
+from humanize import naturalsize, naturaldelta, precisedelta
 from pyshorteners import Shortener
 
 from cogs.music import Paginator
-from lib.db import db
 from utils.default import *
-from utils.gets import *
 from utils.info import fetch_info
 from utils.vars import *
 
@@ -43,17 +48,18 @@ def hex_to_rgb(value):
     return tuple(int(v[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
 
 
-class Info(commands.Cog):
+class Info(commands.Cog, description='Informational and useful commands'):
     def __init__(self, bot):
         self.bot = bot
         self.config = config()
         self.PADDING = 9
-        self.process = psutil.Process(os.getpid())
+        self.process = self.bot.process
         self.event = self.bot.get_cog("Events")
         self.oldcolorApiH = 'https://www.thecolorapi.com/id?hex='
         self.neweroldColorApi = 'https://api.color.pizza/v1/'
         self.colorApi = 'https://api.popcatdev.repl.co/color/'
-        self.trans = googletrans.Translator()
+        self.trans = Translator()
+        self.logs = self.bot.get_channel(self.config["edoc_logs"])
 
         # @commands.command(aliases=["UIS", "UsersSpotify"])
         # async def UserInfoSpotify(ctx, user: discord.Member = None):
@@ -100,24 +106,42 @@ class Info(commands.Cog):
             return await ctx.send(f'An error occurred: {e.__class__.__name__}: {e}')
 
         embed = discord.Embed(colour=blue)
-        src = googletrans.LANGUAGES.get(ret.src, '(auto-detected)').title()
-        dest = googletrans.LANGUAGES.get(ret.dest, 'Unknown').title()
+        src = LANGUAGES.get(ret.src, '(auto-detected)').title()
+        dest = LANGUAGES.get(ret.dest, 'Unknown').title()
         embed.set_author(name='Translated', icon_url='https://i.imgur.com/kqYmKR6.png')
         embed.add_field(name=f'From {src}', value=ret.origin, inline=False)
         embed.add_field(name=f'To {dest}', value=ret.text, inline=False)
-        await ctx.reply(embed=embed)
+        try:
+            await ctx.reply(embed=embed)
+        except HTTPException:
+            await ctx.reply('msg too long')
 
     @commands.group()
     @commands.cooldown(rate=1, per=43200, type=commands.BucketType.user)
     async def report(self, ctx):
         """USAGE
         ```yaml
-        ~report guild (reason)
-        ~report user (reason)
-        ~report bug (bug)
-        ```"""
+        ~report guild (reason) < DOESNT EXIST RN
+        ~report user (user) (reason)
+        ~report bug (bug-other details)~ < DOESNT EXIST RN
+        ```
+        If you abuse this command you will get blacklisted
+        **No chance for appeal**"""
         if ctx.invoked_subcommand is None:
             await ctx.send_help(str(ctx.command))
+
+    @report.command()
+    async def user(self, ctx, user: discord.Member, *, reason: str = None):
+        channel = self.logs
+        author = ctx.message.author
+        await ctx.message.delete()  # Privacy on the users part
+        if not reason:
+            await author.send('You must provide a reasoning to report a user/guild')
+        elif len(reason) > 1900:
+            return await author.send('Your Reason must be under 1900 characters')
+        else:
+            await channel.send(embed=ReportEmbed(ctx=ctx, type='Member', body=reason, directed_at=user))
+            #await channel.send(f"{author} has reported {user}, reason: {reason}")
 
     @commands.command(brief="Shows the bot's uptime")
     async def uptime(self, ctx):
@@ -125,11 +149,11 @@ class Info(commands.Cog):
         Shows the bot's uptime in days | hours | minutes | seconds
         """
         em = discord.Embed(
-            description=f"{humanize.precisedelta(discord.utils.utcnow() - self.bot.start_time, format='%.0f')}",
+            description=f"{precisedelta(discord.utils.utcnow() - self.bot.start_time, format='%.0f')}",
             colour=0x2F3136,
         )
         em.set_author(name="Uptime")
-        em.set_footer(text=f"Requested by {ctx.author}", icon_url=ctx.author.avatar.url)
+        em.set_footer(text=f"Requested by {ctx.author}", icon_url=ctx.author.display_avatar.url)
         await ctx.send(embed=em)
 
     @commands.command(aliases=['RC', 'Rcolor', 'RandColor'])
@@ -251,32 +275,34 @@ class Info(commands.Cog):
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~
     @commands.command()
-    @commands.cooldown(rate=1, per=300, type=commands.BucketType.guild)
+    #@commands.cooldown(rate=1, per=300, type=commands.BucketType.guild)
     async def CmdStats(self, ctx):
-        cmdsran = self.bot.commands_ran
-        marklist = sorted(cmdsran.items(), key=lambda x: x[1], reverse=True)
-        sortdict = dict(marklist)
-        p = ctx.prefix
-        value_iterator = iter(sortdict.values())
-        key_iterator = iter(sortdict.keys())
-        emby = discord.Embed(title='edoC command Stats',
-                             description=f'{self.bot.total_commands_ran} Commands ran this boot\n',
-                             color=random_color())
+        try:
+            cmdsran = self.bot.commands_ran
+            marklist = sorted(cmdsran.items(), key=lambda x: x[1], reverse=True)
+            sortdict = dict(marklist)
+            p = ctx.prefix
+            value_iterator = iter(sortdict.values())
+            key_iterator = iter(sortdict.keys())
+            emby = discord.Embed(title='edoC command Stats',
+                                 description=f'{self.bot.total_commands_ran} Commands ran this boot\n',
+                                 color=random_color())
+            emby.add_field(name='Top 10 commands ran', value=f'🥇:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                             f'🥈:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                             f'🥉:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                             f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                             f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                             f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                             f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                             f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                             f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                                             f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n')
 
-        emby.add_field(name='Top 10 commands ran', value=f'🥇:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                         f'🥈:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                         f'🥉:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                         f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                         f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                         f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                         f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                         f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                         f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                         f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n')
+            emby.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
 
-        emby.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
-
-        await ctx.reply(embed=emby)
+            await ctx.reply('hi', embed=emby)
+        except StopIteration as e:
+            await ctx.send(f'{e} e')
 
     @commands.command(hidden=True)
     @commands.cooldown(rate=2, per=300, type=commands.BucketType.user)
@@ -288,14 +314,14 @@ class Info(commands.Cog):
     async def contributors(self, ctx):
         emb = discord.Embed(title=f'Contributors Of edoC', color=random_color(), description='')
         emb.set_footer(text='Created by Jake CEO of annoyance#1904',
-                       icon_url=self.bot.get_user(id=511724576674414600).avatar.url)
+                       icon_url=self.bot.get_user(511724576674414600).display_avatar.url)
         for k, v in contributors.items():
             emb.add_field(name=f'***{k}***', value=f'{v}', inline=False)
         await ctx.send(embed=emb)
 
-    @commands.command(aliases=["stats", "status", "botinfo"])
+    @commands.command(aliases=["stats", "status", "botinfo", 'info'])
     async def about(self, ctx):
-        proc = psutil.Process()
+        proc = Process()
         infos = fetch_info()
 
         with proc.oneshot():
@@ -315,23 +341,22 @@ class Info(commands.Cog):
             )
             e.add_field(
                 name="__<:python:868285625877557379> Python__",
-                value=f"**python** `{platform.python_version()}`\n"
+                value=f"**python** `{python_version()}`\n"
                       f"**discord.py** `{discord.__version__}`",
                 inline=True,
             )
 
-            pmem = humanize.naturalsize(mem.rss)
-            vmem = humanize.naturalsize(mem.vms)
+            pmem = naturalsize(mem.rss)
+            vmem = naturalsize(mem.vms)
             cmds = self.bot.total_commands_ran
-            uptime = humanize.naturaldelta(discord.utils.utcnow() - self.bot.start_time)
+            uptime = naturaldelta(discord.utils.utcnow() - self.bot.start_time)
             totalmembers = sum(g.member_count for g in self.bot.guilds)
             e.add_field(
                 name="__:gear: Usage__",
-                value=
-                f"**{pmem}** physical memory\n"
-                f"**{vmem}** virtual memory\n"
-                f"**{uptime}** Uptime\n"
-                f"**{cmds}** Commands ran this boot\n",
+                value=f"**{pmem}** physical memory\n"
+                      f"**{vmem}** virtual memory\n"
+                      f"**{uptime}** Uptime\n"
+                      f"**{cmds}** Commands ran this boot\n",
                 inline=True)
             e.add_field(
                 name="__Servers count__",
@@ -395,7 +420,20 @@ class Info(commands.Cog):
     @commands.command(name='in')
     async def _in(self, ctx):
         """ 4th rewrite of the info cmd"""
-        embed = discord.Embed(color=random_color())
+        infos = {}
+        infos[f'{emoji("dev")}Developer'] = f'ini\n{version_info["dev"]}'
+        infos[f'{status(str(ctx.guild.me.status))} Uptime'] = precisedelta(discord.utils.utcnow() - self.bot.start_time, format='%.0f')
+        infos[f'System'] = system()
+        infos['Commands Count'] = len(list())
+        infemb = discord.Embed(color=invis)
+        async with ctx.channel.typing():
+            infemb.set_author(name=ctx.guild.me.name, icon_url=ctx.guild.me.avatar)
+            infemb.set_thumbnail(url=ctx.guild.me.avatar)
+            for k, v in infos.items():
+                infemb.add_field(name=k, value=f'```{v}```', inline=False)
+            cmdsran = self.bot.commands_ran
+
+        await ctx.reply(embed=infemb)
 
     @commands.command(aliases=["SAF"])
     @commands.has_permissions(attach_files=True)
@@ -424,7 +462,7 @@ class Info(commands.Cog):
     async def lines(self, ctx):
         """ gets all lines"""
         global color
-        p = pathlib.Path('./')
+        p = Path('./')
         cm = cr = fn = cl = ls = fc = 0
         for f in p.rglob('*.py'):
             if str(f).startswith("venv"):
@@ -446,6 +484,16 @@ class Info(commands.Cog):
                     if '#' in l:
                         cm += 1
                     ls += 1
+
+        infos = fetch_info()
+        l = infos.get('total_lines')
+        cl = infos.get('total_python_class')
+        func = infos.get('total_python_functions')
+        coru = infos.get('total_python_coroutines')
+        com = infos.get('total_python_comments')
+        fc = infos.get('file_amount')
+        pyfc = infos.get('python_file_amount')
+
         lang = random.choice(["ahk", "apache", "prolog"])
         if lang == "apache":
             color = orange
@@ -456,7 +504,7 @@ class Info(commands.Cog):
         e = discord.Embed(title="Lines",
                           color=color,
                           timestamp=ctx.message.created_at)
-        e.description = f"```{lang}\nFiles: {fc}\nLines: {ls:,}\nClasses: {cl}\nFunctions: {fn}\nCoroutines: {cr}\nComments: {cm:,}\n ```"
+        e.description = f"```{lang}\nPython Files: {pyfc}\nFiles: {fc}\nLines: {l:,}\nClasses: {cl}\nFunctions: {func}\nCoroutines: {coru}\nComments: {com:,}```"
         e.set_footer(text=f"Requested by {ctx.author.name}\n{embedfooter}")
         await ctx.send(embed=e)
 
@@ -474,7 +522,7 @@ class Info(commands.Cog):
                         You can also type ~help category for more info on a category.""")
 
     @commands.command(aliases=["code"])
-    async def source(self, ctx):
+    async def repo(self, ctx):
         """ Check out my source code <3 """
         # Do not remove this command, this has to stay due to the GitHub LICENSE.
         # TL:DR, you have to disclose source according to MIT.
@@ -486,31 +534,6 @@ class Info(commands.Cog):
         if isinstance(ctx.channel, discord.DMChannel) or ctx.guild.id != 819282410213605406:
             return await ctx.send(f"**Here you go {ctx.author.name} 🍻\n<{self.config['botserver']}>**")
         await ctx.reply(f"**{ctx.author.name}** this is my home you know :3")
-
-    @commands.command(hidden=True)
-    async def altinfo(self, ctx):
-        """ About the bot """
-
-        ramUsage = self.process.memory_full_info().rss / 1024 ** 2
-        avgmembers = sum(g.member_count for g in self.bot.guilds) / len(self.bot.guilds)
-        totalmembers = sum(g.member_count for g in self.bot.guilds)
-        embed = discord.Embed(colour=green)
-        embed.set_thumbnail(url=ctx.bot.user.avatar.url)
-        embed.add_field(name="Last boot", value=timeago(datetime.now() - self.bot.uptime), inline=True)
-        embed.add_field(
-            name=f"Developer (bio)[https://bio.link/edoc]",
-            value=", ".join([str(self.bot.get_user(x)) for x in self.config["owners"]]),
-            inline=True
-        )
-        embed.add_field(name="Library", value="discord.py", inline=True)
-        embed.add_field(name="Total Members", value=totalmembers)
-        embed.add_field(name="Servers", value=f"{len(ctx.bot.guilds)} ( avg: {avgmembers:,.2f} users/server )",
-                        inline=True)
-        embed.add_field(name="Commands Loaded", value=len([x.name for x in self.bot.commands]), inline=True)
-        embed.add_field(name="Commands Ran By Owners", value=None)
-        embed.add_field(name="RAM", value=f"{ramUsage:.2f} MB", inline=True)
-        embed.set_footer(text=embedfooter)
-        await ctx.send(content=f"ℹ About **{ctx.bot.user}** | **{version_info['version']}**", embed=embed)
 
     @commands.command(aliases=["bs"])
     async def botstats(self, ctx):
@@ -524,10 +547,8 @@ class Info(commands.Cog):
                            description="")
         info = {}
         info["Discord.py version"] = discord.__version__
-        info["Python Version"] = f"{platform.python_version()}"
+        info["Python Version"] = f"{python_version()}"
         info["Avg users/server"] = f"{avgmembers:,.2f}"
-        info["commands ran since restart"] = self.event.normal_commands
-        info["Commands ran by owners"] = self.event.owner_commands
         info["Bot owners"] = len(self.config["owners"])
         info["Prefix in this server"] = db.field("SELECT Prefix FROM guilds WHERE GuildID = ?",
                                                  ctx.guild.id)  # get_prefix(self.bot, ctx)

@@ -1,20 +1,26 @@
-import glob
-import logging
-import os
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#  Copyright (c) 2021. Jason Cameron                                                               +
+#  All rights reserved.                                                                            +
+#  This file is part of the edoC discord bot project ,                                             +
+#  and is released under the "MIT License Agreement". Please see the LICENSE                       +
+#  file that should have been included as part of this package.                                    +
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 from datetime import datetime
+from logging import getLogger
+from os import getpid
 
 import apscheduler.schedulers.asyncio
-import psutil
 from discord import HTTPException
 from discord.ext import commands
 from discord.ext.commands import MissingPermissions, CheckFailure, MaxConcurrencyReached, CommandOnCooldown
+from psutil import Process
 
-from cogs.mod import BannedUsers
 from lib.db import db
 from utils import default
 from utils.vars import *
 
-logging.getLogger("events")
+getLogger("events")
 owners = default.config()["owners"]
 bla = {}
 default.MakeBlackList(bla)
@@ -30,7 +36,7 @@ async def Error(self, ctx, err):
                           timestamp=ctx.message.created_at,
                           description=err)
     await logs_channel.send(embed=embed)
-    logging.error(msg="Error Error")
+    error(msg="Error Error")
 
 
 async def Info(self, ctx, msg):
@@ -40,34 +46,22 @@ async def Info(self, ctx, msg):
                           timestamp=ctx.message.created_at,
                           description=msg)
     await non_critical_logs_channel.send(embed=embed)
-    logging.error(msg="Info message has been sent msg = " + msg)
+    error(msg="Info message has been sent msg = " + msg)
 
 
-class Events(commands.Cog):
+class Events(commands.Cog, description='Event handling if u can see this ping the dev'):
     def __init__(self, bot):
         # self.blacklist = Blacklist
         self.bot = bot
         self.ready = False
         self.config = default.config()
-        self.process = psutil.Process(os.getpid())
+        self.process = Process(getpid())
         self.scheduler = apscheduler.schedulers.asyncio.AsyncIOScheduler()
-        self.owner_commands = 0
-        self.normal_commands = 0
         self.critlogschannel = self.config["edoc_logs"]
         self.allmembers = self.bot.get_all_members()
         self.guilds = self.bot.guilds
         self.noncritlogschannel = self.config["edoc_non_critical_logs"]
         self.update_db()
-        self.tempimgpath = 'data/img/temp/*'
-        self.bot.total_commands_ran = 0
-        self.bot.commands_ran = {}
-        for command in self.bot.commands:
-            self.bot.commands_ran[f'{command.qualified_name}'] = 0
-
-    async def emptyfolder(self, folder):
-        files = glob.glob(folder)
-        for f in files:
-            os.remove(f)
 
     async def erroremb(self, ctx, *, description: str, footer=None, title=None):
         """@summary creates a discord embed so i can send it with x details easier"""
@@ -157,6 +151,12 @@ class Events(commands.Cog):
     #    print("updated db")
 
     @commands.Cog.listener()
+    async def on_ready(self):
+        self.bot.commands_ran = {}
+        for command in self.bot.walk_commands():
+            self.bot.commands_ran[f'{command.qualified_name}'] = 0
+
+    @commands.Cog.listener()
     async def on_command_error(self, ctx, err):
         if isinstance(err, commands.CommandNotFound):
             if not ctx.guild.id == 336642139381301249:
@@ -219,7 +219,9 @@ class Events(commands.Cog):
         elif isinstance(err, CommandOnCooldown):
             await self.erroremb(ctx=ctx,
                                 description=f"This command is on cooldown... try again in {err.retry_after:.2f} seconds.")
-
+        elif isinstance(err, HTTPException):
+            await self.erroremb(ctx=ctx,
+                                description=f'The returned message was too long')
         else:
             print('Unknown error!')
             await self.erroremb(ctx, description="Sorry but this is an unknown error the devs has been notified!")
@@ -227,94 +229,12 @@ class Events(commands.Cog):
             await critlogschannel.send(
                 f"{ctx.message.author.mention} [in {ctx.message.guild.id}, #{ctx.message.channel}] made an error typing a command.```py\n{err}```")
 
+
     @commands.Cog.listener()
     async def on_guild_remove(self, guild):
         db.execute("DELETE FROM Guilds WHERE GuildID=?", (guild.id,))
         print(f"edoc has left {guild.name} it had {len(guild.members)} members")
         # todo add a thing to remove said guild from the database after an hour
-
-    @commands.Cog.listener()
-    async def on_command(self, ctx):
-        try:
-            self.bot.commands_ran[ctx.command.qualified_name] += 1
-        except KeyError:
-            pass
-        self.bot.total_commands_ran += 1
-        if ctx.author.id in BannedUsers:
-            return
-        else:
-            blocked = False
-        try:
-            try:
-                print(
-                    f"{ctx.guild.name} > {ctx.author} > {ctx.message.clean_content} > Blocked {blocked}")
-                logging.basicConfig(filename="log.log",
-                                    format='%(asctime)s %(message)s',
-                                    datefmt='%m/%d/%Y %I:%M:%S %p',
-                                    level=logging.INFO,
-                                    filemode='w+')
-                logging.info(f'{ctx.guild.name} > {ctx.author} > {ctx.message.clean_content}')
-            except AttributeError:
-                print(f"Private message > {ctx.author} > {ctx.message.clean_content} > Blocked {blocked}")
-                logging.info(f'Private message > {ctx.author} ')
-                # {ctx.author} > {ctx.message.clean_content}
-        except UnicodeEncodeError:
-            try:
-                print(f"{ctx.guild.name} > {ctx.author}")
-                logging.info(f'{ctx.guild.name} > {ctx.author}')
-            except AttributeError:
-                print(f"Private message > {ctx.author} >")
-                logging.info(f'Private message > {ctx.author} ')
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        """ The function that activates when boot was completed """
-        global to_send
-        invite_link_cache = []
-        await self.emptyfolder(self.tempimgpath)
-        logschannel = self.bot.get_channel(self.config["edoc_non_critical_logs"])
-        if not self.ready:
-            self.ready = True
-            self.scheduler.start()
-            await logschannel.send(f"{self.bot.user} has been booted up")
-            self.bot.start_time = discord.utils.utcnow()
-            if not hasattr(self.bot, "uptime"):
-                self.bot.uptime = datetime.utcnow()
-
-            # Check if user desires to have something other than online
-            status = self.config["status_type"].lower()
-            status_type = {"idle": discord.Status.idle, "dnd": discord.Status.dnd}
-
-            # Check if user desires to have a different type of activity
-            activity = self.config["activity_type"].lower()
-            activity_type = {"listening": 2, "watching": 3, "competing": 5}
-            totalmembers = sum(g.member_count for g in self.bot.guilds)
-
-            await self.bot.change_presence(
-                activity=discord.Game(
-                    type=activity_type.get(activity, 2),
-                    name=f"Watching over {totalmembers} Members spread over {len(self.bot.guilds)} Guilds!\nPrefix: ~"
-                ),
-                status=status_type.get(status, discord.Status.idle)
-            )
-            # Indicate that the bot has successfully booted up
-            print(
-                f"Ready: {self.bot.user} | Total members {totalmembers} | Guild count: {len(self.bot.guilds)} | Guilds")
-            guilds = {}
-            for Server in self.bot.guilds:
-                try:
-                    to_send = sorted([chan for chan in Server.channels if
-                                      chan.permissions_for(Server.me).send_messages and isinstance(chan,
-                                                                                                   discord.TextChannel)],
-                                     key=lambda z: z.position)[0]
-                except IndexError:
-                    pass
-                gprefix = db.field('SELECT Prefix FROM guilds WHERE GuildID = ?', Server.id)
-                print(
-                    f"{Server.id} ~ {Server} ~ {Server.owner} ~ {Server.member_count} ~ Prefix {gprefix}")
-        else:
-            print(f"{self.bot.user} Reconnected")
-            await logschannel.send(f"{self.bot.user} has been reconnected")
 
     @commands.Cog.listener()
     async def on_user_update(self, before, after):
@@ -347,13 +267,13 @@ class Events(commands.Cog):
 
             await noncritlogschannel.send(embed=embed)
 
-        if before.avatar.url != after.avatar.url:
+        if before.display_avatar.url != after.display_avatar.url:
             embed = discord.Embed(title="Avatar change",
                                   description="New image is below, old to the right.",
                                   colour=blue)
 
-            embed.set_thumbnail(url=before.avatar.url)
-            embed.set_image(url=after.avatar.url)
+            embed.set_thumbnail(url=before.display_avatar.url)
+            embed.set_image(url=after.display_avatar.url)
             embed.set_footer(
                 text=f"{before.name} {f'> {after.name}' if before.name != after.name else ''}\n fullname: {before}")
             await noncritlogschannel.send(embed=embed)

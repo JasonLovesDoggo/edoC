@@ -1,12 +1,20 @@
-import os
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#  Copyright (c) 2021-2021. Jason Cameron                                                          +
+#  All rights reserved.                                                                            +
+#  This file is part of the edoC discord bot project ,                                             +
+#  and is released under the "MIT License Agreement". Please see the LICENSE                       +
+#  file that should have been included as part of this package.                                    +
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-from utils.default import edoC, config, Context
+from os import environ, listdir
+
+from utils.default import edoC, config
 
 config = config()
 # TODO add a fully not erroring get_prefix
 bot = edoC()
-os.environ["JISHAKU_HIDE"] = "True"
-
+environ["JISHAKU_HIDE"] = "True"
+environ["JISHAKU_NO_UNDERSCORE"] = "True"
 NO_LOAD_COG = ''
 #async def process_commands(self, message):
 #    ctx = await self.get_context(message, cls=Context)
@@ -24,7 +32,7 @@ NO_LOAD_COG = ''
 
 try:
     bot.load_extension("jishaku")
-    for file in os.listdir("cogs"):
+    for file in listdir("cogs"):
         if NO_LOAD_COG:
             if file.startswith(NO_LOAD_COG):
                 continue

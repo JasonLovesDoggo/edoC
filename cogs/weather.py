@@ -1,3 +1,11 @@
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#  Copyright (c) 2021. Jason Cameron                                                               +
+#  All rights reserved.                                                                            +
+#  This file is part of the edoC discord bot project ,                                             +
+#  and is released under the "MIT License Agreement". Please see the LICENSE                       +
+#  file that should have been included as part of this package.                                    +
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 import os
 
 import aiohttp
@@ -8,7 +16,7 @@ import discord
 from utils.vars import *
 
 
-class Weather(commands.Cog):
+class Weather(commands.Cog, description='Weather cmd'):
     def __init__(self, bot):
         self.bot = bot
         self.config = default.config()
@@ -42,7 +50,7 @@ class Weather(commands.Cog):
             e.add_field(name="Atmospheric Pressure(hPa)", value=f"{current_pressure}hPa", inline=False)
             e.set_footer(text=f"Requested by {ctx.author.name}")
             e.set_thumbnail(url="https://i.ibb.co/CMrsxdX/weather.png%22")
-            e.set_footer(text=f"Requested by {ctx.author.name}\n{embedfooter}", icon_url=ctx.message.author.avatar.url)
+            e.set_footer(text=f"Requested by {ctx.author.name}\n{embedfooter}", icon_url=ctx.message.author.display_avatar.url)
             await ctx.send(embed=e)
         else:
             await ErrorEmbed(ctx, "City Not Found")

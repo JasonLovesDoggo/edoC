@@ -1,19 +1,102 @@
-﻿import asyncio
-import functools
-import logging
-import time
-import json
-from datetime import datetime
+﻿# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#  Copyright (c) 2021. Jason Cameron                                                               +
+#  All rights reserved.                                                                            +
+#  This file is part of the edoC discord bot project ,                                             +
+#  and is released under the "MIT License Agreement". Please see the LICENSE                       +
+#  file that should have been included as part of this package.                                    +
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-import discord
+import asyncio
+import functools
+import json
+import logging
+import math
+import time
 import traceback
-import timeago as timesince
+from distutils.log import info
+from glob import glob
 from io import BytesIO
+from os import getpid, remove
+
+import apscheduler.schedulers.asyncio
+import discord
+import timeago as timesince
 from discord.ext import commands
 from discord.ext.commands import NoPrivateMessage, when_mentioned_or
+from psutil import Process
 
-from utils.data import MyNewHelp
+from lib.db import db
+from utils.help import PaginatedHelpCommand
 from utils.http import HTTPSession
+from utils.vars import dark_blue
+
+BannedUsers = {}
+def wrap(type, text):
+    return f'```{type}\n{text}```'
+
+def config(filename: str = "config"):
+    """ Fetch default config file """
+    try:
+        with open(f"{filename}.json", encoding='utf8') as data:
+            return json.load(data)
+    except FileNotFoundError:
+        raise FileNotFoundError("JSON file wasn't found")
+
+async def emptyfolder(folder):
+    files = glob(folder)
+    for f in files:
+        remove(f)
+
+class Timer:
+    def __init__(self):
+        self._start = None
+        self._end = None
+
+    def start(self):
+        self._start = time.perf_counter()
+
+    def stop(self):
+        self._end = time.perf_counter()
+
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.stop()
+
+    def __int__(self):
+        return round(self.time)
+
+    def __float__(self):
+        return self.time
+
+    def __str__(self):
+        return str(self.time)
+
+    def __repr__(self):
+        return f"<Timer time={self.time}>"
+
+    @property
+    def time(self):
+        if self._end is None:
+            raise ValueError("Timer has not been ended.")
+        return self._end - self._start
+
+    # Usage:
+    # with Timer() as timer:
+    #    # do stuff that takes time here
+    #    print("hello")
+    # print(f"That took {timer} seconds to do")
+
+
+def ReportEmbed(ctx, type, body: str, directed_at=None):
+    rmby = discord.Embed(color=dark_blue, title=f'***A New {type} Report Came In***')
+    rmby.set_author(name=f'{ctx.author.name} Just Reported {directed_at}', icon_url=ctx.author.display_avatar.url)
+    # if directed_at:
+    #    rmby.add_field(name='Target', value=directed_at)
+    rmby.description = body
+    return rmby
 
 
 async def toggle_role(ctx, role_id):
@@ -106,15 +189,6 @@ def can_handle(ctx, permission: str):
     return isinstance(ctx.channel, discord.DMChannel) or getattr(ctx.channel.permissions_for(ctx.guild.me), permission)
 
 
-def config(filename: str = "config"):
-    """ Fetch default config file """
-    try:
-        with open(f"{filename}.json", encoding='utf8') as data:
-            return json.load(data)
-    except FileNotFoundError:
-        raise FileNotFoundError("JSON file wasn't found")
-
-
 confi = config()
 log = logging.getLogger(__name__)
 description = 'Relatively simply awesome bot. Developed by Jake CEO of annoyance#1904'
@@ -154,8 +228,12 @@ class Context(commands.Context):
         else:
             return await self.send(content)
 
+
 class edoC(commands.AutoShardedBot):
     def __init__(self):
+        if not hasattr(self, 'uptime'):
+            self.uptime = discord.utils.utcnow()
+        self.start_time = discord.utils.utcnow()
         allowed_mentions = discord.AllowedMentions(roles=True, everyone=False, users=True)
         intents = discord.Intents(
             guilds=True,
@@ -172,9 +250,15 @@ class edoC(commands.AutoShardedBot):
                          chunk_guilds_at_startup=False, heartbeat_timeout=150.0,
                          allowed_mentions=allowed_mentions, intents=intents,
                          owner_ids=confi["owners"], case_insensitive=True,
-                         command_attrs=dict(hidden=True), help_command=MyNewHelp(), )
+                         command_attrs=dict(hidden=True), help_command=PaginatedHelpCommand(), )
         self.session = HTTPSession(loop=self.loop)
         self.prefix = '~'
+        self.process = Process(getpid())
+        self.config = config()
+        self.tempimgpath = 'data/img/temp/*'
+        self.ready = False
+        self.scheduler = apscheduler.schedulers.asyncio.AsyncIOScheduler()
+        self.total_commands_ran = 0
         # self.blacklist = Config('blacklist.json')
 
     # async def on_guild_join(self, guild):
@@ -186,10 +270,6 @@ class edoC(commands.AutoShardedBot):
             return
 
         await self.process_commands(msg)
-
-    async def on_ready(self):
-        if not hasattr(self, 'uptime'):
-            self.uptime = discord.utils.utcnow()
 
     async def close(self):
         await super().close()
@@ -230,7 +310,74 @@ class edoC(commands.AutoShardedBot):
     async def get_context(self, message, *, cls=Context):
         return await super().get_context(message, cls=cls)
 
+    async def on_ready(self):
+        """ The function that activates when boot was completed """
+        invite_link_cache = []
+        await emptyfolder(self.tempimgpath)
+        logschannel = self.get_channel(self.config["edoc_non_critical_logs"])
+        if not self.ready:
+            self.ready = True
+            self.scheduler.start()
+            await logschannel.send(f"{self.user} has been booted up")
 
+            # Check if user desires to have something other than online
+            status = self.config["status_type"].lower()
+            status_type = {"idle": discord.Status.idle, "dnd": discord.Status.dnd}
+
+            # Check if user desires to have a different type of activity
+            activity = self.config["activity_type"].lower()
+            activity_type = {"listening": 2, "watching": 3, "competing": 5}
+            totalmembers = sum(g.member_count for g in self.guilds)
+
+            await self.change_presence(
+                activity=discord.Game(
+                    type=activity_type.get(activity, 2),
+                    name=f"Watching over {totalmembers} Members spread over {len(self.guilds)} Guilds!\nPrefix: ~"
+                ),
+                status=status_type.get(status, discord.Status.idle)
+            )
+            # Indicate that the bot has successfully booted up
+            print(
+                f"Ready: {self.user} | Total members {totalmembers} | Guild count: {len(self.guilds)} | Guilds")
+            guilds = {}
+            for Server in self.guilds:
+                gprefix = db.field('SELECT Prefix FROM guilds WHERE GuildID = ?', Server.id)
+                print(
+                    f"{Server.id} ~ {Server} ~ {Server.owner} ~ {Server.member_count} ~ Prefix {gprefix}")
+        else:
+            print(f"{self.user} Reconnected")
+            await logschannel.send(f"{self.user} has been reconnected")
+
+    async def on_command(self, ctx):
+        try:
+            self.commands_ran[ctx.command.qualified_name] += 1
+        except KeyError:
+            pass
+        self.total_commands_ran += 1
+        if ctx.author.id in BannedUsers:
+            return
+        else:
+            blocked = False
+        try:
+            try:
+                try:
+                    print(
+                        f"{ctx.guild.name} > {ctx.author} > {ctx.message.clean_content} > Blocked {blocked}")
+                    info(f'{ctx.guild.name} > {ctx.author} > {ctx.message.clean_content}')
+                except AttributeError:
+                    print(f"Private message > {ctx.author} > {ctx.message.clean_content} > Blocked {blocked}")
+                    info(f'Private message > {ctx.author} ')
+                    # {ctx.author} > {ctx.message.clean_content}
+            except UnicodeEncodeError:
+                try:
+                    print(f"{ctx.guild.name} > {ctx.author}")
+                    info(f'{ctx.guild.name} > {ctx.author}')
+                except AttributeError:
+                    print(f"Private message > {ctx.author} >")
+                    info(f'Private message > {ctx.author} ')
+
+        except:
+            pass
 def UpdateBlacklist(newblacklist, filename: str = "blacklist"):
     try:
         with open(f"{filename}.json", encoding='utf-8', mode="r+") as file:
@@ -336,7 +483,18 @@ async def prettyResults(ctx, filename: str = "Results", resultmsg: str = "Here's
         content=resultmsg,
         file=discord.File(data, filename=timetext(filename.title()))
     )
+def naturalsize(size_in_bytes: int):
+    """
+    Converts a number of bytes to an appropriately-scaled unit
+    E.g.:
+        1024 -> 1.00 KiB
+        12345678 -> 11.77 MiB
+    """
+    units = ('B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB')
 
+    power = int(math.log(size_in_bytes, 1024))
+
+    return f"{size_in_bytes / (1024 ** power):.2f} {units[power]}"
 
 async def send(ctx, content=None, embed=None, ttl=None):
     perms = ctx.channel.permissions_for(ctx.me).embed_links

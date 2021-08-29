@@ -1,12 +1,18 @@
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#  Copyright (c) 2021. Jason Cameron                                                               +
+#  All rights reserved.                                                                            +
+#  This file is part of the edoC discord bot project ,                                             +
+#  and is released under the "MIT License Agreement". Please see the LICENSE                       +
+#  file that should have been included as part of this package.                                    +
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 import asyncio
-import copy
 import importlib
 import inspect
 import io
 import json
 import logging
 import os
-import sys
 import textwrap
 import traceback
 from contextlib import redirect_stdout
@@ -21,13 +27,12 @@ from cogs.mod import BanUser, MemberID
 from lib.db import db
 from lib.db.db import cur
 from utils import default, http
-from utils.default import is_admin
 from utils.vars import *
 
 on = False
 
 
-class Admin(commands.Cog):
+class Owner(commands.Cog, description='Only i can use these so shoo'):
     def __init__(self, bot):
         self.highest_num = 0
         self.bot = bot
@@ -70,6 +75,46 @@ class Admin(commands.Cog):
 
         # remove `foo`
         return content.strip('` \n')
+
+    @commands.command(aliaes=['source'])
+    @commands.is_owner()
+    async def src(self, ctx, *, command: str = None):
+        """Displays my full source code or for a specific command.
+        To display the source code of a subcommand you can separate it by
+        periods, e.g. cat.hi for the create subcommand of the tag command
+        or by spaces."""
+        source_url = 'https://github.com/JakeWasChosen/edoC'
+        branch = 'master'
+        if command is None:
+            return await ctx.send(source_url)
+
+        if command == 'help':
+            src = type(self.bot.help_command)
+            module = src.__module__
+            filename = inspect.getsourcefile(src)
+        else:
+            obj = self.bot.get_command(command.replace('.', ' '))
+            if obj is None:
+                return await ctx.send('Could not find command.')
+
+            # since we found the command we're looking for, presumably anyway, let's
+            # try to access the code itself
+            src = obj.callback.__code__
+            module = obj.callback.__module__
+            filename = src.co_filename
+
+        lines, firstlineno = inspect.getsourcelines(src)
+        if not module.startswith('discord'):
+            # not a built-in command
+            location = os.path.relpath(filename).replace('\\', '/')
+        else:
+            location = module.replace('.', '/') + '.py'
+            source_url = 'https://github.com/Rapptz/discord.py'
+            branch = 'master'
+
+        final_url = f'<{source_url}/blob/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}>'
+        await ctx.send(final_url)
+
 
     @commands.command(aliases=["pyeval"])
     @commands.is_owner()
@@ -180,9 +225,7 @@ class Admin(commands.Cog):
     @sudo.command(name="in")
     @commands.is_owner()
     async def edoC_in(self, ctx: commands.Context, channel: discord.TextChannel, *, command_string: str):
-        """
-        Run a command as if it were run in a different channel.
-        """
+        """ Run a command as if it were run in a different channel. """
 
         alt_ctx = await copy_context_with(ctx, channel=channel, content=ctx.prefix + command_string)
 
@@ -611,4 +654,4 @@ class Admin(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(Admin(bot))
+    bot.add_cog(Owner(bot))

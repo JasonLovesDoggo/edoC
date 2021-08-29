@@ -1,18 +1,22 @@
-import unicodedata
-from asyncio import sleep
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#  Copyright (c) 2021. Jason Cameron                                                               +
+#  All rights reserved.                                                                            +
+#  This file is part of the edoC discord bot project ,                                             +
+#  and is released under the "MIT License Agreement". Please see the LICENSE                       +
+#  file that should have been included as part of this package.                                    +
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 from collections import Counter
+from io import BytesIO
 from typing import Union
+from unicodedata import name
 
 import discord
-
-from io import BytesIO
-
+from discord.ext import commands
 from discord.utils import format_dt
 
-from utils import default
-from discord.ext import commands
-from utils.vars import embedfooter, random_color
-from utils.default import spacefill, Context
+from utils.default import spacefill, date, CustomTimetext, config, mod_or_permissions
+from utils.vars import random_color, error, status
 
 
 def format_relative(dt):
@@ -42,15 +46,15 @@ class plural:
         return f'{v} {singular}'
 
 
-class Discord(commands.Cog):
+class Discord(commands.Cog, description="Discord Information commands"):
     def __init__(self, bot):
         self.bot = bot
-        self.config = default.config()
+        self.config = config()
 
     async def say_permissions(self, ctx, member, channel):
         permissions = channel.permissions_for(member)
         e = discord.Embed(colour=member.colour)
-        avatar = member.avatar.with_static_format('png')
+        avatar = member.display_avatar.with_static_format('png')
         e.set_author(name=str(member), icon_url=avatar)
         allowed, denied = [], []
         for name, value in permissions:
@@ -72,8 +76,8 @@ class Discord(commands.Cog):
 
         def to_string(c):
             digit = f'{ord(c):x}'
-            name = unicodedata.name(c, 'Name not found.')
-            return f'`\\U{digit:>08}`: {name} - {c} \N{EM DASH} <http://www.fileformat.info/info/unicode/char/{digit}>'
+            nam = name(c, 'Name not found.')
+            return f'`\\U{digit:>08}`: {nam} - {c} \N{EM DASH} <http://www.fileformat.info/info/unicode/char/{digit}>'
 
         msg = '\n'.join(map(to_string, characters))
         if len(msg) > 2000:
@@ -85,13 +89,14 @@ class Discord(commands.Cog):
         """Shows a user's enlarged avatar (if possible)."""
         embed = discord.Embed(color=0x2F3136)
         user = user or ctx.author
-        avatar = user.avatar.with_static_format('png')
-        embed.set_author(name=str(user), url=avatar)
-        embed.set_image(url=avatar)
+        avatar = user.display_avatar.with_static_format('png')
+        embed.set_author(name=str(user), url=str(avatar))
+        embed.set_image(url=str(avatar))
         await ctx.send(embed=embed)
 
     @commands.command()
     @commands.guild_only()
+    @commands.cooldown(1, 1000, type=commands.BucketType.default)
     async def roles(self, ctx):
         """ Get all roles in current server """
         allroles = ""
@@ -111,24 +116,24 @@ class Discord(commands.Cog):
 
         data = BytesIO(allroles.encode("utf-8"))
         await ctx.send(content=f"Roles in **{ctx.guild.name}**",
-                       file=discord.File(data, filename=f"{default.CustomTimetext('apache', 'Roles')}"))
+                       file=discord.File(data, filename=f"{CustomTimetext('apache', 'Roles')}"))
 
-    @commands.command()
+    @commands.command(aliases=['JoinPos'])
     @commands.guild_only()
     async def joinedat(self, ctx, *, user: discord.Member = None):
         """ Check when a user joined the current server """
         user = user or ctx.author
 
         embed = discord.Embed(colour=user.top_role.colour.value)
-        embed.set_thumbnail(url=user.avatar.url)
-        embed.description = f"**{user}** joined **{ctx.guild.name}**\n{default.date(user.joined_at)}"
+        embed.set_thumbnail(url=user.display_avatar.url)
+        embed.description = f"**{user}** joined **{ctx.guild.name}**\n{date(user.joined_at)}"
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["joinme", "inviteme", "botinvite"])
     async def invite(self, ctx):
-        """Joins a server."""
+        """ Invite me to a server."""
         perms = discord.Permissions.all()
-        await ctx.send(f'<{discord.utils.oauth_url(self.bot.client_id, permissions=perms)}>')
+        await ctx.send(f'<{discord.utils.oauth_url(self.bot.user.id, permissions=perms)}>')
 
     @commands.command()
     @commands.guild_only()
@@ -154,14 +159,15 @@ class Discord(commands.Cog):
 
         await ctx.send(f"Mods in **{ctx.guild.name}**\n{message}")
 
-    @commands.command(aliases=['guildinfo'])
+    @commands.command(aliases=['guildinfo', 'si', 'gi'])
     @commands.guild_only()
     async def serverinfo(self, ctx, *, guild_id: int = None):
         """Shows info about the current server."""
         if guild_id is not None and await self.bot.is_owner(ctx.author):
             guild = self.bot.get_guild(guild_id)
             if guild is None:
-                return await ctx.send(f'Invalid Guild ID given.')
+                return await ctx.send(
+                    embed=discord.Embed(description='Invalid Guild ID given or im not in that guild', color=error))
         else:
             guild = ctx.guild
 
@@ -267,31 +273,16 @@ class Discord(commands.Cog):
         e.set_footer(text='Created').timestamp = guild.created_at
         await ctx.send(embed=e)
 
-    # @server.command(name="avatar", aliases=["icon"])
-    # async def server_avatar(self, ctx):
-    #    """ Get the current server icon """
-    #    if not ctx.guild.icon:
-    #        return await ctx.send("This server does not have a avatar...")
-    #    await ctx.send(
-    #        embed=discord.Embed(description=f"Avatar of **{ctx.guild.name}**", ).set_image(url=ctx.guild.icon))
-
-    # @server.command(name="banner")
-    # async def server_banner(self, ctx):
-    #    """ Get the current banner image """
-    #    if not ctx.guild.banner:
-    #        return await ctx.send("This server does not have a banner...")
-    #    await ctx.send(f"Banner of **{ctx.guild.name}**\n{ctx.guild.banner}")
-
-    @commands.command()
-    async def info(self, ctx, *, user: Union[discord.Member, discord.User] = None):
+    @commands.command(aliases=["aboutuser", "about_user", "userinfo", "user_info", "whoisme"])
+    async def whois(self, ctx, *, user: Union[discord.Member, discord.User] = None):
         """Shows info about a user."""
 
         user = user or ctx.author
-        e = discord.Embed()
+        e = discord.Embed(description='')
         roles = [role.name.replace('@', '@\u200b') for role in getattr(user, 'roles', []) if
                  not role.id == ctx.guild.default_role.id]
-
-        e.set_author(name=str(user))
+        bottag = '<:bot_tag:880193490556944435>'
+        e.set_author(name=f'{user}{bottag if user.bot else ""}')
         join_position = sorted(ctx.guild.members, key=lambda m: m.joined_at).index(user) + 1
 
         def format_date(dt):
@@ -325,6 +316,10 @@ class Discord(commands.Cog):
         if isinstance(user, discord.User):
             e.set_footer(text='This member is not in this server.')
 
+        e.description += f'Mobile {status(str(user.mobile_status))}  ' \
+                         f'Desktop {status(str(user.desktop_status))}  ' \
+                         f'Web browser {status(str(user.web_status))}'
+
         await ctx.send(embed=e)
 
     @commands.command()
@@ -343,7 +338,7 @@ class Discord(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
-    @default.mod_or_permissions(manage_roles=True)
+    @mod_or_permissions(manage_roles=True)
     async def botpermissions(self, ctx, *, channel: discord.TextChannel = None):
         """Shows the bot's permissions in a specific channel.
         If no channel is given then it uses the current one.

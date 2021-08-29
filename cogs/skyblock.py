@@ -1,3 +1,11 @@
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#  Copyright (c) 2021. Jason Cameron                                                               +
+#  All rights reserved.                                                                            +
+#  This file is part of the edoC discord bot project ,                                             +
+#  and is released under the "MIT License Agreement". Please see the LICENSE                       +
+#  file that should have been included as part of this package.                                    +
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 import aiohttp
 import requests
 from discord.ext import commands
@@ -24,7 +32,7 @@ SbColors = {
 class SkyblockUpdatedError(BaseException):
     pass
 
-class Skyblock(commands.Cog):
+class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related commands'):
     def __init__(self, bot):
         self.bot = bot
         
@@ -66,72 +74,59 @@ class Skyblock(commands.Cog):
     @commands.command(name='taming', description='Shows your Taming statistics.')
     async def taming(self, ctx, name, pname=None):
         nameApi = requests.get(self.MojangUrl + name).json()
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.SkyV2 + name) as api:
-                data = await api.json()
-                for profile in data["profiles"].values():
-                    if pname is None:
-                        if profile['current']:
-                            target_profile = profile
-                            pname = profile['cute_name']
-                            break
-                    elif pname.lower() == profile['cute_name'].lower():
+        async with ctx.session.get(self.SkyV2 + name) as api:
+            data = await api.json()
+            for profile in data["profiles"].values():
+                if pname is None:
+                    if profile['current']:
                         target_profile = profile
                         pname = profile['cute_name']
                         break
-                if target_profile is None:
-                    raise CommandInvokeError
-
-                print(
-                    f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] looked at {name}'s {pname} Taming stats.")
-
-                xpForMax = target_profile['data']['levels']['taming']['xp']
-                of = self.lvl50 - xpForMax
-
-                if of <= 0:
-                    of = 0
-
-                xpForNext = target_profile['data']['levels']['taming']['xpForNext']
-                if xpForNext is None or xpForNext <= 0:
-                    xpForNext = 0
-
-                xpNow = target_profile['data']['levels']['taming']['xpCurrent']
-                xpMax = xpForNext - xpNow
-                if xpMax <= 0:
-                    xpMax = 0
-
-                embed = discord.Embed(
-                    title='Taming Level for ' + nameApi['name'] + ' On Profile ' + pname,
-                    url=f'{self.SkyShiiyuStats}{name}/{pname}',
-                    description='**Total Taming EXP: ** ' + self.separator.format(round(int(xpForMax))),
-                    color=self.TamingColor
-                )
-
-                # Contents of discord embed
-                embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar.url)
-                embed.set_thumbnail(url=self.McHeads + name)
-
-                embed.timestamp = ctx.message.created_at
-
-                embed.add_field(name='**Taming Level**',
-                                value=(str(round(target_profile['data']['levels']['taming']['level']))) + '/ 50')
-                embed.add_field(name='**Level with Progress**',
-                                value=(round(target_profile['data']['levels']['taming']['levelWithProgress'], 2)))
-                embed.add_field(name='**Remaining XP for Next Level**', value=self.separator.format(round(int(xpMax))),
-                                inline=False)
-                embed.add_field(name='**Ranking**',
-                                value=self.separator.format(int(target_profile['data']['levels']['taming']['rank'])))
-                embed.add_field(name='**Xp Required for Max Level**', value=self.separator.format(round(int(of))))
-
-                await ctx.send(embed=embed)
-
+                elif pname.lower() == profile['cute_name'].lower():
+                    target_profile = profile
+                    pname = profile['cute_name']
+                    break
+            if target_profile is None:
+                raise CommandInvokeError
+            print(
+                f"{ctx.message.author} [in {ctx.message.guild}, #{ctx.message.channel}] looked at {name}'s {pname} Taming stats.")
+            xpForMax = target_profile['data']['levels']['taming']['xp']
+            of = self.lvl50 - xpForMax
+            if of <= 0:
+                of = 0
+            xpForNext = target_profile['data']['levels']['taming']['xpForNext']
+            if xpForNext is None or xpForNext <= 0:
+                xpForNext = 0
+            xpNow = target_profile['data']['levels']['taming']['xpCurrent']
+            xpMax = xpForNext - xpNow
+            if xpMax <= 0:
+                xpMax = 0
+            embed = discord.Embed(
+                title='Taming Level for ' + nameApi['name'] + ' On Profile ' + pname,
+                url=f'{self.SkyShiiyuStats}{name}/{pname}',
+                description='**Total Taming EXP: ** ' + self.separator.format(round(int(xpForMax))),
+                color=self.TamingColor
+            )
+            # Contents of discord embed
+            embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.display_avatar.url)
+            embed.set_thumbnail(url=self.McHeads + name)
+            embed.timestamp = ctx.message.created_at
+            embed.add_field(name='**Taming Level**',
+                            value=(str(round(target_profile['data']['levels']['taming']['level']))) + '/ 50')
+            embed.add_field(name='**Level with Progress**',
+                            value=(round(target_profile['data']['levels']['taming']['levelWithProgress'], 2)))
+            embed.add_field(name='**Remaining XP for Next Level**', value=self.separator.format(round(int(xpMax))),
+                            inline=False)
+            embed.add_field(name='**Ranking**',
+                            value=self.separator.format(int(target_profile['data']['levels']['taming']['rank'])))
+            embed.add_field(name='**Xp Required for Max Level**', value=self.separator.format(round(int(of))))
+            await ctx.send(embed=embed)
     @commands.command(name='farming', description='Shows your Farming statistics.')
     async def farming(self, ctx, name, pname=None):
         nameApi = requests.get(self.MojangUrl + name).json()
 
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.SkyV2 + name) as api:
-                data = await api.json()
+        async with ctx.session.get(self.SkyV2 + name) as api:
+            data = await api.json()
 
         for profile in data["profiles"].values():
             if pname is None:
@@ -199,7 +194,7 @@ class Skyblock(commands.Cog):
         )
 
         # Contents of discord embed
-        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar.url)
+        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.display_avatar.url)
         embed.set_thumbnail(url=self.McHeads + name)
 
         embed.timestamp = ctx.message.created_at
@@ -235,9 +230,8 @@ class Skyblock(commands.Cog):
     async def mining(self, ctx, name, pname=None):
         nameApi = requests.get(self.MojangUrl + name).json()
 
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.SkyV2 + name) as api:
-                data = await api.json()
+        async with ctx.session.get(self.SkyV2 + name) as api:
+            data = await api.json()
 
         for profile in data["profiles"].values():
             if pname is None:
@@ -279,7 +273,7 @@ class Skyblock(commands.Cog):
         )
 
         # Contents of discord embed
-        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar.url)
+        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.display_avatar.url)
         embed.set_thumbnail(url=self.McHeads + name)
         embed.timestamp = ctx.message.created_at
 
@@ -299,9 +293,8 @@ class Skyblock(commands.Cog):
     async def combat(self, ctx, name, pname=None):
         nameApi = requests.get(self.MojangUrl + name).json()
 
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.SkyV2 + name) as api:
-                data = await api.json()
+        async with ctx.session.get(self.SkyV2 + name) as api:
+            data = await api.json()
 
         for profile in data["profiles"].values():
             if pname is None:
@@ -342,7 +335,7 @@ class Skyblock(commands.Cog):
         )
 
         # Contents of discord embed
-        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar.url)
+        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.display_avatar.url)
         embed.set_thumbnail(url=self.McHeads + name)
 
         embed.timestamp = ctx.message.created_at
@@ -363,9 +356,8 @@ class Skyblock(commands.Cog):
     async def foraging(self, ctx, name, pname=None):
         nameApi = requests.get(self.MojangUrl + name).json()
 
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.SkyV2 + name) as api:
-                data = await api.json()
+        async with ctx.session.get(self.SkyV2 + name) as api:
+            data = await api.json()
 
         for profile in data["profiles"].values():
             if pname is None:
@@ -406,7 +398,7 @@ class Skyblock(commands.Cog):
         )
 
         # Contents of discord embed
-        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar.url)
+        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.display_avatar.url)
         embed.set_thumbnail(url=self.McHeads + name)
 
         embed.timestamp = ctx.message.created_at
@@ -427,9 +419,8 @@ class Skyblock(commands.Cog):
     async def fishing(self, ctx, name, pname=None):
         nameApi = requests.get(self.MojangUrl + name).json()
 
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.SkyV2 + name) as api:
-                data = await api.json()
+        async with ctx.session.get(self.SkyV2 + name) as api:
+            data = await api.json()
 
         for profile in data["profiles"].values():
             if pname is None:
@@ -470,7 +461,7 @@ class Skyblock(commands.Cog):
         )
 
         # Contents of discord embed
-        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar.url)
+        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.display_avatar.url)
         embed.set_thumbnail(url=self.McHeads + name)
 
         embed.timestamp = ctx.message.created_at
@@ -491,9 +482,8 @@ class Skyblock(commands.Cog):
     async def enchanting(self, ctx, name, pname=None):
         nameApi = requests.get(self.MojangUrl + name).json()
 
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.SkyV2 + name) as api:
-                data = await api.json()
+        async with ctx.session.get(self.SkyV2 + name) as api:
+            data = await api.json()
 
         for profile in data["profiles"].values():
             if pname is None:
@@ -534,7 +524,7 @@ class Skyblock(commands.Cog):
         )
 
         # Contents of discord embed
-        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar.url)
+        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.display_avatar.url)
         embed.set_thumbnail(url=self.McHeads + name)
 
         embed.timestamp = ctx.message.created_at
@@ -555,9 +545,8 @@ class Skyblock(commands.Cog):
     async def alchemy(self, ctx, name, pname=None):
         nameApi = requests.get(self.MojangUrl + name).json()
 
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.SkyV2 + name) as api:
-                data = await api.json()
+        async with ctx.session.get(self.SkyV2 + name) as api:
+            data = await api.json()
 
         for profile in data["profiles"].values():
             if pname is None:
@@ -598,7 +587,7 @@ class Skyblock(commands.Cog):
         )
 
         # Contents of discord embed
-        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar.url)
+        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.display_avatar.url)
         embed.set_thumbnail(url=self.McHeads + name)
 
         embed.timestamp = ctx.message.created_at
@@ -619,9 +608,8 @@ class Skyblock(commands.Cog):
     async def carpentry(self, ctx, name, pname=None):
         nameApi = requests.get(self.MojangUrl + name).json()
 
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.SkyV2 + name) as api:
-                data = await api.json()
+        async with ctx.session.get(self.SkyV2 + name) as api:
+            data = await api.json()
 
         for profile in data["profiles"].values():
             if pname is None:
@@ -662,7 +650,7 @@ class Skyblock(commands.Cog):
         )
 
         # Contents of discord embed
-        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar.url)
+        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.display_avatar.url)
         embed.set_thumbnail(url=self.McHeads + name)
 
         embed.timestamp = ctx.message.created_at
@@ -683,9 +671,8 @@ class Skyblock(commands.Cog):
     async def runecrafting(self, ctx, name, pname=None):
         nameApi = requests.get(self.MojangUrl + name).json()
 
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.SkyV2 + name) as api:
-                data = await api.json()
+        async with ctx.session.get(self.SkyV2 + name) as api:
+            data = await api.json()
 
         for profile in data["profiles"].values():
             if pname is None:
@@ -726,7 +713,7 @@ class Skyblock(commands.Cog):
         )
 
         # Contents of discord embed
-        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.avatar.url)
+        embed.set_author(name=f'Requested by {ctx.message.author}.', icon_url=ctx.message.author.display_avatar.url)
         embed.set_thumbnail(url=self.McHeads + name)
 
         embed.timestamp = ctx.message.created_at
@@ -751,9 +738,8 @@ class Skyblock(commands.Cog):
         nameApi = requests.get(f'{self.MojangUrl}{name}').json()
         target_profile = None
 
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.SkyV2 + name) as api:
-                data = await api.json()
+        async with ctx.session.get(self.SkyV2 + name) as api:
+            data = await api.json()
 
         for profile in data["profiles"].values():
             if pname is None:
@@ -870,9 +856,8 @@ class Skyblock(commands.Cog):
         nameApi = requests.get(self.MojangUrl + name).json()
         target_profile = None
 
-        async with aiohttp.ClientSession() as cs:
-            async with cs.get(self.SkyV2 + name) as api:
-                data = await api.json()
+        async with ctx.session.get(self.SkyV2 + name) as api:
+            data = await api.json()
 
         for profile in data["profiles"].values():
             if pname is None:
@@ -946,7 +931,7 @@ class Skyblock(commands.Cog):
         )
 
         # Contents of discord embed
-        embed.set_author(name=f'Requested by {ctx.message.author.display_name}.', icon_url=ctx.message.author.avatar.url)
+        embed.set_author(name=f'Requested by {ctx.message.author.display_name}.', icon_url=ctx.message.author.display_avatar.url)
         embed.set_thumbnail(url=self.McHeads + name)
         embed.timestamp = ctx.message.created_at
 
