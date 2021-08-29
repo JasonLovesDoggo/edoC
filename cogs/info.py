@@ -141,7 +141,7 @@ class Info(commands.Cog, description='Informational and useful commands'):
             return await author.send('Your Reason must be under 1900 characters')
         else:
             await channel.send(embed=ReportEmbed(ctx=ctx, type='Member', body=reason, directed_at=user))
-            #await channel.send(f"{author} has reported {user}, reason: {reason}")
+            # await channel.send(f"{author} has reported {user}, reason: {reason}")
 
     @commands.command(brief="Shows the bot's uptime")
     async def uptime(self, ctx):
@@ -275,7 +275,7 @@ class Info(commands.Cog, description='Informational and useful commands'):
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~
     @commands.command()
-    #@commands.cooldown(rate=1, per=300, type=commands.BucketType.guild)
+    # @commands.cooldown(rate=1, per=300, type=commands.BucketType.guild)
     async def CmdStats(self, ctx):
         try:
             cmdsran = self.bot.commands_ran
@@ -287,16 +287,17 @@ class Info(commands.Cog, description='Informational and useful commands'):
             emby = discord.Embed(title='edoC command Stats',
                                  description=f'{self.bot.total_commands_ran} Commands ran this boot\n',
                                  color=random_color())
-            emby.add_field(name='Top 10 commands ran', value=f'🥇:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                             f'🥈:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                             f'🥉:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                             f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                             f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                             f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                             f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                             f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                             f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                                             f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n')
+            emby.add_field(name='Top 10 commands ran',
+                           value=f'🥇:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                 f'🥈:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                 f'🥉:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                 f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                 f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                 f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                 f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                 f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                 f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
+                                 f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n')
 
             emby.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
 
@@ -319,107 +320,10 @@ class Info(commands.Cog, description='Informational and useful commands'):
             emb.add_field(name=f'***{k}***', value=f'{v}', inline=False)
         await ctx.send(embed=emb)
 
-    @commands.command(aliases=["stats", "status", "botinfo", 'info'])
-    async def about(self, ctx):
-        proc = Process()
-        infos = fetch_info()
-
-        with proc.oneshot():
-            mem = proc.memory_full_info()
-
-            e = discord.Embed(
-                title="Information about edoC",
-                color=0x89C4F9,
-            )
-
-            e.add_field(
-                name=(
-                    "__:busts_in_silhouette: Development__"
-                ),
-                value="**Jake CEO of annoyance#1904:** [GitHub](https://github.com/JakeWasChosen)\n",
-                inline=True,
-            )
-            e.add_field(
-                name="__<:python:868285625877557379> Python__",
-                value=f"**python** `{python_version()}`\n"
-                      f"**discord.py** `{discord.__version__}`",
-                inline=True,
-            )
-
-            pmem = naturalsize(mem.rss)
-            vmem = naturalsize(mem.vms)
-            cmds = self.bot.total_commands_ran
-            uptime = naturaldelta(discord.utils.utcnow() - self.bot.start_time)
-            totalmembers = sum(g.member_count for g in self.bot.guilds)
-            e.add_field(
-                name="__:gear: Usage__",
-                value=f"**{pmem}** physical memory\n"
-                      f"**{vmem}** virtual memory\n"
-                      f"**{uptime}** Uptime\n"
-                      f"**{cmds}** Commands ran this boot\n",
-                inline=True)
-            e.add_field(
-                name="__Servers count__",
-                value=str(len(self.bot.guilds)),
-                inline=True,
-            )
-            e.add_field(
-                name="__Channels count__",
-                value=str(len(list(self.bot.get_all_channels()))),
-                inline=True,
-            )
-            e.add_field(
-                name="__Members count__",
-                value=totalmembers,
-                inline=True,
-            )
-
-            e.add_field(
-                name="__:file_folder: Files__",
-                value=f"{infos.get('file_amount')} "
-                      f"*({infos.get('python_file_amount')}"
-                      f" <:python:868285625877557379>)*",
-                inline=True,
-            )
-            e.add_field(  # (class, functions, coroutines, comments)
-                name="__¶ Lines__",
-                value=f"{infos.get('total_lines')} "
-                      f" *({infos.get('total_python_class')} class"
-                      + ","
-                        f" {infos.get('total_python_functions')} functions"
-                      + ","
-                        f" {infos.get('total_python_coroutines')} coroutines"
-                      + ","
-                        f" {infos.get('total_python_comments')} comments"
-                      + ")*",
-                inline=True,
-            )
-
-            e.add_field(
-                name="__Latest changes__",
-                value=version_info["info"].title(),
-                inline=False,
-            )
-
-            e.add_field(
-                name="__:link: Links__",
-                value="[edoC](https://dsc.gg/edoc) "
-                      "| [dev links](https://bio.link/edoC) "
-                      "| [support me](https://www.buymeacoffee.com/edoC) "
-                      "| [invite](https://discordapp.com/oauth2/authorize?client_id=845186772698923029&scope=bot&permissions=8) ",
-                inline=False,
-            )
-            prefix = db.field("SELECT Prefix FROM guilds WHERE GuildID = ?",
-                              ctx.guild.id)
-            e.set_footer(
-                text=f"version: {version_info['version']} • prefix: {prefix} • {len([x.name for x in self.bot.commands])} commands loaded\n {embedfooter}")
-
-        await ctx.send(embed=e)
-
     # ~~~
-    @commands.command(name='in')
+    @commands.command(name='in', aliases=["stats", "status", "botinfo", 'info', 'about'])
     async def _in(self, ctx):
-        """ 4th rewrite of the info cmd"""
+        """ edoC information/stats cmd """
         lines = fetch_info()
         avgmembers = sum(g.member_count for g in self.bot.guilds) / len(self.bot.guilds)
         comments = lines.get('total_python_comments')
@@ -430,13 +334,22 @@ class Info(commands.Cog, description='Informational and useful commands'):
         files = lines.get('file_amount')
         pyfiles = lines.get('python_file_amount')
         lang = 'ahk'
+        prefix = db.field("SELECT Prefix FROM guilds WHERE GuildID = ?",
+                          ctx.guild.id)  # get_prefix(self.bot, ctx)
+        cmds = self.bot.total_commands_ran
         chancount = str(len(list(self.bot.get_all_channels())))
         infos = {}
+        #define em all lmao
+
         infos[f'{emoji("dev")}Developer'] = f'ini\n{version_info["dev"]}'
-        infos[f'{status(str(ctx.guild.me.status))} Uptime'] = precisedelta(discord.utils.utcnow() - self.bot.start_time, format='%.0f')
+        infos[f'{status(str(ctx.guild.me.status))} Uptime'] = precisedelta(discord.utils.utcnow() - self.bot.start_time,
+                                                                           format='%.0f')
         infos[f'System'] = system()
-        infos['Commands Loaded'] = len([x.name for x in self.bot.commands])
-        infos['Stats'] = f'{lang}\nMember Count: {sum(g.member_count for g in self.bot.guilds)}\nChannel Count: {chancount}\nGuild Count: {len(self.bot.guilds)}\nAvg users/server: {avgmembers:,.2f}'
+        infos[
+            'Stats'] = f'{lang}\nMember Count: {sum(g.member_count for g in self.bot.guilds)}\nChannel Count: {chancount}\n' \
+                       f'Guild Count: {len(self.bot.guilds)}\nAvg users/server: {avgmembers:,.2f}\n' \
+                       f'Commands Loaded: {len([x.name for x in self.bot.commands])}\nCommands Ran this boot: {cmds}'
+
         infos['Lines'] = f"""{lang}\n
 Python Files: {pyfiles}
 Files: {files}
@@ -445,14 +358,22 @@ Classes: {clas}
 Functions: {func}
 Coroutines: {coro}
 Comments: {comments}"""
-        infemb = discord.Embed(color=invis)
+        infos["__Latest changes__"] = version_info["info"].title()
+        infemb = discord.Embed(color=invis, description='')
         async with ctx.channel.typing():
-            infemb.set_author(name=ctx.guild.me.name, icon_url=ctx.guild.me.avatar)
+            infemb.set_author(name=ctx.guild.me.name, icon_url=ctx.guild.me.avatar,
+                              url='https://github.com/JakeWasChosen/edoC')
             infemb.set_thumbnail(url=ctx.guild.me.avatar)
             for k, v in infos.items():
                 infemb.add_field(name=k, value=f'```{v}```', inline=False)
             infemb.add_field(name='<:dpy:596577034537402378> Discord.py version', value=f'```{discord.__version__}```')
             infemb.add_field(name='<:python:868285625877557379> Python Version', value=f'```{python_version()}```')
+            infemb.add_field(name='<:edoC:874868276256202782> edoC Version', value=f'```{version_info["version"]}```')
+            infemb.description += ":link: __Links__ \n" \
+                                  "| [dev links](https://bio.link/edoC) " \
+                                  "| [support me](https://www.buymeacoffee.com/edoC) " \
+                                  "| [invite](https://discordapp.com/oauth2/authorize?cient_id=845186772698923029&scope=bot&permissions=8) "
+            infemb.set_footer(text=f"Prefix in this server: {prefix}")
         await ctx.reply(embed=infemb)
 
     @commands.command(aliases=["SAF"])

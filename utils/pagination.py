@@ -143,7 +143,7 @@ class edoCPages(discord.ui.View):
         self._update_labels(0)
         self.message = await self.ctx.send(**kwargs, view=self)
 
-    @discord.ui.button(label='?', style=discord.ButtonStyle.grey)
+    @discord.ui.button(label='<<<', style=discord.ButtonStyle.grey)
     async def go_to_first_page(self, button: discord.ui.Button, interaction: discord.Interaction):
         """go to the first page"""
         await self.show_page(interaction, 0)
@@ -162,7 +162,7 @@ class edoCPages(discord.ui.View):
         """go to the next page"""
         await self.show_checked_page(interaction, self.current_page + 1)
 
-    @discord.ui.button(label='?', style=discord.ButtonStyle.grey)
+    @discord.ui.button(label='>>>', style=discord.ButtonStyle.grey)
     async def go_to_last_page(self, button: discord.ui.Button, interaction: discord.Interaction):
         """go to the last page"""
         # The call here is safe because it's guarded by skip_if
