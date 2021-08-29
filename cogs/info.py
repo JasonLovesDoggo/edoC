@@ -14,12 +14,12 @@ from discord import HTTPException
 from discord.ext.commands import ColourConverter
 from discord.ext.menus import ListPageSource
 from googletrans import Translator
-from humanize import naturalsize, naturaldelta, precisedelta
+from humanize import precisedelta
 from pyshorteners import Shortener
 
-from cogs.music import Paginator
 from utils.default import *
 from utils.info import fetch_info
+from utils.pagination import Paginator
 from utils.vars import *
 
 

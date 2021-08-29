@@ -1,63 +1,22 @@
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#  Copyright (c) 2021. Jason Cameron                                                               +
+#  All rights reserved.                                                                            +
+#  This file is part of the edoC discord bot project ,                                             +
+#  and is released under the "MIT License Agreement". Please see the LICENSE                       +
+#  file that should have been included as part of this package.                                    +
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 from datetime import datetime
-from typing import List
 
 import DiscordUtils
-import aiohttp
 import humanfriendly
 from discord.ext import commands
 
 from utils.default import is_dj_or_perms
+from utils.pagination import Paginator
 from utils.vars import *
 
 music_ = DiscordUtils.Music()
-
-
-class Paginator(discord.ui.View):
-    def __init__(self, ctx: commands.Context, embeds: List[discord.Embed]):
-        super().__init__(timeout=None)
-        self.ctx = ctx
-        self.embeds = embeds
-        self.current = 0
-        self.LeaveIn = 240
-
-    async def edit(self, msg, pos):
-        em = self.embeds[pos]
-        em.set_footer(text=f"Page: {pos + 1}")
-        await msg.edit(embed=em)
-
-    @discord.ui.button(emoji='??', style=discord.ButtonStyle.blurple)
-    async def bac(self, b, i):
-        if self.current == 0:
-            return
-        await self.edit(i.message, self.current - 1)
-        self.current -= 1
-
-    @discord.ui.button(emoji='??', style=discord.ButtonStyle.blurple)
-    async def stap(self, b, i):
-        await i.message.delete()
-
-    @discord.ui.button(emoji='??', style=discord.ButtonStyle.blurple)
-    async def nex(self, b, i):
-        if self.current + 1 == len(self.embeds):
-            return
-        await self.edit(i.message, self.current + 1)
-        self.current += 1
-
-    async def interaction_check(self, interaction):
-        if interaction.user == self.ctx.author:
-            return True
-        await interaction.response.send_message("Not your command ._.", ephemeral=True)
-
-
-# i wrote this cog while sleeping
-# dont ask
-def success_embed(title, description):
-    return discord.Embed(
-        title=title,
-        description=description,
-        color=blue
-    )
-
 
 class music(commands.Cog, description="Jam to some awesome tunes! ?"):
     def __init__(self, bot):
