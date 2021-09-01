@@ -6,8 +6,10 @@
 #  file that should have been included as part of this package.                                    +
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-from discord.ext import commands
 import asyncio
+
+from discord.ext import commands
+
 
 def to_emoji(c):
     base = 0x1f1e6

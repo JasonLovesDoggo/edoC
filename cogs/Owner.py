@@ -23,7 +23,7 @@ from discord.ext import commands
 from jishaku.models import copy_context_with
 from jishaku.paginators import WrappedPaginator, PaginatorInterface
 
-from cogs.mod import BanUser, MemberID
+from cogs.Mod import BanUser, MemberID
 from lib.db import db
 from lib.db.db import cur
 from utils import default, http
@@ -64,7 +64,7 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
         except asyncio.TimeoutError:
             return await confirm_msg.edit(
                 content=f"~~{confirm_msg.clean_content}~~\n\nStopped process...")
-        await self.bot.leave_guild(guild)
+        await guild.leave()
         await ctx.send(f":ok_hand: Left guild: {guild.name} ({guild.id})")
 
     def cleanup_code(self, content):
@@ -385,13 +385,12 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
         await BanUser(ctx, userid, reason)
         await ctx.send(f"banned {userid} for {reason}")
 
-    @commands.command(aliases=["l"],
-                      brief='Loads an Extension',
-                      description='The command is used to load the Extensions into the Bot.'
-                      )
+    @commands.command(aliases=["l"], brief='Loads an Extension',
+                      description='The command is used to load the Extensions into the Bot.')
     @commands.is_owner()
     async def load(self, ctx, name: str):
         """ Loads an extension. """
+        name = name.title()
         try:
             self.bot.load_extension(f"cogs.{name}")
         except Exception as e:
@@ -402,6 +401,7 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
     @commands.is_owner()
     async def unload(self, ctx, name: str):
         """ Unloads an extension. """
+        name = name.title()
         try:
             self.bot.unload_extension(f"cogs.{name}")
         except Exception as e:
@@ -412,6 +412,7 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
     @commands.is_owner()
     async def reload(self, ctx, name: str):
         """ Reloads an extension. """
+        name = name.title()
         try:
             self.bot.reload_extension(f"cogs.{name}")
         except Exception as e:
@@ -463,6 +464,7 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
         """ shut down the bot """
         await ctx.send("Shuting down now...")
         logging.warning('Shutting down now')
+        await self.bot.session.close()
         await asyncio.sleep(2)
         await self.bot.close()
 
@@ -528,16 +530,12 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
 
     @commands.command(aliases=['pm'])
     @commands.is_owner()
-    async def dm(self, ctx, user_id: int, *, message: str):
-        """ DM the user of your choice """
-        user = self.bot.get_user(user_id) or (await self.bot.fetch_user(user_id))
-        if not user:
-            return await ctx.send(f"Could not find any UserID matching **{user_id}**")
+    async def dm(self, ctx, user: discord.User, *, message: str):
         fmt = message + '\n\n*This is a DM sent because you had previously requested feedback or I found a bug' \
                         ' in a command you used, I do not monitor this DM.*'
         try:
             await user.send(fmt)
-            await ctx.send(f"✉️ Sent a DM to **{user_id}**")
+            await ctx.send(f"✉️ Sent a DM to **{user}**")
         except discord.Forbidden:
             await ctx.send("This user might be having DMs blocked or it's a bot account...")
 

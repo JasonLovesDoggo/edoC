@@ -125,14 +125,14 @@ class Discord(commands.Cog, description="Discord Information commands"):
         user = user or ctx.author
 
         embed = discord.Embed(colour=user.top_role.colour.value)
-        embed.set_thumbnail(url=user.display_avatar.url)
-        embed.description = f"**{user}** joined **{ctx.guild.name}**\n{date(user.joined_at)}"
+        embed.set_thumbnail(url=user.avatar.url)
+        embed.description = f"**{user}** joined **{ctx.guild.name}**\n{date(user.joined_at, ago=True)}"
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["joinme", "inviteme", "botinvite"])
     async def invite(self, ctx):
         """ Invite me to a server."""
-        perms = discord.Permissions.all()
+        perms = discord.Permissions.administrator()
         await ctx.send(f'<{discord.utils.oauth_url(self.bot.user.id, permissions=perms)}>')
 
     @commands.command()
@@ -196,7 +196,8 @@ class Discord(commands.Cog, description="Discord Information commands"):
         e.description = f'**ID**: {guild.id}\n**Owner**: {guild.owner}'
         if guild.icon:
             e.set_thumbnail(url=guild.icon.url)
-
+        if ctx.guild.banner:
+            e.set_image(url=ctx.guild.banner.with_format("png").with_size(1024))
         channel_info = []
         key_to_emoji = {
             discord.TextChannel: '<:text_channel:879518927019966485>',
@@ -270,7 +271,7 @@ class Discord(commands.Cog, description="Discord Information commands"):
 
         fmt = f'{fmt}Total Emoji: {len(guild.emojis)}/{guild.emoji_limit * 2}'
         e.add_field(name='Emoji', value=fmt, inline=False)
-        e.set_footer(text='Created').timestamp = guild.created_at
+        e.set_footer(text=f'Created {date(guild.created_at, ago=True)}')
         await ctx.send(embed=e)
 
     @commands.command(aliases=["aboutuser", "about_user", "userinfo", "user_info", "whoisme"])

@@ -7,25 +7,23 @@
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 import argparse
+import asyncio
 import copy
 import datetime
 import logging
+import re
 import shlex
 from collections import Counter
 from io import BytesIO
 
-from discord.utils import find
-
 from discord import NotFound, Object
-
-import re
-import asyncio
 from discord.ext import commands
 from discord.ext.commands import Converter, BadArgument
+from discord.utils import find
 
-from cogs.discordinfo import format_relative, plural
-from utils import checks, default
+from cogs.Discordinfo import format_relative, plural
 from lib.db import db
+from utils import checks, default
 from utils.default import mod_or_permissions, is_admin
 from utils.vars import *
 
@@ -243,7 +241,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
     @commands.command()
     @commands.guild_only()
     @mod_or_permissions(kick_members=True)
-    async def kick(self, ctx, member: MemberID, *, reason: ActionReason = None):
+    async def kick(self, ctx, member: discord.Member, *, reason: ActionReason = None):
         """Kicks a member from the server.
         In order for this to work, the bot must have Kick Member permissions.
         To use this command you must have Kick Members permission.
@@ -268,6 +266,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
     #    profanity.load_censor_words_from_file("./data/profanity.txt")
     #    await ctx.send("Action complete.")
     #    await ctx.send("Action complete.")
+
     @commands.command(aliases=["nick"])
     @commands.guild_only()
     @commands.has_permissions(manage_nicknames=True)

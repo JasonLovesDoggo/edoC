@@ -11,8 +11,8 @@ import os
 import aiohttp
 import psutil
 from discord.ext import commands
+
 from utils import default
-import discord
 from utils.vars import *
 
 

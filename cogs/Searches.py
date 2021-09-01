@@ -6,19 +6,15 @@
 #  file that should have been included as part of this package.                                    +
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-import io
 import re
 
-import aiohttp
-import discord
 import wikipedia
-import yarl
 from discord.ext import commands, menus
 from wikipedia.exceptions import WikipediaException
 
+from utils import default
 from utils.default import Context
 from utils.pagination import edoCPages
-from utils import default
 from utils.vars import *
 
 

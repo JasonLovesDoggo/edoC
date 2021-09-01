@@ -85,15 +85,19 @@ class Events(commands.Cog, description='Event handling if u can see this ping th
         await ctx.send(embed=embed)
 
     @commands.Cog.listener()
-    async def on_guild_join(self, guild, member):
+    async def on_guild_join(self, guild):
         """guild thingos """
-        channel = self.bot.get_channel(guild.system_channel)
-        db.execute("INSERT OR IGNORE INTO Guilds (GuildID) VALUES(?)", guild.id, )
+        to_send = next((
+            chan for chan in sorted(guild.channels, key=lambda x: x.position)
+            if chan.permissions_for(guild.me).send_messages and isinstance(chan, discord.TextChannel)
+        ), None)
+        db.execute("INSERT OR IGNORE INTO Guilds (GuildID) VALUE (?)", guild.id, )
+        channel = self.bot.get_channel(guild.system_channel) or to_send
         await channel.send("Thank you for inviting me to the server")
         await channel.send("Please do ~help to get started")
-        await channel.send(
-            "also if edoC fails it is because your servers guildID didn't get put into the database please contact the dev about it \n*(you can find him in ~info)")
-        print("hi ", member)
+        #await channel.send(
+        #    "also if edoC fails it is because your servers guildID didn't get put into the database please contact the dev about it \n*(you can find him in ~info)")
+        print(f'edoC has Joined {guild.name} it has {len(guild.members)} members ')
 
     # async def update_db(self):
     #    members = self.bot.get_all_members()

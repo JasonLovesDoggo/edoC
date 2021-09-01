@@ -23,7 +23,7 @@ from nekos import InvalidArgument, why, owoify, img
 from pyfiglet import figlet_format
 from pyjokes import pyjokes
 
-from cogs.discordinfo import plural
+from cogs.Discordinfo import plural
 from utils.default import config, CustomTimetext
 from utils.http import get
 from utils.vars import *
@@ -127,7 +127,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
         api = f'https://mcgen.herokuapp.com/a.php?i=2&h={a}&t={t}'
         emb = discord.Embed(color=random_color())
         emb.set_image(url=api)
-        await ctx.send(embed=emb)
+        await ctx.reply(embed=emb)
 
     @commands.command(aliases=["rfact", "rf"])
     @commands.cooldown(rate=1, per=2, type=commands.BucketType.user)
@@ -136,6 +136,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
         fact = random.choice(random_facts)
         emb = discord.Embed(description=fact, color=random.choice(ColorsList))
         await ctx.reply(embed=emb, mention_author=False)
+
     async def api_img_creator(self, ctx, url: str, filename: str, content: str = None):
         async with ctx.channel.typing():
             req = await get(url, res_method="read")

@@ -13,6 +13,8 @@ import logging
 import math
 import time
 import traceback
+from calendar import calendar
+from datetime import datetime
 from distutils.log import info
 from glob import glob
 from io import BytesIO
@@ -233,7 +235,7 @@ class Context(commands.Context):
 class edoC(commands.AutoShardedBot):
     def __init__(self):
         if not hasattr(self, 'uptime'):
-            self.uptime = discord.utils.utcnow()
+            self.uptime = datetime.now()
         self.start_time = discord.utils.utcnow()
         allowed_mentions = discord.AllowedMentions(roles=True, everyone=False, users=True)
         intents = discord.Intents(
@@ -275,8 +277,8 @@ class edoC(commands.AutoShardedBot):
         await self.process_commands(msg)
 
     async def close(self):
-        await super().close()
         await self.session.close()
+        await super().close()
 
     async def get_or_fetch_member(self, guild, member_id):
         """Looks up a member in cache or fetches if not found.
@@ -318,27 +320,27 @@ class edoC(commands.AutoShardedBot):
         invite_link_cache = []
         await emptyfolder(self.tempimgpath)
         logschannel = self.get_channel(self.config["edoc_non_critical_logs"])
+        # Check if user desires to have something other than online
+        status = self.config["status_type"].lower()
+        status_type = {"idle": discord.Status.idle, "dnd": discord.Status.dnd}
+
+        # Check if user desires to have a different type of activity
+        activity = self.config["activity_type"].lower()
+        activity_type = {"listening": 2, "watching": 3, "competing": 5}
+        totalmembers = sum(g.member_count for g in self.guilds)
+
+        await self.change_presence(
+            activity=discord.Game(
+                type=activity_type.get(activity, 3),
+                name=f"Watching over {totalmembers} Members spread over {len(self.guilds)} Guilds!\nPrefix: ~"
+            ),
+            status=status_type.get(status, discord.Status.online)
+        )
+
         if not self.ready:
             self.ready = True
             self.scheduler.start()
             await logschannel.send(f"{self.user} has been booted up")
-
-            # Check if user desires to have something other than online
-            status = self.config["status_type"].lower()
-            status_type = {"idle": discord.Status.idle, "dnd": discord.Status.dnd}
-
-            # Check if user desires to have a different type of activity
-            activity = self.config["activity_type"].lower()
-            activity_type = {"listening": 2, "watching": 3, "competing": 5}
-            totalmembers = sum(g.member_count for g in self.guilds)
-
-            await self.change_presence(
-                activity=discord.Game(
-                    type=activity_type.get(activity, 3),
-                    name=f"Watching over {totalmembers} Members spread over {len(self.guilds)} Guilds!\nPrefix: ~"
-                ),
-                status=status_type.get(status, discord.Status.online)
-            )
             # Indicate that the bot has successfully booted up
             print(
                 f"Ready: {self.user} | Total members {totalmembers} | Guild count: {len(self.guilds)} | Guilds")
@@ -441,16 +443,36 @@ def CustomTimetext(filetype, name):
     return f"{name}_{int(time.time())}.{filetype}"
 
 
-def timeago(target):
-    """ Timeago in easier way """
-    return timesince.format(target)
+def date(target, clock: bool = True, seconds: bool = False, ago: bool = False, only_ago: bool = False, raw: bool = False):
+    if isinstance(target, int) or isinstance(target, float):
+        target = datetime.utcfromtimestamp(target)
 
+    if raw:
+        if clock:
+            timestamp = target.strftime("%d %B %Y, %H:%M")
+        elif seconds:
+            timestamp = target.strftime("%d %B %Y, %H:%M:%S")
+        else:
+            timestamp = target.strftime("%d %B %Y")
 
-def date(target, clock=True):
-    """ Clock format using datetime.strftime() """
-    if not clock:
-        return target.strftime("%d %B %Y")
-    return target.strftime("%d %B %Y, %H:%M")
+        if isinstance(target, int) or isinstance(target, float):
+            target = datetime.utcfromtimestamp(target)
+            target = calendar.timegm(target.timetuple())
+
+        if ago:
+            timestamp += f" ({timesince.format(target)})"
+        if only_ago:
+            timestamp = timesince.format(target)
+
+        return f"{timestamp} (UTC)"
+    else:
+        unix = int(time.mktime(target.timetuple()))
+        timestamp = f"<t:{unix}:{'f' if clock else 'D'}>"
+        if ago:
+            timestamp += f" (<t:{unix}:R>)"
+        if only_ago:
+            timestamp = f"<t:{unix}:R>"
+        return timestamp
 
 
 def responsible(target, reason):

@@ -9,10 +9,7 @@
 from urllib.parse import quote_plus
 
 import discord
-from discord import ButtonStyle
 from discord.ext import commands
-from discord.ui import Button
-
 
 
 class Counter(discord.ui.View):

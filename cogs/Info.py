@@ -18,6 +18,7 @@ from humanize import precisedelta
 from pyshorteners import Shortener
 
 from utils.default import *
+from utils.http import get
 from utils.info import fetch_info
 from utils.pagination import Paginator
 from utils.vars import *
@@ -358,18 +359,18 @@ Classes: {clas}
 Functions: {func}
 Coroutines: {coro}
 Comments: {comments}"""
-        infos["__Latest changes__"] = version_info["info"].title()
+        infos["Latest changes"] = version_info["info"].title()
         infemb = discord.Embed(color=invis, description='')
         async with ctx.channel.typing():
             infemb.set_author(name=ctx.guild.me.name, icon_url=ctx.guild.me.avatar,
                               url='https://github.com/JakeWasChosen/edoC')
-            infemb.set_thumbnail(url=ctx.guild.me.avatar)
+            infemb.set_thumbnail(url=self.bot.user.avatar)
             for k, v in infos.items():
                 infemb.add_field(name=k, value=f'```{v}```', inline=False)
             infemb.add_field(name='<:dpy:596577034537402378> Discord.py version', value=f'```{discord.__version__}```')
             infemb.add_field(name='<:python:868285625877557379> Python Version', value=f'```{python_version()}```')
             infemb.add_field(name='<:edoC:874868276256202782> edoC Version', value=f'```{version_info["version"]}```')
-            infemb.description += ":link: __Links__ \n" \
+            infemb.description += ":link: **Links** \n" \
                                   "  [dev links](https://bio.link/edoC) " \
                                   "| [support me](https://www.buymeacoffee.com/edoC) " \
                                   "| [invite](https://discordapp.com/oauth2/authorize?cient_id=845186772698923029&scope=bot&permissions=8) "
@@ -475,6 +476,38 @@ Comments: {comments}"""
         if isinstance(ctx.channel, discord.DMChannel) or ctx.guild.id != 819282410213605406:
             return await ctx.send(f"**Here you go {ctx.author.name} 🍻\n<{self.config['botserver']}>**")
         await ctx.reply(f"**{ctx.author.name}** this is my home you know :3")
+
+    @commands.command()
+    async def covid(self, ctx, *, country: str):
+        """Covid-19 Statistics for any countries"""
+        country = country.title()
+        async with ctx.channel.typing():
+            r = await get(f"https://disease.sh/v3/covid-19/countries/{country.lower()}", res_method="json")
+
+            if "message" in r:
+                return await ctx.send(f"The API returned an error:\n{r['message']}")
+
+            json_data = [
+                ("Total Cases", r["cases"]), ("Total Deaths", r["deaths"]),
+                ("Total Recover", r["recovered"]), ("Total Active Cases", r["active"]),
+                ("Total Critical Condition", r["critical"]), ("New Cases Today", r["todayCases"]),
+                ("New Deaths Today", r["todayDeaths"]), ("New Recovery Today", r["todayRecovered"])
+            ]
+
+            embed = discord.Embed(
+                description=f"The information provided was last updated <t:{int(r['updated'] / 1000)}:R>"
+            )
+
+            for name, value in json_data:
+                embed.add_field(
+                    name=name, value=f"{value:,}" if isinstance(value, int) else value
+                )
+
+            await ctx.send(
+                f"**COVID-19** statistics in :flag_{r['countryInfo']['iso2'].lower()}: "
+                f"**{country.capitalize()}** *({r['countryInfo']['iso3']})*",
+                embed=embed
+            )
 
     @commands.command(aliases=["bs"])
     async def botstats(self, ctx):
