@@ -394,9 +394,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
     @commands.command(aliases=['Rcap'])
     async def Mock(self, ctx, *, words):
         """ alternate caps and non caps"""
-        if ctx.author == ctx.guild.owner or 511724576674414600:
-            await ctx.message.delete()
-        tosend = ""
+        tosend = ''
         number = 1  # 1 if you want it to start with a capitol 0 if you want it to start with a lowercase
         for letter in words.lower():
             if number == 1:
@@ -405,6 +403,10 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
             else:
                 tosend += letter.lower()
                 number = 1
+        if ctx.author.id == self.bot.ownerid:
+            await ctx.message.delete()
+        else:
+            tosend += f' ||~ {ctx.message.author.name}||\n'
         await ctx.send(tosend)
 
     @commands.group()

@@ -34,8 +34,11 @@ from utils.http import HTTPSession
 from utils.vars import dark_blue
 
 BannedUsers = {}
+
+
 def wrap(type, text):
     return f'```{type}\n{text}```'
+
 
 def config(filename: str = "config"):
     """ Fetch default config file """
@@ -45,10 +48,12 @@ def config(filename: str = "config"):
     except FileNotFoundError:
         raise FileNotFoundError("JSON file wasn't found")
 
+
 async def emptyfolder(folder):
     files = glob(folder)
     for f in files:
         remove(f)
+
 
 class Timer:
     def __init__(self):
@@ -259,11 +264,12 @@ class edoC(commands.AutoShardedBot):
         self.process = Process(getpid())
         self.config = config()
         self.tempimgpath = 'data/img/temp/*'
+        self.ownerid = 511724576674414600
         self.ready = False
         self.scheduler = apscheduler.schedulers.asyncio.AsyncIOScheduler()
         self.total_commands_ran = 0
         self.alex_api = alexflipnote.Client(confi['alexflipnote_api'],
-                                       loop=self.loop)  # just a example, the client doesn't have to be under bot and loop kwarg is optional
+                                            loop=self.loop)  # just a example, the client doesn't have to be under bot and loop kwarg is optional
         # self.blacklist = Config('blacklist.json')
 
     # async def on_guild_join(self, guild):
@@ -383,6 +389,8 @@ class edoC(commands.AutoShardedBot):
 
         except:
             pass
+
+
 def UpdateBlacklist(newblacklist, filename: str = "blacklist"):
     try:
         with open(f"{filename}.json", encoding='utf-8', mode="r+") as file:
@@ -443,7 +451,8 @@ def CustomTimetext(filetype, name):
     return f"{name}_{int(time.time())}.{filetype}"
 
 
-def date(target, clock: bool = True, seconds: bool = False, ago: bool = False, only_ago: bool = False, raw: bool = False):
+def date(target, clock: bool = True, seconds: bool = False, ago: bool = False, only_ago: bool = False,
+         raw: bool = False):
     if isinstance(target, int) or isinstance(target, float):
         target = datetime.utcfromtimestamp(target)
 
@@ -508,6 +517,8 @@ async def prettyResults(ctx, filename: str = "Results", resultmsg: str = "Here's
         content=resultmsg,
         file=discord.File(data, filename=timetext(filename.title()))
     )
+
+
 def naturalsize(size_in_bytes: int):
     """
     Converts a number of bytes to an appropriately-scaled unit
@@ -520,6 +531,7 @@ def naturalsize(size_in_bytes: int):
     power = int(math.log(size_in_bytes, 1024))
 
     return f"{size_in_bytes / (1024 ** power):.2f} {units[power]}"
+
 
 async def send(ctx, content=None, embed=None, ttl=None):
     perms = ctx.channel.permissions_for(ctx.me).embed_links
