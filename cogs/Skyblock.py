@@ -115,7 +115,10 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
 
     @commands.command(aliases=['coins'])
     async def balance(self, ctx, name, pname=None):
-        name = self.get_name(name)
+        try:
+            name = self.get_name(name)
+        except:
+            return await ctx.error('Name not found')
         async with ctx.session.get("https://sky.shiiyu.moe/api/v2/coins/" + name) as api:
             data = await api.json()
         async with ctx.session.get(self.SkyV2 + name) as api:

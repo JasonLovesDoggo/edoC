@@ -24,14 +24,17 @@ import alexflipnote
 import apscheduler.schedulers.asyncio
 import discord
 import timeago as timesince
+from discord import Embed
 from discord.ext import commands
 from discord.ext.commands import NoPrivateMessage, when_mentioned_or
+from discord.utils import utcnow
 from psutil import Process
 
 from lib.db import db
+from utils.cache import CacheManager
 from utils.help import PaginatedHelpCommand
 from utils.http import HTTPSession
-from utils.vars import dark_blue
+from utils.vars import dark_blue, error, green, yellow, invis
 
 BannedUsers = {}
 
@@ -201,6 +204,34 @@ confi = config()
 log = logging.getLogger(__name__)
 description = 'Relatively simply awesome bot. Developed by Jake CEO of annoyance#1904'
 
+class EEmbed(discord.Embed):
+    def __init__(self, color=0x3DB4FF, fields=(), field_inline=False, **kwargs):
+        super().__init__(color=color, **kwargs)
+        for n, v in fields:
+            self.add_field(name=n, value=v, inline=field_inline)
+
+    @classmethod
+    def minimal(cls, timestamp=None, **kwargs):
+        instance = cls(timestamp=timestamp or utcnow(), **kwargs)
+        return instance
+
+    @classmethod
+    def default(cls, ctx, timestamp=None, **kwargs):
+        instance = cls.minimal(timestamp=timestamp or utcnow(), **kwargs)
+        instance.set_footer(
+            text="Requested by {}".format(ctx.author), icon_url=ctx.author.avatar.url
+        )
+        return instance
+    @classmethod
+    def loading(
+        cls,
+        *,
+        emoji='<a:wait:879146899670708234>',
+        title="Loading...",
+        **kwargs,
+    ):
+        return cls(title="{} {}".format(emoji, title), **kwargs)
+
 
 class Context(commands.Context):
     def __init__(self, **kwargs):
@@ -221,7 +252,19 @@ class Context(commands.Context):
             return f'{emoji}: {label}'
         return emoji
 
-    async def safe_send(self, content, *, escape_mentions=True, **kwargs):
+    async def try_reply(self, content=None, *, mention_author=False, **kwargs):
+        """Try reply, if failed do send instead"""
+        try:
+            action = self.safe_reply
+            return await action(content, mention_author=mention_author, **kwargs)
+        except BaseException:
+            if mention_author:
+                content = f"{self.author.mention} " + content if content else ""
+
+            action = self.safe_send
+            return await self.safe_send(content, **kwargs)
+
+    async def safe_send(self, content, *, escape_mentions=True, channel=False, **kwargs):
         """Same as send except with some safe guards.
         1) If the message is too long then it sends a file with the results instead.
         2) If ``escape_mentions`` is ``True`` then it escapes mentions.
@@ -229,16 +272,90 @@ class Context(commands.Context):
         if escape_mentions:
             content = discord.utils.escape_mentions(content)
 
+        if channel:
+            channel = self.bot.get_channel(channel)
+        else:
+            channel = self
+
         if len(content) > 2000:
             fp = BytesIO(content.encode())
             kwargs.pop('file', None)
-            return await self.send(file=discord.File(fp, filename='message_too_long.txt'), **kwargs)
+            return await channel.send(file=discord.File(fp, filename='message_too_long.txt'), **kwargs)
         else:
-            return await self.send(content)
+            return await channel.send(content)
 
+    async def safe_reply(self, content, *, escape_mentions=True, **kwargs):
+        return await self.safe_send_reply(
+            content, escape_mentions=escape_mentions, type="reply", **kwargs
+        )
+
+    async def safe_send_reply(
+        self, content, *, escape_mentions=True, type="send", **kwargs
+    ):
+        action = getattr(self, type)
+
+        if escape_mentions and content is not None:
+            content = discord.utils.escape_mentions(content)
+
+        if content is not None and len(content) > 2000:
+            fp = BytesIO(content.encode())
+            kwargs.pop("file", None)
+            return await action(
+                file=discord.File(fp, filename="message_too_long.txt"), **kwargs
+            )
+        else:
+            if content is not None:
+                kwargs["content"] = content
+            return await action(**kwargs)
+
+    async def error(self, error_message):
+        e = Embed(color=error)
+        e.description = str(error_message)
+        return await self.try_reply(embed=e)
+
+    async def success(self, success_message: str = None):
+        e = Embed(color=green)
+        e.description = str(success_message)
+        return await self.try_reply(embed=e)
+
+    async def warn(self, warn_message: str = None):
+        e = Embed(color=yellow)
+        e.description = str(warn_message)
+        return await self.try_reply(embed=e)
+
+    async def invis(self, invis_message):
+        e = Embed(color=invis)
+        e.description = str(invis_message)
+        return await self.try_reply(embed=e)
+
+    async def unknown(self, unknownerror, command):
+        e = Embed(color=error, title=command.name)
+        e.description = str(unknownerror)
+        channel = self.bot.get_channel(867828022752444416)
+        await self.try_reply(f'An unknown error happend with {command.name}')
+        return await channel.send(embed=e)
+
+    async def report(self, ctx, msg):
+        channel = self.bot.get_channel(877724111420391515)
+        if len(msg) > 300:
+            return self.error('Too Long please keep under 300 characters')
+        elif len(msg) < 20:
+            return self.warn('Too short please keep over 20 characters')
+        e = Embed(color=green)
+        e.description = str(msg)
+        e.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar)
+        await channel.send(embed=e)
+
+    @discord.utils.cached_property
+    def replied_reference(self):
+        ref = self.message.reference
+        if ref and isinstance(ref.resolved, discord.Message):
+            return ref.resolved.to_reference()
+        return None
 
 class edoC(commands.AutoShardedBot):
     def __init__(self):
+        self.db = None
         if not hasattr(self, 'uptime'):
             self.uptime = datetime.now()
         self.start_time = discord.utils.utcnow()
@@ -265,11 +382,14 @@ class edoC(commands.AutoShardedBot):
         self.config = config()
         self.tempimgpath = 'data/img/temp/*'
         self.ownerid = 511724576674414600
+        self.icons = {}
         self.ready = False
         self.scheduler = apscheduler.schedulers.asyncio.AsyncIOScheduler()
         self.total_commands_ran = 0
         self.alex_api = alexflipnote.Client(confi['alexflipnote_api'],
                                             loop=self.loop)  # just a example, the client doesn't have to be under bot and loop kwarg is optional
+        self.cache = CacheManager()
+
         # self.blacklist = Config('blacklist.json')
 
     # async def on_guild_join(self, guild):
@@ -286,6 +406,25 @@ class edoC(commands.AutoShardedBot):
         await self.session.close()
         await super().close()
 
+    def loading_emojis(self):
+        emojis = {
+            "greenTick": "<a:b_yes:879161309315346582>",
+            "redTick": "<a:no:879146899322601495>",
+            "plus": "<:plus:882749457932902401>",
+            "minus": "<:minus:882749665777438740>",
+            "save": "<:save:882749805703618590>",
+            'online': '<:online:808613541774360576>',
+            'offline': '<:offline:817034738014879845>',
+            'idle': '<:idle:817035319165059102>',
+            'dnd': '<:dnd:817035352925536307>',
+            'boosters': '<:Boosters:814930829461553152>',
+            'typing': '<a:typing:884860688164597841>',
+            'database': '<:database:857553072909189191>',
+            'edoc': '<:edoC:874868276256202782>',
+            'loading': '<a:loadshuffle:879146779235471430>'
+        }
+        self.icons = emojis
+        return self.icons
     async def get_or_fetch_member(self, guild, member_id):
         """Looks up a member in cache or fetches if not found.
         Parameters
@@ -355,6 +494,8 @@ class edoC(commands.AutoShardedBot):
                 gprefix = db.field('SELECT Prefix FROM guilds WHERE GuildID = ?', Server.id)
                 print(
                     f"{Server.id} ~ {Server} ~ {Server.owner} ~ {Server.member_count} ~ Prefix {gprefix}")
+            self.loading_emojis()
+            await self.fill_cache()
         else:
             print(f"{self.user} Reconnected")
             await logschannel.send(f"{self.user} has been reconnected")
@@ -390,6 +531,46 @@ class edoC(commands.AutoShardedBot):
         except:
             pass
 
+    async def fill_cache(self):
+        """Loading up the blacklisted users."""
+        #query = 'SELECT * FROM (SELECT guild_id AS snowflake_id, blacklisted  FROM guild_config  UNION ALL SELECT user_id AS snowflake_id, blacklisted  FROM users_data) WHERE blacklisted="TRUE"'
+        #cur = await self.db.execute(query)
+        #data = await cur.fetchall()
+        #self.cache["blacklisted_users"] = {r[0] for r in data} or set()
+#
+        #"""Loading up premium users."""
+        #query = 'SELECT * FROM (SELECT guild_id AS snowflake_id, premium  FROM guild_config  UNION ALL SELECT user_id AS snowflake_id, premium  FROM users_data) WHERE premium="TRUE"'
+        #cur = await self.db.execute(query)
+        #data = await cur.fetchall()
+        #self.cache["premium_users"] = {r[0] for r in data} or set()
+#
+        #"""Loading up users that have tips enabled"""
+        #query = 'SELECT user_id FROM users_data WHERE tips = "TRUE"'
+        #cur = await self.db.execute(query)
+        #data = await cur.fetchall()
+        #self.cache["tips_are_on"] = {r[0] for r in data} or set()
+#
+        #"""Loading up users that have mentions enabled"""
+        #query = 'SELECT user_id FROM users_data WHERE mentions = "TRUE"'
+        #cur = await self.db.execute(query)
+        #data = await cur.fetchall()
+        #self.cache["mentions_are_on"] = {r[0] for r in data} or set()
+#
+        #"""Loads up all disabled_commands"""
+        #query = "SELECT command_name, snowflake_id FROM disabled_commands ORDER BY command_name"
+        #cur = await self.db.execute(query)
+        #data = await cur.fetchall()
+        #self.cache["disabled_commands"] = {
+        #    cmd: [r[1] for r in _group]
+        #    for cmd, _group in itertools.groupby(data, key=operator.itemgetter(0))
+        #}
+
+        self.cache["users"] = {}
+        self.cache['afk_users'] = {}
+        self.cache["tips_are_on"] = {}
+        self.cache["disabled_commands"] = {}
+        self.cache["premium_users"] = {}
+        self.cache["blacklisted_users"] = {}
 
 def UpdateBlacklist(newblacklist, filename: str = "blacklist"):
     try:
@@ -556,3 +737,25 @@ async def send(ctx, content=None, embed=None, ttl=None):
             await ctx.message.edit(content='\N{HEAVY EXCLAMATION MARK SYMBOL} No Perms for Embeds', delete_after=5)
         else:
             await ctx.send(content=content, embed=embed, delete_after=ttl, file=None)
+def renderBar(
+    value: int,
+    *,
+    gap: int = 0,
+    length: int = 32,
+    point: str = "",
+    fill: str = "-",
+    empty: str = "-",
+) -> str:
+    # make the bar not wider than 32 even with gaps > 0
+    length = int(length / int(gap + 1))
+
+    # handles fill and empty's length
+    fillLength = int(length * value / 100)
+    emptyLength = length - fillLength
+
+    # handles gaps
+    gapFill = " " * gap if gap else ""
+
+    return gapFill.join(
+        [fill] * (fillLength - len(point)) + [point] + [empty] * emptyLength
+    )

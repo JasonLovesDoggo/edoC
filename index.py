@@ -5,7 +5,9 @@
 #  and is released under the "MIT License Agreement". Please see the LICENSE                       +
 #  file that should have been included as part of this package.                                    +
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+import contextlib
+import logging
+from logging.handlers import RotatingFileHandler
 from os import environ, listdir
 
 from utils.default import edoC, config
@@ -16,7 +18,9 @@ bot = edoC()
 environ["JISHAKU_HIDE"] = "True"
 environ["JISHAKU_NO_UNDERSCORE"] = "True"
 NO_LOAD_COG = ''
-#async def process_commands(self, message):
+
+
+# async def process_commands(self, message):
 #    ctx = await self.get_context(message, cls=Context)
 #
 #    if ctx.command is not None and ctx.guild is not None:
@@ -29,6 +33,38 @@ NO_LOAD_COG = ''
 #        else:
 #            await self.invoke(ctx)
 #
+@contextlib.contextmanager
+def setup_logging():
+    try:
+        FORMAT = "[%(asctime)s] [%(levelname)s]: %(message)s"
+        DATE_FORMAT = "%d/%m/%Y (%H:%M:%S)"
+
+        logger = logging.getLogger("discord")
+        logger.setLevel(logging.INFO)
+
+        file_handler = RotatingFileHandler(
+            filename="discord.log",
+            mode="a",
+            encoding="utf-8",
+            maxBytes=33554432,
+            backupCount=5,
+        )  # maxBytes = 33554432 -> 32 mb
+        file_handler.setFormatter(logging.Formatter(fmt=FORMAT, datefmt=DATE_FORMAT))
+        file_handler.setLevel(logging.INFO)
+        logger.addHandler(file_handler)
+
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(logging.Formatter(fmt=FORMAT, datefmt=DATE_FORMAT))
+        console_handler.setLevel(logging.WARNING)
+        logger.addHandler(console_handler)
+
+        yield
+    finally:
+        handlers = logger.handlers[:]  # type: ignore
+        for handler in handlers:
+            handler.close()
+            logger.removeHandler(handler)  # type: ignore
+
 
 try:
     bot.load_extension("jishaku")
@@ -43,6 +79,7 @@ except Exception:
     raise ChildProcessError("Problem with one of the cogs/utils")
 
 try:
-    bot.run(config["token"], reconnect=True)
+    with setup_logging():
+        bot.run(config["token"], reconnect=True)
 except Exception as e:
     print(f"Error when logging in: {e}")

@@ -5,7 +5,7 @@
 #  and is released under the "MIT License Agreement". Please see the LICENSE                       +
 #  file that should have been included as part of this package.                                    +
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+import asyncio
 import json
 import random as rng
 from asyncio import sleep
@@ -15,10 +15,14 @@ from os import listdir
 from secrets import token_urlsafe
 from typing import Optional
 
+import discord
 import discord.ext.commands
 from aiohttp import ClientConnectorError, ContentTypeError
 from bs4 import BeautifulSoup
+from discord import Embed, HTTPException
 from discord.ext import commands
+from discord.ext.commands import BucketType
+from discord.ext.menus import MenuPages
 from nekos import InvalidArgument, why, owoify, img
 from pyfiglet import figlet_format
 from pyjokes import pyjokes
@@ -26,6 +30,7 @@ from pyjokes import pyjokes
 from cogs.Discordinfo import plural
 from utils.default import config, CustomTimetext
 from utils.http import get
+from utils.pagination import UrbanSource
 from utils.vars import *
 
 dogphotospath = listdir("C:/Users/Jason/edoC/data/img/Dog Picks")
@@ -55,10 +60,10 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
 
     @commands.command()
     async def supreme(self, ctx, *, text: str):
-        embed = discord.Embed(title=f"Rendered by {ctx.author.display_name} VIA {ctx.guild.me.display_name}", color=invis).set_image(url="attachment://supreme.png")
+        embed = discord.Embed(title=f"Rendered by {ctx.author.display_name} VIA {ctx.guild.me.display_name}",
+                              color=invis).set_image(url="attachment://supreme.png")
         image = discord.File(await (await self.bot.alex_api.supreme(text=text)).read(), "supreme.png")
         await ctx.send(embed=embed, file=image)
-
 
     @commands.command(aliases=["sayagain", 'repeat'])
     async def echo(self, ctx, *, what_to_say: commands.clean_content):
@@ -68,9 +73,9 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
     @commands.command(aliases=["8ball"])
     async def eightball(self, ctx, *, question: commands.clean_content):
         """ Consult 8ball to receive an answer """
-        answer = random.choice(ballresponse)
+        answer = rng.choice(ballresponse)
         tosend = f"🎱 **Question:** {question}\n**Answer:** {answer}"
-        emb = discord.Embed(description=tosend, color=random.choice(ColorsList))
+        emb = discord.Embed(description=tosend, color=rng.choice(ColorsList))
         await ctx.reply(embed=emb)
 
     @commands.command(aliases=['asciiart'])
@@ -79,12 +84,15 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
         art = figlet_format(f"{value}")
         try:
             await ctx.send(f"```\n{art}```")
-        except Exception:
+        except HTTPException:
             await ctx.send('Thats a bit too long please try somthing shorter')
+        else:
+            return await ctx.error(
+                'please join the support server and ping the developer about this (i think there will be an error here sometime)')
 
     @commands.command(aliases=["roll", "dice"])
     async def rolldice(self, ctx, guess):
-        answer = random.randint(1, 6)
+        answer = rng.randint(1, 6)
         await ctx.reply(embed=discord.Embed(color=green if guess == answer else red,
                                             description=f"{'True' if guess == answer else 'False'} your guess was {guess} and the answer was {answer}"))
 
@@ -133,8 +141,8 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
     @commands.cooldown(rate=1, per=2, type=commands.BucketType.user)
     async def RandomFact(self, ctx):
         """ Legit just posts a random fact"""
-        fact = random.choice(random_facts)
-        emb = discord.Embed(description=fact, color=random.choice(ColorsList))
+        fact = rng.choice(random_facts)
+        emb = discord.Embed(description=fact, color=rng.choice(ColorsList))
         await ctx.reply(embed=emb, mention_author=False)
 
     async def api_img_creator(self, ctx, url: str, filename: str, content: str = None):
@@ -158,22 +166,22 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
     @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
     async def coffee(self, ctx):
         """ Posts a random coffee """
-        await self.alexflipnote(ctx, "https://coffee.alexflipnote.dev/random.json", "file")
+        await self.alexflipnote(ctx, "https://coffee.alexflipnote.dev/rng.json", "file")
 
     # @commands.command(aliases=["doggo"])
     # @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
     # async def dog(self, ctx):
     #    """ Posts a random dog """
-    #    await self.randomimageapi(ctx, "https://random.dog/woof.json", "url")
+    #    await self.randomimageapi(ctx, "https://rng.dog/woof.json", "url")
     @commands.command()
     async def dog(self, ctx):
         """Gives you a random dog."""
-        async with self.bot.session.get('https://random.dog/woof') as resp:
+        async with self.bot.session.get('https://rng.dog/woof') as resp:
             if resp.status != 200:
                 return await ctx.send('No dog found :(')
 
             filename = await resp.text()
-            url = f'https://random.dog/{filename}'
+            url = f'https://rng.dog/{filename}'
             filesize = ctx.guild.filesize_limit if ctx.guild else 8388608
             if filename.endswith(('.mp4', '.webm')):
                 async with ctx.typing():
@@ -188,6 +196,35 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
                         await ctx.send(file=discord.File(fp, filename=filename))
             else:
                 await ctx.send(embed=discord.Embed(title='Random Dog').set_image(url=url))
+
+    @commands.command(aliases=['trig'], breif='sends a img of the dudes pfp triggered')
+    async def triggered(self, ctx, member: discord.Member = None):
+        member = member or ctx.author
+
+
+        async with ctx.session.get(
+                f'https://some-random-api.ml/canvas/triggered?avatar={member.avatar.url}') as trigImg:
+            imageData = BytesIO(await trigImg.read())  # read the image/bytes
+            await ctx.try_reply(file=discord.File(imageData, 'triggered.gif'))
+
+    @commands.command(aliases=['horny'], breif='Horny license just for u')
+    async def hornylicense(self, ctx, member: discord.Member = None):
+        member = member or ctx.author
+        await ctx.trigger_typing()
+        async with ctx.session.get(
+                f'https://some-random-api.ml/canvas/horny?avatar={member.avatar.url}'
+        ) as af:
+            if 300 > af.status >= 200:
+                fp = BytesIO(await af.read())
+                file = discord.File(fp, "horny.png")
+                em = discord.Embed(
+                    title="bonk",
+                    color=0xefa490,
+                )
+                em.set_image(url="attachment://horny.png")
+                await ctx.send(embed=em, file=file)
+            else:
+                await ctx.send('No horny :(')
 
     @commands.group(aliases=['cate', 'kat', 'kate', 'catoo'])
     @commands.cooldown(3, 7, type=commands.BucketType.user)
@@ -232,7 +269,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
     @commands.command(aliases=["MyDoggo", "Bella", "Belz", "WhosAgudGurl"])
     async def MyDog(self, ctx):
         """ Posts a random pic of my doggo Bella :) """
-        imge = random.choice(self.dogphotospath)  # change dir name to whatever
+        imge = rng.choice(self.dogphotospath)  # change dir name to whatever
         file = discord.File(f"C:/Users/Jason/edoC/data/img/Dog Picks/{imge}")
         try:
             await ctx.send(file=file)
@@ -245,7 +282,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
     async def coinflip(self, ctx):
         """ Coinflip! """
         coinsides = ["Heads", "Tails"]
-        await ctx.send(f"**{ctx.author.name}** flipped a coin and got **{random.choice(coinsides)}**!")
+        await ctx.send(f"**{ctx.author.name}** flipped a coin and got **{rng.choice(coinsides)}**!")
 
     @commands.command(aliases=["flip", "coin"])
     async def coinflip(self, ctx, *, toss='Heads'):
@@ -253,13 +290,13 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
         responses = ['Heads', 'Tails']
         if len(toss) > 100:
             return await ErrorEmbed(ctx=ctx, err='Please keep the length of your toss down')
-        value = random.randint(0, 0xffffff)
+        value = rng.randint(0, 0xffffff)
         embed = discord.Embed(
 
             colour=value,
 
         )
-        embed.add_field(name=f'**User Side:** {toss}\n**Result:** {random.choice(responses)}',
+        embed.add_field(name=f'**User Side:** {toss}\n**Result:** {rng.choice(responses)}',
                         value="Someone is gonna go cry to mommy.", inline=False)
 
         await ctx.send(embed=embed)
@@ -271,16 +308,16 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
         await ctx.reply(joke)
 
     @commands.command(aliases=['renamedchuckJokes', 'gudjokesherenoscam', 'CJ'])
-    async def ChuckJoke(self, ctx, person: commands.MemberConverter = 'Chuck Norris'):
+    async def ChuckJoke(self, ctx, person: discord.Member = None):
         """ChuckNorris is the only man to ever defeat a brick wall in a game of tennis."""
-        joke = random.choice(chuckjoke)
-        nj = joke.replace('Chuck Norris', person)
-        await ctx.reply(embed=discord.Embed(color=green, description=nj))
-
-    @commands.command()
-    async def ccjm(self, ctx):
-        joke = random.choice(chuckjoke)
-        nj = joke.replace('Chuck Norris', ctx.author.display_name)
+        joke = rng.choice(chuckjoke)
+        if person is not None:
+            try:
+                nj = joke.replace('Chuck Norris', person)
+            except TypeError:
+                nj = joke.replace('Chuck Norris', ctx.author.display_name)
+        else:
+            nj = joke
         await ctx.reply(embed=discord.Embed(color=green, description=nj))
 
     @commands.command(aliases=['quote'])
@@ -325,17 +362,15 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
         embed.set_footer(text=data["ad"])
         await ctx.send(embed=embed)
 
-    @commands.command(alises=['randint', 'rn'])
+    @commands.command(aliases=['randint', 'rn'])
     async def RandomNumber(self, ctx, minimum=0, maximum=100):
         """Displays a random number within an optional range.
         The minimum must be smaller than the maximum and the maximum number
         accepted is 1000.
         """
-
         maximum = min(maximum, 1000)
         if minimum >= maximum:
-            await ctx.send('Maximum is smaller than minimum.')
-            return
+            return await ctx.send('Maximum is smaller than minimum.')
 
         await ctx.send(rng.randint(minimum, maximum))
 
@@ -381,6 +416,68 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
         data = '\n'.join(builder)
         data = BytesIO(data.encode("utf-8"))
         await ctx.send(file=discord.File(data, filename=f"{CustomTimetext('prolog', 'output')}"))
+
+    @commands.command(name="guessthenumber", aliases=["gtn"], brief="Guess the number game!")
+    @commands.max_concurrency(1, commands.BucketType.user)
+    async def gtn(self, ctx):
+        """Play a guess the number game! You have three chances to guess the number 1-10"""
+
+        no = rng.randint(1, 10)  # randrange to randint
+        await ctx.success(
+            "A number between **1 and 10** has been chosen, You have 3 attempts to guess the right number! Type your guess in the chat as a valid number!"
+            # no f
+        )
+        for i in range(3):
+            try:
+                response = await self.bot.wait_for(
+                    "message",
+                    timeout=10,
+                    check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
+                )
+            except asyncio.TimeoutError:
+                await ctx.error(
+                    "You got to give me a number... game ended due to inactivity"
+                )
+                return
+
+            if not response.content.isdigit():
+                if 2 - i == 0:
+                    await ctx.error(
+                        f"Unlucky, you ran out of attempts. The number was **{no}**"
+                    )
+                    return
+                await ctx.error(
+                    "That is not a valid number! It costed you one attempt..."
+                )
+                continue
+            guess = int(response.content)
+
+            if guess > 10 or guess < 1:
+                await ctx.error(
+                    "That number is out of range! It costed you one attempt..."
+                )
+                continue
+
+            if guess != no and 2 - i == 0:
+                await ctx.error(
+                    f"Unlucky, you ran out of attempts. The number was **{no}**"
+                )
+                return
+
+            if guess > no:
+                await ctx.warn(
+                    f"The number is smaller than {guess}\n`{2 - i}` attempts left"
+                )
+            elif guess < no:
+                await ctx.warn(
+                    f"The number is bigger than {guess}\n`{2 - i}` attempts left"
+                )
+
+            else:
+                await ctx.success(
+                    f"Good stuff, you got the number right. I was thinking of **{no}**"
+                )
+                return
 
     @commands.command()
     async def clap(self, ctx, *, words: commands.clean_content):
@@ -448,12 +545,12 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
         """ Press F to pay respect """
         hearts = ["❤", "💛", "💚", "💙", "💜"]
         reason = f"for **{text}** " if text else ""
-        await ctx.send(f"**{ctx.author.name}** has paid their respect {reason}{random.choice(hearts)}")
+        await ctx.send(f"**{ctx.author.name}** has paid their respect {reason}{rng.choice(hearts)}")
 
     @commands.command(aliases=['ans'])
     async def answer(self, ctx):
         """ purely just says yes or no randomly """
-        ans = random.choice(["yes", "no"])
+        ans = rng.choice(["yes", "no"])
         await ctx.reply(ans)
 
     @commands.command(aliases=["uwuify", "makeuwu", "makeowo"])
@@ -561,7 +658,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
     @commands.command()
     async def ship(self, ctx, person1: commands.clean_content, person2: commands.clean_content):
         """ Rates what you desire """
-        ship_amount = random.uniform(0.0, 100.0)
+        ship_amount = rng.uniform(0.0, 100.0)
         if "jake" or "jason" or "edoc" in person1.lower() or person2.lower():
             ship_amount = 69.42069
         await ctx.send(f"`{person1}` and `{person2}` are **{round(ship_amount, 4)} compatible **")
@@ -591,19 +688,21 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
             await self.bot.wait_for("raw_reaction_add", timeout=30.0, check=reaction_check)
             await msg.edit(content=f"**{user.name}** and **{ctx.author.name}** are enjoying a lovely beer together 🍻")
         except TimeoutError:
-            await msg.delete()
-            await ctx.send(f"well, doesn't seem like **{user.name}** wanted a beer with you **{ctx.author.name}** ;-;")
+            await msg.edit(
+                content=f"well, doesn't seem like **{user.name}** wanted a beer with you **{ctx.author.name}** ;-;")
         except discord.Forbidden:
             # Yeah so, bot doesn't have reaction permission, drop the "offer" word
             beer_offer = f"**{user.name}**, you got a 🍺 from **{ctx.author.name}**"
             beer_offer = beer_offer + f"\n\n**Reason:** {reason}" if reason else beer_offer
             await msg.edit(content=beer_offer)
+        else:
+            return await ctx.unknown('uhm unknown error with the beer command', ctx.command)
 
     @commands.command(aliases=["howhot", "hot"])
     async def hotcalc(self, ctx, *, user: discord.Member):
         """ Returns a random percent for how hot is a discord user """
-        random.seed(user.id)
-        r = random.randint(1, 100)
+        rng.seed(user.id)
+        r = rng.randint(1, 100)
         hot = r / 1.17
         if user.id == 511724576674414600:
             hot = 100
@@ -619,12 +718,276 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
 
         await ctx.send(f"**{user.name}** is **{hot:.2f}%** hot {emoji}")
 
-    @commands.command(aliases=["howgay", "gay"])
-    async def gaycalc(self, ctx, *, user=None):
-        """ Returns a random percent for how gay is a discord user """
-        user = user or ctx.author
-        gay = abs(hash(user))
-        await ctx.send(f"**{user}** is **{int(str(gay)[:2]):.2f}%** gay :rainbow_flag: ")
+    @commands.command(aliases=['howgay', 'gay'], brief="Rates your gayness")
+    async def gayrate(self, ctx, member: discord.Member = None):
+        """Rate your gayness or another users gayness. 1-100% is returned"""
+        user = member.name + " is" if member else "You are"
+        gaynes = f'{int(str(abs(hash(user)))[:2]):.2f}'
+
+        emb = Embed(
+            title="gay r8 machine",
+            description=f"{user} **{gaynes}%** gay 🌈",
+            color=discord.Color.random(),
+        )
+        await ctx.send(embed=emb)
+
+    @gayrate.error
+    async def gayrate_error(self, ctx, error):
+        if isinstance(error, commands.MemberNotFound):
+            gaynes = f'{int(str(abs(hash(error.argument)))[:2]):.2f}'
+            emb = Embed(
+                title="gay r8 machine",
+                description=f"{error.argument} is **{gaynes}%** gay 🌈",
+                color=discord.Color.random(),
+            )
+            await ctx.send(embed=emb)
+        else:
+            raise error
+
+    @commands.command(aliases=["memes"], brief="Shows a meme from reddit")
+    @commands.cooldown(1, 1.5, type=BucketType.user)
+    async def meme(self, ctx):
+        """Shows a meme from r/memes."""
+        res = await ctx.session.get("https://www.reddit.com/r/memes/random/.json")
+        data = await res.json()
+        image = data[0]["data"]["children"][0]["data"]["url"]
+        permalink = data[0]["data"]["children"][0]["data"]["permalink"]
+        url = f"https://reddit.com{permalink}"
+        title = data[0]["data"]["children"][0]["data"]["title"]
+        ups = data[0]["data"]["children"][0]["data"]["ups"]
+        # downs = data[0]["data"]["children"][0]["data"]["downs"]
+        comments = data[0]["data"]["children"][0]["data"]["num_comments"]
+
+        em = Embed(colour=discord.Color.blurple(), title=title, url=url)
+        em.set_image(url=image)
+        em.description = f"<:UpVote:878877980003270686> {ups} <:comment:882798531121913857> {comments}"
+
+        await ctx.send(embed=em)
+
+    @commands.command(name="fight")
+    @commands.max_concurrency(1, commands.BucketType.user)
+    async def fight(self, ctx, member: discord.Member):
+        """
+        Challenge an user to a duel!
+        The user cannot be a bot.
+        """
+        if member.bot or member == ctx.author:
+            return await ctx.send("You can't fight yourself or a bot stupid")
+
+        users = [ctx.author, member]
+
+        user1 = rng.choice(users)
+        user2 = ctx.author if user1 == member else member
+
+        user1_hp = 100
+        user2_hp = 100
+
+        fails_user1 = 0
+        fails_user2 = 0
+
+        x = 2
+
+        while True:
+            if user1_hp <= 0 or user2_hp <= 0:
+                winner = user1 if user2_hp <= 0 else user2
+                loser = user2 if winner == user1 else user1
+                winner_hp = user1_hp if user2_hp <= 0 else user2_hp
+                await ctx.send(
+                    rng.choice(
+                        [
+                            f"Wow! **{winner.name}** totally melted down **{loser.name}**, winning with just `{winner_hp} HP` left!",
+                            f"YEET! **{winner.name}** REKT **{loser.name}**, winning with `{winner_hp} HP` left.",
+                            f"Woops! **{winner.name}** send **{loser.name}** home crying... with only `{winner_hp} HP` left!",
+                            f"Holy cow! **{winner.name}** won from **{loser.name}** with `{winner_hp} HP` left. **{loser.name}** ran home to their mommy.",
+                        ]
+                    )
+                )
+                return
+
+            alpha = user1 if x % 2 == 0 else user2
+            beta = user2 if alpha == user1 else user1
+            await ctx.send(
+                f"{alpha.mention}, what do you want to do? `punch`, `kick`, `slap` or `end`?\nType your choice out in chat as it's displayed!"
+            )
+
+            def check(m):
+                if alpha == user1:
+                    return m.author == user1 and m.channel == ctx.channel
+                else:
+                    return m.author == user2 and m.channel == ctx.channel
+
+            try:
+                msg = await self.bot.wait_for("message", timeout=15.0, check=check)
+            except asyncio.TimeoutError:
+                await ctx.send(
+                    f"**{alpha.name}** didn't react on time. What a noob. **{beta.name}** wins!"
+                )
+                return
+
+            if msg.content.lower() == "punch":
+                damage = rng.choice(
+                    [
+                        rng.randint(20, 60),
+                        rng.randint(0, 50),
+                        rng.randint(30, 70),
+                        rng.randint(0, 40),
+                        rng.randint(10, 30),
+                        rng.randint(5, 10),
+                    ]
+                )
+
+                if alpha == user1:
+                    user2_hp -= damage
+                    hpover = 0 if user2_hp < 0 else user2_hp
+                else:
+                    user1_hp -= damage
+                    hpover = 0 if user1_hp < 0 else user1_hp
+
+                randommsg = rng.choice(
+                    [
+                        f"**{alpha.name}** deals **{damage}** damage with an OP punch.\n**{beta.name}** is left with {hpover} HP",
+                        f"**{alpha.name}** lands an amazing punch on **{beta.name}** dealing **{damage}** damage!\n**{beta.name}** is left over with {hpover} HP!",
+                        f"**{alpha.name}** lands a dangerous punch on **{beta.name}** dealing **{damage}** damage!\n**{beta.name}** is left over with {hpover} HP!",
+                    ]
+                )
+                await ctx.send(f"{randommsg}")
+
+            elif msg.content.lower() == "kick":
+                damage = rng.choice(
+                    [
+                        rng.randint(30, 45),
+                        rng.randint(30, 60),
+                        rng.randint(-50, -1),
+                        rng.randint(-40, -1),
+                    ]
+                )
+                if damage > 0:
+
+                    if alpha == user1:
+                        user2_hp -= damage
+                        hpover = 0 if user2_hp < 0 else user2_hp
+                    else:
+                        user1_hp -= damage
+                        hpover = 0 if user1_hp < 0 else user1_hp
+
+                    await ctx.send(
+                        rng.choice(
+                            [
+                                f"**{alpha.name}** kicks **{beta.name}** and deals **{damage}** damage\n**{beta.name}** is left over with **{hpover}** HP",
+                                f"**{alpha.name}** lands a dank kick on **{beta.name}**, dealing **{damage}** damage.\n**{beta.name}** is left over with **{hpover}** HP",
+                            ]
+                        )
+                    )
+                elif damage < 0:
+
+                    if alpha == user1:
+                        user1_hp += damage
+                        hpover = 0 if user1_hp < 0 else user1_hp
+                    else:
+                        user2_hp += damage
+                        hpover = 0 if user2_hp < 0 else user2_hp
+
+                    await ctx.send(
+                        rng.choice(
+                            [
+                                f"**{alpha.name}** flipped over while kicking their opponent, dealing **{-damage}** damage to themselves.",
+                                f"{alpha.name} tried to kick {beta.name} but FELL DOWN! They took {-damage} damage!",
+                            ]
+                        )
+                    )
+
+            elif msg.content.lower() == "slap":
+                damage = rng.choice(
+                    [
+                        rng.randint(20, 60),
+                        rng.randint(0, 50),
+                        rng.randint(30, 70),
+                        rng.randint(0, 40),
+                        rng.randint(10, 30),
+                        rng.randint(5, 10),
+                    ]
+                )
+
+                if alpha == user1:
+                    user2_hp -= damage
+                    hpover = 0 if user2_hp < 0 else user2_hp
+                else:
+                    user1_hp -= damage
+                    hpover = 0 if user1_hp < 0 else user1_hp
+
+                await ctx.send(
+                    f"**{alpha.name}** slaps their opponent, and deals **{damage}** damage.\n{beta.name} is left over with **{hpover}** HP"
+                )
+
+            elif msg.content.lower() == "end":
+                await ctx.send(f"{alpha.name} ended the game. What a pussy.")
+                return
+
+            elif (
+                    msg.content.lower() != "kick"
+                    and msg.content.lower() != "slap"
+                    and msg.content.lower() != "punch"
+                    and msg.content.lower() != "end"
+            ):
+                if fails_user1 >= 1 or fails_user2 >= 1:
+                    return await ctx.send(
+                        "This game has ended due to multiple invalid choices. God ur dumb"
+                    )
+                if alpha == user1:
+                    fails_user1 += 1
+                else:
+                    fails_user2 += 1
+                await ctx.send("That is not a valid choice!")
+                x -= 1
+
+            x += 1
+
+    @commands.command(brief="Let me tell a joke!")
+    async def joke(self, ctx):
+        """
+        Returns a random joke from https://official-joke-api.appspot.com/jokes/rng.
+        """
+        res = await self.bot.session.get("https://official-joke-api.appspot.com/jokes/random")
+        data = await res.json()
+        await ctx.invis(f'{data["setup"]}\n||{data["punchline"]}||')
+
+    @commands.command()
+    async def urban(self, ctx, *, term: str):
+        """
+        Searches a term on urban dictionary and sends the result.
+        """
+        res = await ctx.session.get('http://api.urbandictionary.com/v0/define', params={'term': term})
+        if not res.ok:
+            await ctx.send(f'An error occured at the API. Try again with a different word or wait a bit.')
+            return
+
+        data = await res.json()
+        if not data['list']:
+            await ctx.send(f'No results were found for term `{term}`. Try again with a different word.')
+            return
+
+        menu = MenuPages(source=UrbanSource(data['list']), timeout=30, delete_message_after=True)
+        await menu.start(ctx)
+
+    @commands.command(aliases=["dankmemes"], brief="Shows a meme from reddit")
+    @commands.cooldown(1, 1.5, type=BucketType.user)
+    async def dankmeme(self, ctx):
+        """Shows a meme from r/dankmemes."""
+        res = await ctx.session.get("https://www.reddit.com/r/dankmemes/random/.json")
+        data = await res.json()
+        image = data[0]["data"]["children"][0]["data"]["url"]
+        permalink = data[0]["data"]["children"][0]["data"]["permalink"]
+        url = f"https://reddit.com{permalink}"
+        title = data[0]["data"]["children"][0]["data"]["title"]
+        ups = data[0]["data"]["children"][0]["data"]["ups"]
+        # downs = data[0]["data"]["children"][0]["data"]["downs"]
+        comments = data[0]["data"]["children"][0]["data"]["num_comments"]
+
+        em = Embed(colour=discord.Color.blurple(), title=title, url=url)
+        em.set_image(url=image)
+        em.description = f"<:UpVote:878877980003270686> {ups} <:comment:882798531121913857> {comments}"
+
+        await ctx.send(embed=em)
 
     @commands.command(aliases=["noticemesenpai"])
     async def noticeme(self, ctx):
@@ -636,9 +999,9 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
     async def slot(self, ctx):
         """ Roll the slot machine """
         emojis = "🍎🍊🍐🍋🍉🍇🍓🍒"
-        a = random.choice(emojis)
-        b = random.choice(emojis)
-        c = random.choice(emojis)
+        a = rng.choice(emojis)
+        b = rng.choice(emojis)
+        c = rng.choice(emojis)
 
         slotmachine = f"**[ {a} {b} {c} ]\n{ctx.author.name}**,"
 

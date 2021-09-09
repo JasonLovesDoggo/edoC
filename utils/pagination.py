@@ -7,13 +7,13 @@
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 import asyncio
+import re
 from typing import Optional, Dict, Any, List
 
 import discord
+from discord import Embed
+from discord.ext import menus
 from discord.ext.commands import Paginator as CommandPaginator
-from discord.ext import menus, commands
-
-from utils.vars import blue
 
 
 class edoCPages(discord.ui.View):
@@ -21,14 +21,14 @@ class edoCPages(discord.ui.View):
             self,
             source: menus.PageSource,
             *,
-            ctx: commands.Context,
+            ctx,
             check_embeds: bool = True,
             compact: bool = False,
     ):
         super().__init__()
         self.source: menus.PageSource = source
         self.check_embeds: bool = check_embeds
-        self.ctx: commands.Context = ctx
+        self.ctx = ctx
         self.message: Optional[discord.Message] = None
         self.current_page: int = 0
         self.compact: bool = compact
@@ -276,38 +276,80 @@ class SimplePages(edoCPages):
         super().__init__(SimplePageSource(entries, per_page=per_page))
         self.embed = discord.Embed(colour=discord.Colour.blurple())
 
+
 class Paginator(discord.ui.View):
-    def __init__(self, ctx: commands.Context, embeds: List[discord.Embed]):
+    def __init__(self, ctx, embeds: List[discord.Embed]):
         super().__init__(timeout=None)
         self.ctx = ctx
         self.embeds = embeds
         self.current = 0
         self.LeaveIn = 240
+        self.pages = len(embeds)
 
     async def edit(self, msg, pos):
         em = self.embeds[pos]
-        em.set_footer(text=f"Page: {pos + 1}")
+        em.set_footer(text=f"Page: {pos + 1}/{self.pages} ")
         await msg.edit(embed=em)
 
-    @discord.ui.button(emoji='??', style=discord.ButtonStyle.blurple)
-    async def bac(self, b, i):
+    @discord.ui.button(label='Back', style=discord.ButtonStyle.blurple)
+    async def back(self, b, i):
         if self.current == 0:
             return
         await self.edit(i.message, self.current - 1)
         self.current -= 1
 
-    @discord.ui.button(emoji='??', style=discord.ButtonStyle.blurple)
-    async def stap(self, b, i):
+    @discord.ui.button(label='Stop', style=discord.ButtonStyle.blurple)
+    async def stop(self, b, i):
         await i.message.delete()
 
-    @discord.ui.button(emoji='??', style=discord.ButtonStyle.blurple)
-    async def nex(self, b, i):
+    @discord.ui.button(label='Next', style=discord.ButtonStyle.blurple)
+    async def next(self, b, i):
         if self.current + 1 == len(self.embeds):
             return
         await self.edit(i.message, self.current + 1)
         self.current += 1
-
     async def interaction_check(self, interaction):
         if interaction.user == self.ctx.author:
             return True
         await interaction.response.send_message("Not your command ._.", ephemeral=True)
+
+
+class UrbanSource(menus.ListPageSource):
+    BRACKETED = re.compile(r'(\[(.+?)\])')
+
+    def __init__(self, data):
+        super().__init__(data, per_page=1)
+
+    def cleanup_definition(self, definition, *, regex=BRACKETED):
+        def repl(m):
+            word = m.group(2)
+            return f'[{word}](http://{word.replace(" ", "-")}.urbanup.com)'
+
+        ret = regex.sub(repl, definition)
+        if len(ret) >= 2048:
+            return ret[0:2000] + ' [...]'
+        return ret
+
+    async def format_page(self, menu, entries):
+        definition = self.cleanup_definition(entries['definition'])
+
+        permalink = entries['permalink']
+        up = entries['thumbs_up']
+        author = entries['author']
+        example = self.cleanup_definition(entries['example'])
+
+        em = Embed(
+            title="\N{BOOKS} Definition of " + str(entries['word']),
+            url=permalink,
+            description=f'**Definition:**\n{definition}\n\n**Examples:**\n{example}\n<:UpVote:878877980003270686> {up} By {author}'
+        )
+        em.set_footer(text=f"Page {menu.current_page + 1}/{self.get_max_pages()}")
+
+        try:
+            date = discord.utils.parse_time(entries['written_on'][0:-1])
+        except (ValueError, KeyError):
+            pass
+        else:
+            em.timestamp = date
+
+        return em

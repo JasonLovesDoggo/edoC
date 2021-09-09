@@ -1,3 +1,11 @@
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#  Copyright (c) 2021. Jason Cameron                                                               +
+#  All rights reserved.                                                                            +
+#  This file is part of the edoC discord bot project ,                                             +
+#  and is released under the "MIT License Agreement". Please see the LICENSE                       +
+#  file that should have been included as part of this package.                                    +
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 from os.path import isfile
 from sqlite3 import connect
 
@@ -19,7 +27,7 @@ def with_commit(func):
 
 @with_commit
 def build():
-    if isfile(BUILD_PATH):
+    if not isfile(DB_PATH):
         scriptexec(BUILD_PATH)
 
 

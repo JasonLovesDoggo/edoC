@@ -19,6 +19,7 @@ from contextlib import redirect_stdout
 from io import BytesIO
 
 import aiohttp
+import discord
 from discord.ext import commands
 from jishaku.models import copy_context_with
 from jishaku.paginators import WrappedPaginator, PaginatorInterface
@@ -39,7 +40,6 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
         self.config = default.config()
         self._last_result = None
         self.DoggoPath = r"C:/Users/Jason/edoC/data/img/Dog Picks"
-        self.filenum = 0
         self._last_result = None
         self.sessions = set()
 
@@ -50,7 +50,7 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
         if guild is None:
             await ctx.send("I don't recognize that guild.")
             return
-        confirmcode = random.randint(0, 99999)
+        confirmcode = randint(0, 99999)
         confirm_msg = await ctx.send(f"Type `{confirmcode}` within 30s to confirm this choice\n")
 
         def check_confirm(m):
@@ -160,7 +160,7 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
 
     @commands.group(aliases=["su"])
     @commands.is_owner()
-    async def sudo(self, ctx: commands.Context, target: discord.User, *, command_string: str):
+    async def sudo(self, ctx, target: discord.User, *, command_string: str):
         """
         Run a command as someone else.
 
@@ -184,7 +184,7 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
 
     @sudo.command(name="in")
     @commands.is_owner()
-    async def edoC_in(self, ctx: commands.Context, channel: discord.TextChannel, *, command_string: str):
+    async def edoC_in(self, ctx, channel: discord.TextChannel, *, command_string: str):
         """ Run a command as if it were run in a different channel. """
 
         alt_ctx = await copy_context_with(ctx, channel=channel, content=ctx.prefix + command_string)
@@ -196,7 +196,7 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
 
     @sudo.command(aliases=["src"])
     @commands.is_owner()
-    async def source(self, ctx: commands.Context, *, command_name: str):
+    async def source(self, ctx, *, command_name: str):
         """
         Displays the source code for a command.
         """
@@ -260,7 +260,7 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
         await ctx.send(content=f"Users", file=discord.File(data, filename=default.CustomTimetext('ini', 'Users')))
 
     @users.error
-    async def users_error(self, ctx: commands.Context, error: commands.CommandError):
+    async def users_error(self, ctx, error: commands.CommandError):
         # if the conversion above fails for any reason, it will raise `commands.BadArgument`
         # so we handle this in this error handler:
         if isinstance(error, commands.BadArgument):
@@ -426,9 +426,6 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
         await ctx.send("Shuting down now...")
         logging.warning('Shutting down now')
         await self.bot.session.close()
-        await asyncio.sleep(2)
-        await self.bot.close()
-
     @commands.command()
     @commands.is_owner()
     async def todoadd(self, ctx, *, message: str):
@@ -575,20 +572,20 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
         except TypeError:
             await ctx.send("You need to either provide an image URL or upload one with the command")
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        path = self.DoggoPath
-        files = os.listdir(path)
-        for filename in files:
-            truename = filename[:-4]
-            if ' ' in truename:
-                continue
-            try:
-                if int(truename) > self.highest_num:
-                    self.highest_num = int(truename)
-            except ValueError:
-                pass
-        self.filenum = self.highest_num
+    #@commands.Cog.listener()
+    #async def on_ready(self):
+    #    path = self.DoggoPath
+    #    files = os.listdir(path)
+    #    for filename in files:
+    #        truename = filename[:-4]
+    #        if ' ' in truename:
+    #            continue
+    #        try:
+    #            if int(truename) > self.highest_num:
+    #                self.highest_num = int(truename)
+    #        except ValueError:
+    #            pass
+    #    self.filenum = self.highest_num
 
     @commands.is_owner()
     @commands.command(aliases=["RDPN"])
@@ -605,10 +602,11 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
         """ Function to rename all the doggo files """
         path = self.DoggoPath
         files = os.listdir(path)
+        filenum = 0
         for count, file in enumerate(files):
-            self.filenum += 1
-            os.rename(os.path.join(path, file), os.path.join(path, ''.join([str(self.filenum), '.jpg'])))
-        await ctx.send(f"done\ncurrent limit is {self.filenum}")
+            filenum += 1
+            os.rename(os.path.join(path, file), os.path.join(path, ''.join([str(filenum), '.jpg'])))
+        await ctx.send(f"done\ncurrent limit is {filenum}")
 
 
 def setup(bot):

@@ -11,6 +11,7 @@ from logging import getLogger
 from os import getpid
 
 import apscheduler.schedulers.asyncio
+import discord
 from discord import HTTPException
 from discord.ext import commands
 from discord.ext.commands import MissingPermissions, CheckFailure, MaxConcurrencyReached, CommandOnCooldown
@@ -95,7 +96,7 @@ class Events(commands.Cog, description='Event handling if u can see this ping th
         channel = self.bot.get_channel(guild.system_channel) or to_send
         await channel.send("Thank you for inviting me to the server")
         await channel.send("Please do ~help to get started")
-        #await channel.send(
+        # await channel.send(
         #    "also if edoC fails it is because your servers guildID didn't get put into the database please contact the dev about it \n*(you can find him in ~info)")
         print(f'edoC has Joined {guild.name} it has {len(guild.members)} members ')
 
@@ -171,7 +172,7 @@ class Events(commands.Cog, description='Event handling if u can see this ping th
 
         elif isinstance(err, commands.NotOwner):
             await self.erroremb(ctx,
-                                description=f"You must be the owner of`{ctx.me.display_name}` to use `{ctx.prefix}{ctx.command}`")
+                                description=f"You must be the owner of {ctx.me.display_name} to use `{ctx.prefix}{ctx.command}`")
 
         elif isinstance(err, commands.MissingRequiredArgument):
             # await self.erroremb(ctx,
@@ -233,7 +234,6 @@ class Events(commands.Cog, description='Event handling if u can see this ping th
             await critlogschannel.send(
                 f"{ctx.message.author.mention} [in {ctx.message.guild.id}, #{ctx.message.channel}] made an error typing a command.```py\n{err}```")
 
-
     @commands.Cog.listener()
     async def on_guild_remove(self, guild):
         db.execute("DELETE FROM Guilds WHERE GuildID=?", (guild.id,))
@@ -271,16 +271,17 @@ class Events(commands.Cog, description='Event handling if u can see this ping th
 
             await noncritlogschannel.send(embed=embed)
 
-        if before.display_avatar.url != after.display_avatar.url:
-            embed = discord.Embed(title="Avatar change",
-                                  description="New image is below, old to the right.",
-                                  colour=blue)
+        # if before.display_avatar.url != after.display_avatar.url:
+        #    embed = discord.Embed(title="Avatar change",
+        #                          description="New image is below, old to the right.",
+        #                          colour=blue)
 
-            embed.set_thumbnail(url=before.display_avatar.url)
-            embed.set_image(url=after.display_avatar.url)
-            embed.set_footer(
-                text=f"{before.name} {f'> {after.name}' if before.name != after.name else ''}\n fullname: {before}")
-            await noncritlogschannel.send(embed=embed)
+    #
+    #    embed.set_thumbnail(url=before.display_avatar.url)
+    #    embed.set_image(url=after.display_avatar.url)
+    #    embed.set_footer(
+    #        text=f"{before.name} {f'> {after.name}' if before.name != after.name else ''}\n fullname: {before}")
+    #    await noncritlogschannel.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
@@ -304,8 +305,8 @@ class Events(commands.Cog, description='Event handling if u can see this ping th
                                   colour=after.colour,
                                   timestamp=datetime.utcnow())
             embed.set_footer(text=f"{before.name} {f'> {after.name}' if before.name != after.name else ''}")
-            fields = [("Before", ", ".join([r.mention for r in before.roles]), False),
-                      ("After", ", ".join([r.mention for r in after.roles]), False)]
+            fields = [("Before", ", ".join([r.name for r in before.roles]), False),
+                      ("After", ", ".join([r.name for r in after.roles]), False)]
 
             for name, value, inline in fields:
                 embed.add_field(name=name, value=value, inline=inline)
@@ -335,24 +336,27 @@ class Events(commands.Cog, description='Event handling if u can see this ping th
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
-        noncritlogschannel = self.bot.get_channel(self.noncritlogschannel)
-        if not message.author.bot:
-            embed = discord.Embed(title="Message deletion",
-                                  description=f"Action by {message.author.display_name}.\nIn {message.channel}\nIn {message.channel.guild}",
-                                  colour=message.author.colour,
-                                  timestamp=datetime.utcnow())
+        try:
+            noncritlogschannel = self.bot.get_channel(self.noncritlogschannel)
+            if not message.author.bot:
+                embed = discord.Embed(title="Message deletion",
+                                      description=f"Action by {message.author.display_name}.\nIn {message.channel}\nIn {message.channel.guild}",
+                                      colour=message.author.colour,
+                                      timestamp=datetime.utcnow())
 
-            fields = [("Content", message.content, False)]
+                fields = [("Content", message.content, False)]
 
-            for name, value, inline in fields:
-                embed.add_field(name=name, value=value, inline=inline)
-            try:
-                await noncritlogschannel.send(embed=embed)
-            except discord.errors.HTTPException:
-                await noncritlogschannel.send(embed=discord.Embed(title="Message deletion",
-                                                                  description=f"Action by {message.author.display_name}.\nIn {message.channel}\nIn{message.channel.guild}",
-                                                                  colour=message.author.colour,
-                                                                  timestamp=datetime.utcnow()))
+                for name, value, inline in fields:
+                    embed.add_field(name=name, value=value, inline=inline)
+                try:
+                    await noncritlogschannel.send(embed=embed)
+                except HTTPException:
+                    await noncritlogschannel.send(embed=discord.Embed(title="Message deletion",
+                                                                      description=f"Action by {message.author.display_name}.\nIn {message.channel}\nIn{message.channel.guild}",
+                                                                      colour=message.author.colour,
+                                                                      timestamp=datetime.utcnow()))
+        except Exception:
+            pass
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, prev, cur):

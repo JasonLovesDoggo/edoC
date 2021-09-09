@@ -5,10 +5,14 @@
 #  and is released under the "MIT License Agreement". Please see the LICENSE                       +
 #  file that should have been included as part of this package.                                    +
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+import contextlib
 import inspect
+from datetime import timezone
 from os import path
 from pathlib import Path
 from platform import python_version, system
+from random import choice
+from textwrap import dedent
 from typing import List, Tuple
 
 from discord import HTTPException
@@ -18,6 +22,7 @@ from googletrans import Translator
 from humanize import precisedelta
 from pyshorteners import Shortener
 
+from utils.curse import ProfanitiesFilter
 from utils.default import *
 from utils.http import get
 from utils.info import fetch_info
@@ -62,25 +67,64 @@ class Info(commands.Cog, description='Informational and useful commands'):
         self.colorApi = 'https://api.popcatdev.repl.co/color/'
         self.trans = Translator()
         self.logs = self.bot.get_channel(self.config["edoc_logs"])
+        self.pf = ProfanitiesFilter()
+        self.pf.inside_words = True
 
-        # @commands.command(aliases=["UIS", "UsersSpotify"])
-        # async def UserInfoSpotify(ctx, user: discord.Member = None):
-        #    if not user:
-        #        user = ctx.author
-        #        pass
-        #    if user.activities:
-        #        for activity in user.activities:
-        #            from discord import Spotify
-        #            if isinstance(activity, Spotify):
-        #                embed = discord.Embed(
-        #                    title=f"{user.name}'s Spotify",
-        #                    description="Listening to {}".format(activity.title),
-        #                    color=green)
-        #                embed.set_thumbnail(url=activity.album_cover_url)
-        #                embed.add_field(name="Artist", value=activity.artist)
-        #                embed.add_field(name="Album", value=activity.album)
-        #                embed.set_footer(text="Song started at {}".format(activity.created_at.strftime("%H:%M")))
-        #                await ctx.send(embed=embed)
+    @commands.command(aliases=("spotify", "spot"),
+                      brief="Show what song a member listening to in Spotify", )
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    @commands.guild_only()
+    async def spotifyinfo(self, ctx, user: discord.Member = None):
+        user = user or ctx.author
+
+        spotify: discord.Spotify = discord.utils.find(
+            lambda s: isinstance(s, discord.Spotify), user.activities
+        )
+        if not spotify:
+            return await ctx.error(
+                f"{user} is not listening to Spotify!"
+            )
+
+        e = (
+            Embed(
+                title=spotify.title,
+                colour=spotify.colour,
+                url=f"https://open.spotify.com/track/{spotify.track_id}"
+            ).set_author(name="Spotify", icon_url="https://i.imgur.com/PA3vvdN.png"
+                         ).set_thumbnail(url=spotify.album_cover_url)
+        )
+
+        # duration
+        cur, dur = (
+            utcnow() - spotify.start.replace(tzinfo=timezone.utc),
+            spotify.duration,
+        )
+
+        # Bar stuff
+        barLength = 5 if user.is_on_mobile() else 17
+        bar = renderBar(
+            int((cur.seconds / dur.seconds) * 100),
+            fill="─",
+            empty="─",
+            point="⬤",
+            length=barLength,
+        )
+
+        e.add_field(name="Artist", value=", ".join(spotify.artists))
+
+        e.add_field(name="Album", value=spotify.album)
+
+        e.add_field(
+            name="Duration",
+            value=(
+                    f"{cur.seconds // 60:02}:{cur.seconds % 60:02}"
+                    + f" {bar} "
+                    + f"{dur.seconds // 60:02}:"
+                    + f"{dur.seconds % 60:02}"
+            ),
+            inline=False,
+        )
+        await ctx.try_reply(embed=e)
 
     async def create_embed(self, description, field: List[Tuple] = None):
         embed_ = discord.Embed(description=description,
@@ -118,32 +162,80 @@ class Info(commands.Cog, description='Informational and useful commands'):
         except HTTPException:
             await ctx.reply('msg too long')
 
-    @commands.group()
-    @commands.cooldown(rate=1, per=43200, type=commands.BucketType.user)
-    async def report(self, ctx):
-        """USAGE
-        ```yaml
-        ~report guild (reason) < DOESNT EXIST RN
-        ~report user (user) (reason)
-        ~report bug (bug-other details)~ < DOESNT EXIST RN
-        ```
-        If you abuse this command you will get blacklisted
-        **No chance for appeal**"""
-        if ctx.invoked_subcommand is None:
-            await ctx.send_help(str(ctx.command))
+    @commands.command(name="report")
+    async def _report(self, ctx):
+        """Used to report something."""
+        questions = [
+            "What do you want to report?",
+            "Write a descriptive overview of what you are reporting.\n"
+            "Note that your answer must be about 20 characters.",
+        ]
+        answers = []
+        for question in questions:
+            await ctx.send(question)
+            try:
+                answer = await self.bot.wait_for(
+                    "message",
+                    timeout=60,
+                    check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
+                )
+            except asyncio.TimeoutError:
+                raise commands.BadArgument(
+                    "`60s` are over. I ended your report session, "
+                    "since you didn't answer fast enough. Please be quicker next time."
+                )
+            else:
+                answer = answer.content
+                answers.append(answer)
 
-    @report.command()
-    async def user(self, ctx, user: discord.Member, *, reason: str = None):
-        channel = self.logs
-        author = ctx.message.author
-        await ctx.message.delete()  # Privacy on the users part
-        if not reason:
-            await author.send('You must provide a reasoning to report a user/guild')
-        elif len(reason) > 1900:
-            return await author.send('Your Reason must be under 1900 characters')
-        else:
-            await channel.send(embed=ReportEmbed(ctx=ctx, type='Member', body=reason, directed_at=user))
-            # await channel.send(f"{author} has reported {user}, reason: {reason}")
+        if len(answers[1]) < 20:
+            raise commands.BadArgument("Sorry, your answer must be a little longer.")
+        if answers:
+            em = Embed(title=answers[0], description=answers[1], timestamp=datetime.utcnow())
+            em.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
+            em.set_footer(text="ID: " + str(ctx.author.id))
+            msg = await ctx.send(
+                content="Are you sure you want to submit your report?", embed=em
+            )
+            for emoji in (emojis := [self.bot.icons['greenTick'], self.bot.icons['redTick']]): await msg.add_reaction(
+                emoji)
+            try:
+                reaction, m = await self.bot.wait_for(
+                    "reaction_add",
+                    timeout=45,
+                    check=lambda reaction, m: m == ctx.author
+                                              and str(reaction.emoji) in emojis,
+                )
+                if str(reaction) == self.bot.icons['greenTick']:
+                    channel = self.bot.get_channel(877724111420391515)
+                    await channel.send(embed=em)
+                    return await ctx.send("Submitted your report")
+                else:
+                    return await ctx.send("Cancelled your report.")
+            except asyncio.TimeoutError:
+                raise commands.BadArgument(
+                    "`60s` are over. I ended your report session, since you didn't answer fast enough. Next time please be quicker."
+                )
+
+    @commands.command(name="suggest")
+    async def _suggest_feature(self, ctx, *, suggestion: str):
+        """Used to suggest a feature for edoC."""
+        channel = self.bot.get_channel(878486511794929664)
+        if len(suggestion) > 300:
+            return await ctx.error('Too Long please keep under 300 characters')
+        elif len(suggestion) < 20:
+            return await ctx.warn('Too short please keep over 20 characters')
+        e = Embed(color=green)
+        e.description = self.pf.clean(suggestion)
+        e.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar)
+        msg = await channel.send(embed=e)
+        await msg.add_reaction("👍")
+        await msg.add_reaction("👎")
+        await ctx.send(f"Submitted your suggestion. Join the support server to see the status of your suggestion.")
+
+    @commands.command()
+    async def nohi(self, ctx):
+        await ctx.try_reply('https://nohello.net/')
 
     @commands.command(brief="Shows the bot's uptime")
     async def uptime(self, ctx):
@@ -160,7 +252,7 @@ class Info(commands.Cog, description='Informational and useful commands'):
 
     @commands.command(aliases=['RC', 'Rcolor', 'RandColor'])
     async def RandomColor(self, ctx):
-        random_number = random.randint(0, 16777215)
+        random_number = randint(0, 16777215)
         hexhex = str(hex(random_number))
         hex_number = hexhex[2:]
 
@@ -322,6 +414,21 @@ class Info(commands.Cog, description='Informational and useful commands'):
             emb.add_field(name=f'***{k}***', value=f'{v}', inline=False)
         await ctx.send(embed=emb)
 
+    @commands.command()
+    async def donate(self, ctx):
+        class DonateView(discord.ui.View):
+            def __init__(self):
+                super().__init__(timeout=30)
+                self.add_item(discord.ui.Button(label='Ko-Fi', url='https://ko-fi.com/edocthebot'))
+                self.add_item(discord.ui.Button(label='Buy me a coffee', url='https://www.buymeacoffee.com/edoC'))
+
+        em = Embed(title='Donate to edoC', color=invis)
+        em.set_thumbnail(url=self.bot.user.avatar.url)
+        em.description = 'Donating money to edoC will help out the developer a lot with service fees for edoC among others. \
+                         Note that this is not required to access any exclusive content on the bot! \
+                         The sole purpose of donating is to support edoC\'s development.'
+
+        await ctx.send(embed=em, view=DonateView())
     # ~~~
     @commands.command(name='in', aliases=["stats", "status", "botinfo", 'info', 'about'])
     async def _in(self, ctx):
@@ -341,7 +448,7 @@ class Info(commands.Cog, description='Informational and useful commands'):
         cmds = self.bot.total_commands_ran
         chancount = str(len(list(self.bot.get_all_channels())))
         infos = {}
-        #define em all lmao
+        # define em all lmao
 
         infos[f'{emoji("dev")}Developer'] = f'ini\n{version_info["dev"]}'
         infos[f'{status(str(ctx.guild.me.status))} Uptime'] = precisedelta(discord.utils.utcnow() - self.bot.start_time,
@@ -374,7 +481,7 @@ Comments: {comments}"""
             infemb.description += ":link: **Links** \n" \
                                   "  [dev links](https://bio.link/edoC) " \
                                   "| [support me](https://www.buymeacoffee.com/edoC) " \
-                                  "| [invite](https://discordapp.com/oauth2/authorize?cient_id=845186772698923029&scope=bot&permissions=8) "
+                                  "| [invite](https://discord.com/api/oauth2/authorize?client_id=845186772698923029&permissions=8&scope=bot%20applications.commands)"
             infemb.set_footer(text=f"Prefix in this server: {prefix}")
         await ctx.reply(embed=infemb)
 
@@ -392,53 +499,77 @@ Comments: {comments}"""
         data = BytesIO(text.encode("utf-8"))
         await ctx.reply(file=discord.File(data, filename=f"{CustomTimetext(filetype, 'Text')}"))
 
-    @commands.command(aliaes=['source'])
-    @commands.is_owner()
-    async def src(self, ctx, *, command: str = None):
+    @commands.command(aliases=['src'])
+    async def source(self, ctx, *, command: str = None):
         """Displays my full source code or for a specific command.
         To display the source code of a subcommand you can separate it by
-        periods, e.g. cat.hi for the create subcommand of the tag command
-        or by spaces."""
+        periods, e.g. cat.hi for the hi subcommand of the cat command
+        or by spaces.
+        """
         source_url = 'https://github.com/JakeWasChosen/edoC'
-        branch = 'master'
+        branch = 'main'
         if command is None:
             return await ctx.send(source_url)
 
-        if command == 'help':
-            src = type(self.bot.help_command)
-            module = src.__module__
-            filename = inspect.getsourcefile(src)
-        else:
-            obj = self.bot.get_command(command.replace('.', ' '))
-            if obj is None:
-                return await ctx.send('Could not find command.')
+        obj = self.bot.get_command(command.replace('.', ' '))
+        if obj is None:
+            return await ctx.send('Could not find command.')
 
-            # since we found the command we're looking for, presumably anyway, let's
-            # try to access the code itself
-            src = obj.callback.__code__
-            module = obj.callback.__module__
-            filename = src.co_filename
+        src = obj.callback.__code__
+        filename = src.co_filename
 
         lines, firstlineno = inspect.getsourcelines(src)
-        if not module.startswith('discord'):
-            # not a built-in command
-            location = path.relpath(filename).replace('\\', '/')
+        location = path.relpath(filename).replace('\\', '/')
+
+        final_url = f'{source_url}/tree/{branch}/main/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}'
+
+        class SourceView(discord.ui.View):
+            def __init__(self, ctx):
+                super().__init__()
+                self.ctx = ctx
+                self.add_item(discord.ui.Button(label='Source URL', url=final_url))
+
+            @discord.ui.button(emoji='<:trashcan:882779835737460846>')
+            async def delete(self, button: discord.ui.Button, interaction: discord.Interaction):
+                if interaction.user != self.ctx.author:
+                    return await interaction.response.send_message('Oops. This is not your interaction.', ephemeral=True)
+                with contextlib.suppress(discord.HTTPException):
+                    await self.ctx.message.delete()
+                await interaction.message.delete()
+
+            @discord.ui.button(label='Source File')
+            async def send_file(self, button: discord.ui.Button, interaction: discord.Interaction):
+                if interaction.user != self.ctx.author:
+                    return await interaction.response.send_message('Oops. This is not your interaction.', ephemeral=True)
+
+                await interaction.channel.send(file=discord.File(BytesIO(dedent(''.join(lines)).encode('ascii')), 'source.py'))
+                button.disabled = True
+                await interaction.response.edit_message(view=self)
+
+        em = Embed(title=f'Here is the source for {obj.qualified_name}')
+
+        if len("".join(lines)) < 2000:
+            zwsp = '\u200b'
+            em.description = f'```py\n{dedent("".join(lines).replace("``", f"`{zwsp}`"))}\n```'
         else:
-            location = module.replace('.', '/') + '.py'
-            source_url = 'https://github.com/Rapptz/discord.py'
-            branch = 'master'
+            em.description = '```\nSource was too long to be shown here. Click Source File/Source URL below to see it.```'
+        await ctx.send(embed=em, view=SourceView(ctx))
 
-        final_url = f'<{source_url}/blob/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}>'
-        await ctx.send(final_url)
-
-    @commands.command()
+    @commands.command(help="Shows the bot's latency in miliseconds.Useful if you want to know if the bot is lagging or not",
+                      brief="Shows the bots latency")
     async def ping(self, ctx):
-        """ Pong! """
-        before = time.monotonic()
-        before_ws = int(round(self.bot.latency * 1000, 1))
-        message = await ctx.send("🏓 Pong")
-        ping = (time.monotonic() - before) * 1000
-        await message.edit(content=f"🏓 WS: {before_ws}ms  |  REST: {int(ping)}ms")
+        start = time.perf_counter()
+        msg = await ctx.invis("<a:disloading:879146777767473174> pinging...")
+        end = time.perf_counter()
+        typing_ping = (end - start) * 1000
+
+        #start = time.perf_counter()
+        #await self.bot.db.execute('SELECT 1')
+        #end = time.perf_counter()
+        #sql_ping = (end - start) * 1000
+        e = discord.Embed(description=f"{self.bot.icons['typing']} ** | Typing**: {round(typing_ping, 1)} ms\n{self.bot.icons['edoc']} ** | Websocket**: {round(self.bot.latency*1000)} ms",
+                          color=invis) #\n{self.bot.icons['database']} **" | Database**: {round(sql_ping, 1)} ms")
+        await msg.edit(embed=e)
 
     @commands.command()
     async def lines(self, ctx):
@@ -476,7 +607,7 @@ Comments: {comments}"""
         fc = infos.get('file_amount')
         pyfc = infos.get('python_file_amount')
 
-        lang = random.choice(["ahk", "apache", "prolog"])
+        lang = choice(["ahk", "apache", "prolog"])
         if lang == "apache":
             color = orange
         elif lang == "ahk":

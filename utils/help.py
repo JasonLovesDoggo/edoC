@@ -11,7 +11,6 @@ import itertools
 from typing import List, Dict, Any, Optional, Union
 
 import discord
-
 from discord.ext import commands, menus
 from discord.utils import format_dt
 
@@ -136,7 +135,7 @@ class HelpSelectMenu(discord.ui.Select['HelpMenu']):
             await self.view.rebind(source, interaction)
 
 class HelpMenu(edoCPages):
-    def __init__(self, source: menus.PageSource, ctx: commands.Context):
+    def __init__(self, source: menus.PageSource, ctx):
         super().__init__(source, ctx=ctx, compact=True)
 
     def add_categories(self, commands: Dict[commands.Cog, List[commands.Command]]) -> None:

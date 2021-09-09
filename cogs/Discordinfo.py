@@ -16,6 +16,7 @@ from discord.ext import commands
 from discord.utils import format_dt
 
 from utils.default import spacefill, date, CustomTimetext, config, mod_or_permissions
+from utils.text_formatting import hyperlink
 from utils.vars import random_color, error, status
 
 
@@ -32,6 +33,27 @@ def diff(num1, num2):
         answer = 0
     return answer
 
+class MemberOrUser(commands.Converter):
+    async def convert(self, ctx, argument):
+        try:
+            return await commands.MemberConverter().convert(ctx, argument)
+        except commands.MemberNotFound:
+            try:
+                return await commands.UserConverter().convert(ctx, argument)
+            except commands.UserNotFound:
+                return None
+
+# TODO: Move this somewhere in `exts/utils/` folder
+async def authorOrReferenced(ctx):
+    if ref := ctx.replied_reference:
+        # Get referenced message author
+        # if user reply to a message while doing this command
+        return (
+            ref.cached_message.author
+            if ref.cached_message
+            else (await ctx.fetch_message(ref.message_id)).author
+        )
+    return ctx.author
 
 class plural:
     def __init__(self, value):
@@ -82,17 +104,33 @@ class Discord(commands.Cog, description="Discord Information commands"):
         msg = '\n'.join(map(to_string, characters))
         if len(msg) > 2000:
             return await ctx.send('Output too long to display.')
-        await ctx.send(msg)
+        await ctx.send(msg
+                       )
+    @commands.command(
+        aliases=("av", "userpfp", "pfp"), brief="Get member's avatar image"
+    )
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def avatar(self, ctx, _user: MemberOrUser = None):
+        user: Union[discord.Member, discord.User] = _user or await authorOrReferenced(ctx)
+        jpg = user.avatar.with_format("jpg").url
+        png = user.avatar.with_format("png").url
+        webp = user.avatar.with_format("webp").url
+        # Links to avatar (with different formats)
+        links = (
+            f"[JPG]({jpg})"
+            f" | [PNG]({png})"
+            f" | [WEBP]({webp})"
+            )
+        if user.avatar.is_animated():
+            links += f" | [GIF]({user.avatar.with_format('gif').url})"
 
-    @commands.command()
-    async def avatar(self, ctx, *, user: Union[discord.Member, discord.User] = None):
-        """Shows a user's enlarged avatar (if possible)."""
-        embed = discord.Embed(color=0x2F3136)
-        user = user or ctx.author
-        avatar = user.display_avatar.with_static_format('png')
-        embed.set_author(name=str(user), url=str(avatar))
-        embed.set_image(url=str(avatar))
-        await ctx.send(embed=embed)
+        # Embed stuff
+        e = Embed(
+            title=f"{user.name}'s Avatar",
+            description=links,
+        )
+        e.set_image(url=user.avatar.with_size(1024).url)
+        await ctx.try_reply(embed=e)
 
     @commands.command()
     @commands.guild_only()
@@ -129,11 +167,27 @@ class Discord(commands.Cog, description="Discord Information commands"):
         embed.description = f"**{user}** joined **{ctx.guild.name}**\n{date(user.joined_at, ago=True)}"
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=["joinme", "inviteme", "botinvite"])
+    @commands.command(name="invite", aliases=["support", "inviteme", "botinvite"], brief="Sends an invite for the bot.")
     async def invite(self, ctx):
-        """ Invite me to a server."""
-        perms = discord.Permissions.administrator()
-        await ctx.send(f'<{discord.utils.oauth_url(self.bot.user.id, permissions=perms)}>')
+        """
+        Sends an invite for the bot with no permissions.
+        Note that a few permissions are required to let the bot run smoothly,
+        as shown in `perms`
+        """
+        em = Embed(title=f"Invite {self.bot.user.name} to your server!")
+        em.description = f'You like me huh? Invite me to your server with the link below. \n \
+                          Run into any problems? Join the support server where we can help you out.\n\n\
+                          Thank you for using me! \n\n \
+                          {hyperlink("Dev`s links", "https://bio.link/edoC")} | \
+                          {hyperlink("Source", "https://github.com/JakeWasChosen/edoC")}'
+
+        class InviteView(discord.ui.View):
+            def __init__(self):
+                super().__init__()
+                self.add_item(discord.ui.Button(label='Invite edoC!', url='https://discord.com/api/oauth2/authorize?client_id=845186772698923029&permissions=8&scope=bot%20applications.commands'))
+                self.add_item(discord.ui.Button(label='Support Server', url='https://discord.gg/6EFAqm5aSG'))
+
+        await ctx.send(embed=em, view=InviteView())
 
     @commands.command()
     @commands.guild_only()
@@ -378,7 +432,7 @@ class Discord(commands.Cog, description="Discord Information commands"):
     @commands.command(aliases=['Se'])
     @commands.guild_only()
     @commands.has_permissions(manage_emojis=True)
-    async def StealEmoji(self, ctx: commands.Context, emoji: discord.PartialEmoji, *roles: discord.Role):
+    async def StealEmoji(self, ctx, emoji: discord.PartialEmoji, *roles: discord.Role):
         """This clones a specified emoji that optionally only specified roles
         are allowed to use.
         """

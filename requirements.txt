@@ -3,7 +3,7 @@ timeago==1.0.13
 aiohttp>=3.7.4
 apscheduler~=3.7.0
 requests~=2.25.1
-
+git+https://github.com/Pycord-Development/pycord
 humanize~=3.9.0
 jishaku~=2.0.0
 pyfiglet~=0.8.post1

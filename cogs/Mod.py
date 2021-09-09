@@ -16,6 +16,7 @@ import shlex
 from collections import Counter
 from io import BytesIO
 
+import discord
 from discord import NotFound, Object
 from discord.ext import commands
 from discord.ext.commands import Converter, BadArgument
@@ -24,7 +25,7 @@ from discord.utils import find
 from cogs.Discordinfo import format_relative, plural
 from lib.db import db
 from utils import checks, default
-from utils.default import mod_or_permissions, is_admin
+from utils.default import mod_or_permissions
 from utils.vars import *
 
 log = logging.getLogger('mod')
@@ -211,7 +212,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
 
         members = sorted(ctx.guild.members, key=lambda m: m.joined_at, reverse=True)[:count]
 
-        e = discord.Embed(title='New Members', colour=discord.Colour.green())
+        e = discord.Embed(title='New Members', colour=green)
 
         for member in members:
             body = f'Joined {format_relative(member.joined_at)}\nCreated {format_relative(member.created_at)}'
@@ -672,7 +673,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
                              name="Soft Banned: " + str(member))
                 await edit(ctx, embed=e)"""
     @commands.command()
-    @is_admin()
+    @commands.is_owner()
     async def do(self, ctx, times: int, *, command):
         """Repeats a command a specified number of times."""
         msg = copy.copy(ctx.message)

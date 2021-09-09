@@ -9,6 +9,7 @@
 from urllib.parse import quote_plus
 
 import discord
+from discord.app import Option
 from discord.ext import commands
 
 
@@ -47,6 +48,15 @@ class Test(commands.Cog, description='Testing cog for... testing'):
     def __init__(self, bot):
         self.bot = bot
         self.bot.remove_command('google')
+
+        @bot.slash_command()
+        async def hello(
+                ctx,
+                name: Option(str, "Enter your name"),
+                gender: Option(str, "Choose your gender", choices=["Male", "Female", "Other"]),
+                age: Option(int, "Enter your age", required=False, default=18),
+        ):
+            await ctx.send(f"Hello {name}")
 
         @bot.command()
         async def google(ctx, *, query: str):
@@ -94,11 +104,13 @@ class Test(commands.Cog, description='Testing cog for... testing'):
                 text = soup.find('div', attrs={'class': 'BNeawe iBp4i AP7Wnd'}).find('div', attrs={
                     'class': 'BNeawe iBp4i AP7Wnd'}).text
                 return text
+
             eth = ETH()
             lite = LITE()
             bitca = bitC()
             bit = GETC()
             await ctx.send(f'eth {eth}\nlite {lite}\nbitcoin cash {bitca}\nbitcoin {bit}')
+
 
 def setup(bot):
     bot.add_cog(Test(bot))

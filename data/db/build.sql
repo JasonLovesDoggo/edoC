@@ -23,37 +23,20 @@ CREATE TABLE IF NOT EXISTS warns (
 	warningMessage TEXT
 );
 
-CREATE TABLE IF NOT EXISTS exp (
-	UserID integer PRIMARY KEY,
-	XP integer DEFAULT 0,
-	Level integer DEFAULT 0,
-	XPLock text DEFAULT CURRENT_TIMESTAMP
-);
-
 CREATE TABLE IF NOT EXISTS botban (
 	UserID integer PRIMARY KEY,
 	Reason TEXT DEFAULT None
 );
 
-CREATE TABLE IF NOT EXISTS todo (
-	TodoID integer PRIMARY KEY,
-	TodoText TEXT
+CREATE TABLE playlists (
+    user_id BIGINT NOT NULL,
+    playlist_name VARTEXT(32) NOT NULL,
+    playlist_id INT NOT NULL PRIMARY KEY
 );
 
-CREATE TABLE IF NOT EXISTS tag (
-	TagName TEXT PRIMARY KEY,
-	TagText TEXT,
-	TagCreator TEXT,
-	TagUses integer
+CREATE TABLE playlist_songs (
+    playlist_id INT NOT NULL,
+    playlist_song TEXT NOT NULL,
+    playlist_url TEXT NOT NULL,
+    song_id INT NOT NULL DEFAULT -1
 );
-
-CREATE TABLE IF NOT EXISTS giveaway (
-    GiveawayID integer PRIMARY KEY,
-    GiveawayName TEXT
-
-);
-
-CREATE TABLE IF NOT EXISTS giveawayusers (
-    GiveawayID integer PRIMARY KEY,
-    GiveawayUserID integer
-)

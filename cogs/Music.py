@@ -7,16 +7,21 @@
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 from datetime import datetime
+from urllib.parse import quote
 
 import DiscordUtils
+import discord
 import humanfriendly
-from discord.ext import commands
+from discord.ext import commands, tasks
+from discord.ext.commands import is_owner
 
-from utils.default import is_dj_or_perms
+from utils.default import is_dj_or_perms, is_admin
 from utils.pagination import Paginator
 from utils.vars import *
 
 music_ = DiscordUtils.Music()
+
+
 # i wrote this cog while sleeping
 # dont ask
 def success_embed(title, description):
@@ -25,6 +30,7 @@ def success_embed(title, description):
         description=description,
         color=blue
     )
+
 
 class music(commands.Cog, description="Jam to some awesome tunes! ?"):
     def __init__(self, bot):
@@ -35,6 +41,7 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
         self.onemoji = '<:on:878405331766624267>'
         self.offemoji = '<:off:878405303866118214>'
         self.skip_votes = {}
+        #self.my_background_task.start()
 
     def error_msg(self, error):
         if error == 'not_in_voice_channel':
@@ -70,12 +77,21 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
                                  icon_url=f'{self.on if song.is_looping else self.off}'
                                  ).set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
 
+    @tasks.loop(minutes=30)  # task runs every 30 minutes
+    async def my_background_task(self):
+        channel = self.bot.get_channel(865315406130446366)  # channel ID goes here
+        await channel.send(str(1 + 124234))
+
+    @my_background_task.before_loop
+    async def before_my_task(self):
+        await self.bot.wait_until_ready()  # wait until the bot logs in
+
     @commands.command(help="I will join your voice channel.", aliases=['connect'])
     @commands.cooldown(3, 5, commands.BucketType.user)
-    async def join(self, ctx: commands.Context):
+    async def join(self, ctx):
         if not ctx.author.voice:
             ctx.command.reset_cooldown(ctx)
-            return await ctx.reply(self.error_msg('not_in_voice_channel'))
+            return await ctx.error(self.error_msg('not_in_voice_channel'))
         if ctx.guild.me.voice and len(ctx.guild.me.voice.channel.members) > 1:
             ctx.command.reset_cooldown(ctx)
             return await ctx.reply("Someone else is already using the bot :c")
@@ -111,16 +127,16 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
     @commands.command(help="I will leave your voice channel :c", aliases=['dc', 'disconnect'])
     @commands.cooldown(3, 5, commands.BucketType.user)
     @is_dj_or_perms()
-    async def leave(self, ctx: commands.Context):
+    async def leave(self, ctx):
         if not ctx.author.voice:
             ctx.command.reset_cooldown(ctx)
-            return await ctx.reply(self.error_msg('not_in_voice_channel'))
+            return await ctx.error(self.error_msg('not_in_voice_channel'))
         elif not ctx.guild.me.voice:
             ctx.command.reset_cooldown(ctx)
             return await ctx.reply("I am not in a voice channel ._.")
         elif ctx.author.voice.channel != ctx.guild.me.voice.channel:
             ctx.command.reset_cooldown(ctx)
-            return await ctx.reply(self.error_msg("not_in_same_vc"))
+            return await ctx.error(self.error_msg("not_in_same_vc"))
         elif ctx.author.voice.channel == ctx.guild.me.voice.channel:
             if len(ctx.guild.me.voice.channel.members) == 2:
                 await self.leavechnl(ctx)
@@ -131,6 +147,16 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
                     description=f'You need to either be alone with the bot or have manage channel permissions',
                     color=error))
 
+    @commands.command(help="I will leave the voice channel :c bypassing checks",
+                      aliases=['fdc', 'forcedisconnect'],
+                      breif='Leave the vc bypassing checks')
+    @commands.check_any(is_admin(), is_owner())
+    async def ForceLeave(self, ctx):
+        if not ctx.guild.me.voice:
+            ctx.command.reset_cooldown(ctx)
+            return await ctx.reply("I am not in a voice channel ._.")
+        await self.leavechnl(ctx)
+
     @commands.command(help="V I B E and play epik music!!!", aliases=['p'])
     @commands.cooldown(3, 10, commands.BucketType.user)
     async def play(self, ctx, *, song_=None):
@@ -140,7 +166,7 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
                 f"Correct Usage: `{ctx.clean_prefix}play <song/url>`\nExample: `{ctx.clean_prefix}play Rick Roll`")
         if not ctx.author.voice:
             ctx.command.reset_cooldown(ctx)
-            return await ctx.reply(self.error_msg('not_in_voice_channel'))
+            return await ctx.error(self.error_msg('not_in_voice_channel'))
         if not ctx.guild.me.voice:
             await ctx.invoke(self.bot.get_command('join'))
         player = music_.get_player(guild_id=ctx.guild.id)
@@ -188,13 +214,13 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
     async def pause(self, ctx):
         if not ctx.author.voice:
             ctx.command.reset_cooldown(ctx)
-            return await ctx.reply(self.error_msg('not_in_voice_channel'))
+            return await ctx.error(self.error_msg('not_in_voice_channel'))
         if not ctx.guild.me.voice:
             ctx.command.reset_cooldown(ctx)
             return await ctx.reply("I am not playing any songs ._.")
         if ctx.author.voice.channel != ctx.guild.me.voice.channel:
             ctx.command.reset_cooldown(ctx)
-            return await ctx.reply(self.error_msg("not_in_same_vc"))
+            return await ctx.error(self.error_msg("not_in_same_vc"))
         player = music_.get_player(guild_id=ctx.guild.id)
         if not player:
             ctx.command.reset_cooldown(ctx)
@@ -210,13 +236,13 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
     async def resume(self, ctx):
         if not ctx.author.voice:
             ctx.command.reset_cooldown(ctx)
-            return await ctx.reply(self.error_msg('not_in_voice_channel'))
+            return await ctx.error(self.error_msg('not_in_voice_channel'))
         if not ctx.guild.me.voice:
             ctx.command.reset_cooldown(ctx)
             return await ctx.reply("I am not in a voice channel ._.")
         if ctx.author.voice.channel != ctx.guild.me.voice.channel:
             ctx.command.reset_cooldown(ctx)
-            return await ctx.reply(self.error_msg("not_in_same_vc"))
+            return await ctx.error(self.error_msg("not_in_same_vc"))
         player = music_.get_player(guild_id=ctx.guild.id)
         if not player:
             ctx.command.reset_cooldown(ctx)
@@ -232,13 +258,13 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
     async def stop(self, ctx):
         if not ctx.author.voice:
             ctx.command.reset_cooldown(ctx)
-            return await ctx.reply(self.error_msg('not_in_voice_channel'))
+            return await ctx.error(self.error_msg('not_in_voice_channel'))
         if not ctx.guild.me.voice:
             ctx.command.reset_cooldown(ctx)
             return await ctx.reply("I am not in a voice channel ._.")
         if ctx.author.voice.channel != ctx.guild.me.voice.channel:
             ctx.command.reset_cooldown(ctx)
-            return await ctx.reply(self.error_msg("not_in_same_vc"))
+            return await ctx.error(self.error_msg("not_in_same_vc"))
         player = music_.get_player(guild_id=ctx.guild.id)
         if not player:
             ctx.command.reset_cooldown(ctx)
@@ -254,13 +280,13 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
     async def loop(self, ctx):
         if not ctx.author.voice:
             ctx.command.reset_cooldown(ctx)
-            return await ctx.reply(self.error_msg('not_in_voice_channel'))
+            return await ctx.error(self.error_msg('not_in_voice_channel'))
         if not ctx.guild.me.voice:
             ctx.command.reset_cooldown(ctx)
             return await ctx.reply("I am not in a voice channel ._.")
         if ctx.author.voice.channel != ctx.guild.me.voice.channel:
             ctx.command.reset_cooldown(ctx)
-            return await ctx.reply(self.error_msg("not_in_same_vc"))
+            return await ctx.error(self.error_msg("not_in_same_vc"))
         player = music_.get_player(guild_id=ctx.guild.id)
         if not player:
             ctx.command.reset_cooldown(ctx)
@@ -278,13 +304,13 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
     async def queue(self, ctx):
         if not ctx.author.voice:
             ctx.command.reset_cooldown(ctx)
-            return await ctx.reply(self.error_msg('not_in_voice_channel'))
+            return await ctx.error(self.error_msg('not_in_voice_channel'))
         if not ctx.guild.me.voice:
             ctx.command.reset_cooldown(ctx)
             return await ctx.reply("I am not in a voice channel ._.")
         if ctx.author.voice.channel != ctx.guild.me.voice.channel:
             ctx.command.reset_cooldown(ctx)
-            return await ctx.reply(self.error_msg("not_in_same_vc"))
+            return await ctx.error(self.error_msg("not_in_same_vc"))
         player = music_.get_player(guild_id=ctx.guild.id)
         if not player:
             ctx.command.reset_cooldown(ctx)
@@ -319,13 +345,13 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
     async def skip(self, ctx):
         if not ctx.author.voice:
             ctx.command.reset_cooldown(ctx)
-            return await ctx.reply(self.error_msg('not_in_voice_channel'))
+            return await ctx.error(self.error_msg('not_in_voice_channel'))
         if not ctx.guild.me.voice:
             ctx.command.reset_cooldown(ctx)
             return await ctx.reply("I am not in a voice channel ._.")
         if ctx.author.voice.channel != ctx.guild.me.voice.channel:
             ctx.command.reset_cooldown(ctx)
-            return await ctx.reply(self.error_msg("not_in_same_vc"))
+            return await ctx.error(self.error_msg("not_in_same_vc"))
         player = music_.get_player(guild_id=ctx.guild.id)
         if not player:
             ctx.command.reset_cooldown(ctx)
@@ -365,8 +391,8 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
                 await ctx.reply(
                     f"?? Skip vote added: `{len(self.skip_votes[ctx.guild.id])}/{round(hoomans / 2)}` votes.")
 
-    @commands.command(help="Get lyrics of a song.")
-    async def lyrics(self, ctx, *, song=None):
+    @commands.command(help="Get lyrics of a song. Example: `~lyrics Never Gonna Give You Up`", breif='Get lyrics of a song.', aliases=['lyrc', 'lyric'])
+    async def lyrics(self, ctx, *, song: str = None):
         error_msg = f"Please enter the song name.\nExample: `{ctx.clean_prefix}lyrics Never Gonna Give You Up`"
         if song is None:
             player = music_.get_player(guild_id=ctx.guild.id)
@@ -378,16 +404,17 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
             song = current_song.name
         embeds = []
         async with self.bot.session.get(
-                f'https://some-random-api.ml/lyrics?title={song.lower().replace(" ", "")}') as r:
+                f'https://some-random-api.ml/lyrics?title={quote(song.title())}') as r:
             rj = await r.json()
-            if "error" in rj:
-                return await ctx.reply(rj['error'])
+            errr = rj.get('error')
+            if errr:
+                return await ctx.error(f'Recieved unexpected error: {errr}')
             if len(rj['lyrics']) <= 4000:
                 return await ctx.reply(embed=discord.Embed(
                     title=rj['title'],
                     url=rj['links']['genius'],
                     description=rj['lyrics'],
-                    color=blue
+                    color=invis
                 ).set_thumbnail(url=rj['thumbnail']['genius']))
             i = 0
             while True:
@@ -396,7 +423,7 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
                         title=rj['title'],
                         url=rj['links']['genius'],
                         description=rj['lyrics'][i:i + 3999],
-                        color=blue
+                        color=invis
                     ).set_thumbnail(url=rj['thumbnail']['genius']))
                 elif len(rj['lyrics']) - i <= 0:
                     break
@@ -405,7 +432,7 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
                         title=rj['title'],
                         url=rj['links']['genius'],
                         description=rj['lyrics'][i:len(rj['lyrics']) - 1],
-                        color=blue
+                        color=invis
                     ).set_thumbnail(url=rj['thumbnail']['genius']))
                     break
                 i += 3999

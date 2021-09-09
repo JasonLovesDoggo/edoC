@@ -1,3 +1,12 @@
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#  Copyright (c) 2021. Jason Cameron                                                               +
+#  All rights reserved.                                                                            +
+#  This file is part of the edoC discord bot project ,                                             +
+#  and is released under the "MIT License Agreement". Please see the LICENSE                       +
+#  file that should have been included as part of this package.                                    +
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+from datetime import datetime
 from functools import wraps
 
 
@@ -53,3 +62,28 @@ def async_cache(maxsize=128):
             return res
         return inner
     return decorator
+
+
+class CacheManager(dict):
+
+    def __init__(self):
+        pass
+
+    @property
+    def length(self):
+        return len(self)
+
+    @staticmethod
+    def do_log(message: str):
+        now = datetime.utcnow().strftime("%d-%b %H-%M-%S")
+        template = f"[{now}] {message}\n"
+        return template
+
+    def __setitem__(self, key, value):
+        return super().__setitem__(key, value)
+
+    def __getitem__(self, key):
+        return super().__getitem__(key)
+
+    def get(self, key, default=None):
+        return super().get(key, default)
