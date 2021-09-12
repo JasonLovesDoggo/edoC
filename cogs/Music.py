@@ -7,7 +7,6 @@
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 from datetime import datetime
-from urllib.parse import quote
 
 import DiscordUtils
 import discord
@@ -15,6 +14,7 @@ import humanfriendly
 from discord.ext import commands, tasks
 from discord.ext.commands import is_owner
 
+from utils.checks import UrlSafe
 from utils.default import is_dj_or_perms, is_admin
 from utils.pagination import Paginator
 from utils.vars import *
@@ -149,7 +149,7 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
 
     @commands.command(help="I will leave the voice channel :c bypassing checks",
                       aliases=['fdc', 'forcedisconnect'],
-                      breif='Leave the vc bypassing checks')
+                      brief='Leave the vc bypassing checks')
     @commands.check_any(is_admin(), is_owner())
     async def ForceLeave(self, ctx):
         if not ctx.guild.me.voice:
@@ -391,8 +391,8 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
                 await ctx.reply(
                     f"?? Skip vote added: `{len(self.skip_votes[ctx.guild.id])}/{round(hoomans / 2)}` votes.")
 
-    @commands.command(help="Get lyrics of a song. Example: `~lyrics Never Gonna Give You Up`", breif='Get lyrics of a song.', aliases=['lyrc', 'lyric'])
-    async def lyrics(self, ctx, *, song: str = None):
+    @commands.command(help="Get lyrics of a song. Example: `~lyrics Never Gonna Give You Up`", brief='Get lyrics of a song.', aliases=['lyrc', 'lyric'])
+    async def lyrics(self, ctx, *, song: UrlSafe = None):
         error_msg = f"Please enter the song name.\nExample: `{ctx.clean_prefix}lyrics Never Gonna Give You Up`"
         if song is None:
             player = music_.get_player(guild_id=ctx.guild.id)
@@ -404,7 +404,7 @@ class music(commands.Cog, description="Jam to some awesome tunes! ?"):
             song = current_song.name
         embeds = []
         async with self.bot.session.get(
-                f'https://some-random-api.ml/lyrics?title={quote(song.title())}') as r:
+                f'https://some-random-api.ml/lyrics?title={song.title()}') as r:
             rj = await r.json()
             errr = rj.get('error')
             if errr:

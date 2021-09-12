@@ -7,18 +7,19 @@
 #  file that should have been included as part of this package.                                    +
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-from discord.ext import commands
-from utils import default
-import psutil
 import os
+
+import psutil
+from discord.ext import commands
+
+
 #import dsc
 
 class CoolStuff(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.config = default.config()
+        self.config = bot.config
         self.process = psutil.Process(os.getpid())
-        self.config = default.config()
         # noinspection PyUnresolvedReferences
         #self.client = dsc.Client(default.config["dsc_gg_api_key"])
         #self.app = self.client.get_app(5297746284630572)

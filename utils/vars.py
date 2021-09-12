@@ -6,7 +6,7 @@
 #  file that should have been included as part of this package.                                    +
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 from random import randint
-
+INVALID_ERRORS = ['Invalid Difficulty']
 # EMOJIS
 emojis = {
     'green_checkmark': '✔',
@@ -62,24 +62,34 @@ def emoji(emoji_name=None):
     }
     return emoji[emoji_name]
 
+ANIMALS = {
+    'cat': '🐱',
+    'dog': '🐶',
+    'koala': '🐨',
+    'fox': '🦊',
+    'bird': '🐦',
+    'birb': '🐦',
+    'red_panda': '🔴',
+    'elephant': '🐘',
+    'panda': '🐼',
+    'racoon': '🦝',
+    'kangaroo': '🦘',
+    'giraffe': '🦒',
+    'whale': '🐋'
+}
 
-ascii_letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-
+INDICATOR_NUMS = {'1': '1️⃣', '2': '2️⃣', '3': '3️⃣', '4': '4️⃣', '5': '5️⃣', '6': '6️⃣', '7': '7️⃣', '8': '8️⃣',
+                     '9': '9️⃣', '0': '0️⃣'}
+whitespace = ' \t\n\r\v\f'
 ascii_lowercase = 'abcdefghijklmnopqrstuvwxyz'
-
 ascii_uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-
+ascii_letters = ascii_lowercase + ascii_uppercase
 digits = '0123456789'
-
-hexdigits = '0123456789abcdefABCDEF'
-
+hexdigits = digits + 'abcdef' + 'ABCDEF'
 octdigits = '01234567'
+punctuation = r"""!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~"""
+printable = digits + ascii_letters + punctuation + whitespace
 
-printable = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!'  # $%&\'()*+,-./:;<=>?@[\\]^_`{|}~ \t\n\r\x0b\x0c'
-
-punctuation = '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
-
-whitespace = ' \t\n\r\x0b\x0c'
 MorseCode = {'A': '.-', 'B': '-...', 'C': '-.-.',
              'D': '-..', 'E': '.', 'F': '..-.',
              'G': '--.', 'H': '....', 'I': '..',
@@ -116,6 +126,28 @@ ballresponse = [
     'My sources say no.', 'Outlook not so good.', 'Outlook good.',
     'Signs point to yes.', 'Yes – definitely.', 'You may rely on it.']
 
+ouija_responses = [
+    'Help',
+    'Bruh',
+    'dumb',
+    'You dumb',
+    'Hey gamers'
+    'Infinity',
+    'God damn ur ugly',
+    'Gamers',
+    'Gamers Unite',
+    'Fricken amateur',
+    'Fricken doofus',
+    'Yo',
+    'Joe mama',
+    'No',
+    'yes',
+    'perhaps',
+    'Waluigi',
+    'Bruh Moment',
+    'Moment of the Bruh',
+    'Puh-leaze',
+    'Vibe Check']
 CoolColorResponse = [
     '0x2CCC74', '0x04A4EC', '0x142434', '0xFFFFFF'
 ]

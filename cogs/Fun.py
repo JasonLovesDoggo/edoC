@@ -11,17 +11,16 @@ import random as rng
 from asyncio import sleep
 from collections import Counter
 from io import BytesIO
-from os import listdir
 from secrets import token_urlsafe
 from typing import Optional
 
 import discord
 import discord.ext.commands
-from aiohttp import ClientConnectorError, ContentTypeError
+from aiotrivia import TriviaClient, AiotriviaException
 from bs4 import BeautifulSoup
 from discord import Embed, HTTPException
 from discord.ext import commands
-from discord.ext.commands import BucketType
+from discord.ext.commands import BucketType, command
 from discord.ext.menus import MenuPages
 from nekos import InvalidArgument, why, owoify, img
 from pyfiglet import figlet_format
@@ -33,38 +32,37 @@ from utils.http import get
 from utils.pagination import UrbanSource
 from utils.vars import *
 
-dogphotospath = listdir("C:/Users/Jason/edoC/data/img/Dog Picks")
-
 
 class Fun(commands.Cog, description='Fun and entertaining commands can be found below'):
     def __init__(self, bot):
         self.bot = bot
         self.config = config()
         self.alex_api_token = self.config["alexflipnote_api"]
-        self.DoggoPicsCount = len(dogphotospath)
-        self.logschannel = self.bot.get_channel(self.config["edoc_logs"])
-        self.dogphotospath = dogphotospath
+        self.trivia = TriviaClient()
 
-    async def alexflipnote(self, ctx, url: str, endpoint: str, token: str = None):
+    @command()
+    async def trivia(self, ctx, difficulty: str):
+        difficulty = difficulty.lower()
         try:
-            r = await get(
-                url, res_method="json", no_cache=True,
-                headers={"Authorization": token} if token else None
-            )
-            r = await r.json()
-        except ClientConnectorError:
-            return await ctx.send("The API seems to be down...")
-        except ContentTypeError:
-            return await ctx.send("The API returned an error or didn't return JSON...")
-        await ctx.send(r[endpoint])
-
-    @commands.command()
-    async def supreme(self, ctx, *, text: str):
-        embed = discord.Embed(title=f"Rendered by {ctx.author.display_name} VIA {ctx.guild.me.display_name}",
-                              color=invis).set_image(url="attachment://supreme.png")
-        image = discord.File(await (await self.bot.alex_api.supreme(text=text)).read(), "supreme.png")
-        await ctx.send(embed=embed, file=image)
-
+            question = await self.trivia.get_random_question(difficulty)
+        except AiotriviaException as error:
+            if error.__class__.__name__ == 'InvalidDifficulty':
+                return await ctx.error('Invalid Difficulty Please use either easy, medium or hard')
+            return await ctx.error(f"{error.__class__.__name__}: {error}")
+        answers = question.responses
+        rng.shuffle(answers)
+        final_answers = '\n'.join([f"{index}. {value}" for index, value in enumerate(answers, 1)])
+        message = await ctx.invis(
+            f"**{question.question}**\n{final_answers}\n{question.type.capitalize()} Question about {question.category}")
+        answer = answers.index(question.answer) + 1
+        await self.trivia.close()  # cleaning up
+        try:
+            while True:
+                msg = await self.bot.wait_for('message', timeout=15, check=lambda m: m.id != message.id)
+                if str(answer) in msg.content:
+                    return await ctx.success(f"{answer} was correct! ({question.answer})")
+        except asyncio.TimeoutError:
+            await ctx.invis(f"The correct answer was {question.answer}")
     @commands.command(aliases=["sayagain", 'repeat'])
     async def echo(self, ctx, *, what_to_say: commands.clean_content):
         """ repeats text """
@@ -77,6 +75,12 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
         tosend = f"🎱 **Question:** {question}\n**Answer:** {answer}"
         emb = discord.Embed(description=tosend, color=rng.choice(ColorsList))
         await ctx.reply(embed=emb)
+
+    @command(aliases=['ouija'], brief="Asks the mystical Ouija Board a question...")
+    async def askouija(self, ctx, *, question: str):
+        ouija_choice = rng.choice(ouija_responses)
+        ouija_says = f"You asked me... '_{question}_'... I respond... {ouija_choice}"
+        await ctx.success(ouija_says)
 
     @commands.command(aliases=['asciiart'])
     async def ascii(self, ctx, *, value):
@@ -156,127 +160,20 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
             bio.seek(0)
             await ctx.send(content=content, file=discord.File(bio, filename=filename))
 
-    @commands.command()
-    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
-    async def duck(self, ctx):
-        """ Posts a random duck """
-        await self.alexflipnote(ctx, "https://random-d.uk/api/v1/random", "url")
-
-    @commands.command()
-    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
-    async def coffee(self, ctx):
-        """ Posts a random coffee """
-        await self.alexflipnote(ctx, "https://coffee.alexflipnote.dev/rng.json", "file")
-
     # @commands.command(aliases=["doggo"])
     # @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
     # async def dog(self, ctx):
     #    """ Posts a random dog """
     #    await self.randomimageapi(ctx, "https://rng.dog/woof.json", "url")
-    @commands.command()
-    async def dog(self, ctx):
-        """Gives you a random dog."""
-        async with self.bot.session.get('https://rng.dog/woof') as resp:
-            if resp.status != 200:
-                return await ctx.send('No dog found :(')
 
-            filename = await resp.text()
-            url = f'https://rng.dog/{filename}'
-            filesize = ctx.guild.filesize_limit if ctx.guild else 8388608
-            if filename.endswith(('.mp4', '.webm')):
-                async with ctx.typing():
-                    async with self.bot.session.get(url) as other:
-                        if other.status != 200:
-                            return await ctx.send('Could not download dog video :(')
-
-                        if int(other.headers['Content-Length']) >= filesize:
-                            return await ctx.send(f'Video was too big to upload... See it here: {url} instead.')
-
-                        fp = BytesIO(await other.read())
-                        await ctx.send(file=discord.File(fp, filename=filename))
-            else:
-                await ctx.send(embed=discord.Embed(title='Random Dog').set_image(url=url))
-
-    @commands.command(aliases=['trig'], breif='sends a img of the dudes pfp triggered')
+    @commands.command(aliases=['trig'], brief='sends a img of the dudes pfp triggered')
     async def triggered(self, ctx, member: discord.Member = None):
         member = member or ctx.author
-
 
         async with ctx.session.get(
                 f'https://some-random-api.ml/canvas/triggered?avatar={member.avatar.url}') as trigImg:
             imageData = BytesIO(await trigImg.read())  # read the image/bytes
             await ctx.try_reply(file=discord.File(imageData, 'triggered.gif'))
-
-    @commands.command(aliases=['horny'], breif='Horny license just for u')
-    async def hornylicense(self, ctx, member: discord.Member = None):
-        member = member or ctx.author
-        await ctx.trigger_typing()
-        async with ctx.session.get(
-                f'https://some-random-api.ml/canvas/horny?avatar={member.avatar.url}'
-        ) as af:
-            if 300 > af.status >= 200:
-                fp = BytesIO(await af.read())
-                file = discord.File(fp, "horny.png")
-                em = discord.Embed(
-                    title="bonk",
-                    color=0xefa490,
-                )
-                em.set_image(url="attachment://horny.png")
-                await ctx.send(embed=em, file=file)
-            else:
-                await ctx.send('No horny :(')
-
-    @commands.group(aliases=['cate', 'kat', 'kate', 'catoo'])
-    @commands.cooldown(3, 7, type=commands.BucketType.user)
-    async def cat(self, ctx):
-        """Gives you a random cat."""
-        if ctx.invoked_subcommand is not None:
-            return
-        base_url = 'https://cataas.com'
-        async with ctx.session.get('https://cataas.com/cat?json=true') as resp:
-            if resp.status != 200:
-                return await ctx.send('No cat found :(')
-            js = await resp.json()
-            feet = str(js['tags']).replace('[', '').replace(']', '').replace('\'', '')
-            await ctx.send(embed=discord.Embed(title='Meow!', url=base_url + js['url']).set_image(
-                url=base_url + js['url']).set_footer(text=f'Tags: {feet}' if len(feet) > 1 else ''))
-
-    @commands.command(aliases=['ac'])
-    async def othercat(self, ctx):
-        """Gives you a random cat."""
-        async with ctx.session.get('https://api.thecatapi.com/v1/images/search') as resp:
-            if resp.status != 200:
-                return await ctx.send('No cat found :(')
-            js = await resp.json()
-            await ctx.send(embed=discord.Embed(title='Random Cat').set_image(url=js[0]['url']))
-
-    @cat.command(aliases=['hello'])
-    async def hi(self, ctx, color='white'):
-        url = f'https://cataas.com/cat/says/hello?size=50&color={color}'
-        await ctx.send(embed=discord.Embed(title='Hi!', url=url).set_image(url=url))
-
-    @commands.command(aliases=['lizzyboi'])
-    @commands.cooldown(1, 2, type=commands.BucketType.user)
-    async def lizard(self, ctx):
-        """Gives you a random Lizard pic."""
-        async with self.bot.session.get('https://nekos.life/api/v2/img/lizard') as api:
-            data = await api.json()
-        emb = discord.Embed(title="Lizard",
-                            color=green)
-        emb.set_image(url=data['url'])
-        await ctx.send(embed=emb)
-
-    @commands.command(aliases=["MyDoggo", "Bella", "Belz", "WhosAgudGurl"])
-    async def MyDog(self, ctx):
-        """ Posts a random pic of my doggo Bella :) """
-        imge = rng.choice(self.dogphotospath)  # change dir name to whatever
-        file = discord.File(f"C:/Users/Jason/edoC/data/img/Dog Picks/{imge}")
-        try:
-            await ctx.send(file=file)
-        except discord.HTTPException:
-            await ctx.send(
-                f"The file that i was going to send was too large this has been reported to the devs\ntry to run the cmd again")
-            await self.logschannel.send(f"{imge} is too large to send <@&{self.config['dev_role']}>")
 
     @commands.command(aliases=["flip", "coin"])
     async def coinflip(self, ctx):
@@ -342,7 +239,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
     @commands.command(aliases=["ie"])
     async def iseven(self, ctx, num: int):
         """ checks if a number is even or not"""
-        async with self.bot.session.get(f'https://api.isevenapi.xyz/api/iseven/{num}/') as api:
+        async with ctx.session.get(f'https://api.isevenapi.xyz/api/iseven/{num}/') as api:
             data = await api.json()
         if data["iseven"]:
             color = green
@@ -617,6 +514,17 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
         e = discord.Embed(title="**Nuking everything now**", colour=red)
         e.set_image(url="https://emoji.gg/assets/emoji/7102_NukeExplosion.gif")
         await channel.send(embed=e)
+
+    @command(brief='turn your text into emojis')
+    async def emojify(self, ctx, *, message):
+        msg = ''
+        letters = list(ascii_lowercase)
+        for x in message:
+            if x in letters:
+                msg += f':regional_indicator_{x}:'
+            else:
+                msg += INDICATOR_NUMS.get(x, x)
+        await ctx.success('\u200b' + msg)
 
     @commands.command()
     async def password(self, ctx, nbytes: int = 18):

@@ -6,7 +6,6 @@
 #  file that should have been included as part of this package.                                    +
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-import asyncio
 import functools
 import json
 import logging
@@ -31,12 +30,14 @@ from discord.utils import utcnow
 from psutil import Process
 
 from lib.db import db
+from utils import sqlite
 from utils.cache import CacheManager
 from utils.help import PaginatedHelpCommand
 from utils.http import HTTPSession
-from utils.vars import dark_blue, error, green, yellow, invis
+from utils.vars import dark_blue, error, green, yellow, invis, colors, INVALID_ERRORS
 
 BannedUsers = {}
+logger = logging.getLogger(__name__)
 
 
 def wrap(type, text):
@@ -204,6 +205,7 @@ confi = config()
 log = logging.getLogger(__name__)
 description = 'Relatively simply awesome bot. Developed by Jake CEO of annoyance#1904'
 
+
 class EEmbed(discord.Embed):
     def __init__(self, color=0x3DB4FF, fields=(), field_inline=False, **kwargs):
         super().__init__(color=color, **kwargs)
@@ -222,18 +224,19 @@ class EEmbed(discord.Embed):
             text="Requested by {}".format(ctx.author), icon_url=ctx.author.avatar.url
         )
         return instance
+
     @classmethod
     def loading(
-        cls,
-        *,
-        emoji='<a:wait:879146899670708234>',
-        title="Loading...",
-        **kwargs,
+            cls,
+            *,
+            emoji='<a:wait:879146899670708234>',
+            title="Loading...",
+            **kwargs,
     ):
         return cls(title="{} {}".format(emoji, title), **kwargs)
 
 
-class Context(commands.Context):
+class edoCContext(commands.Context):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -241,16 +244,14 @@ class Context(commands.Context):
     def session(self):
         return self.bot.session
 
-    def tick(self, opt, label=None):
-        lookup = {
-            True: '<a:b_yes:879161311353778247>',
-            False: '<a:no:879146899322601495>',
-            None: '<:graytick:879146777842962454>',
-        }
-        emoji = lookup.get(opt, '<a:no:879146899322601495>')
-        if label is not None:
-            return f'{emoji}: {label}'
-        return emoji
+    def tick(self, val=True):
+        # inspired by Rapptz' RoboDanny
+        # (no code was used)
+        return {
+            True: self.bot.get_emoji(879161311353778247),
+            False: self.bot.get_emoji(879146899322601495),
+            None: self.bot.get_emoji(879146777842962454)
+        }.get(val)
 
     async def try_reply(self, content=None, *, mention_author=False, **kwargs):
         """Try reply, if failed do send instead"""
@@ -290,7 +291,7 @@ class Context(commands.Context):
         )
 
     async def safe_send_reply(
-        self, content, *, escape_mentions=True, type="send", **kwargs
+            self, content, *, escape_mentions=True, type="send", **kwargs
     ):
         action = getattr(self, type)
 
@@ -308,10 +309,17 @@ class Context(commands.Context):
                 kwargs["content"] = content
             return await action(**kwargs)
 
-    async def error(self, error_message):
-        e = Embed(color=error)
+    async def error(self, error_message, real=False):
+        e = Embed(color=colors['error'])
         e.description = str(error_message)
-        return await self.try_reply(embed=e)
+        await self.try_reply(embed=e)
+        if real:
+            for error in INVALID_ERRORS:
+                if str(error_message).startswith(error):
+                    return
+            dbug = self.bot.get_channel(self.bot.config['debug'])
+            await dbug.send(embed=e)
+            logging.debug(error_message)
 
     async def success(self, success_message: str = None):
         e = Embed(color=green)
@@ -353,11 +361,12 @@ class Context(commands.Context):
             return ref.resolved.to_reference()
         return None
 
+
 class edoC(commands.AutoShardedBot):
     def __init__(self):
-        self.db = None
         if not hasattr(self, 'uptime'):
             self.uptime = datetime.now()
+        self.config = config()
         self.start_time = discord.utils.utcnow()
         allowed_mentions = discord.AllowedMentions(roles=True, everyone=False, users=True)
         intents = discord.Intents(
@@ -368,7 +377,7 @@ class edoC(commands.AutoShardedBot):
             voice_states=True,
             messages=True,
             reactions=True,
-            presences=True
+            presences=True,
         )
         super().__init__(command_prefix=when_mentioned_or('~'), description=description,
                          pm_help=None, help_attrs=dict(hidden=True),
@@ -379,11 +388,11 @@ class edoC(commands.AutoShardedBot):
         self.session = HTTPSession(loop=self.loop)
         self.prefix = '~'
         self.process = Process(getpid())
-        self.config = config()
         self.tempimgpath = 'data/img/temp/*'
         self.ownerid = 511724576674414600
         self.icons = {}
         self.ready = False
+        self.db = sqlite.Database()
         self.scheduler = apscheduler.schedulers.asyncio.AsyncIOScheduler()
         self.total_commands_ran = 0
         self.alex_api = alexflipnote.Client(confi['alexflipnote_api'],
@@ -425,6 +434,7 @@ class edoC(commands.AutoShardedBot):
         }
         self.icons = emojis
         return self.icons
+
     async def get_or_fetch_member(self, guild, member_id):
         """Looks up a member in cache or fetches if not found.
         Parameters
@@ -457,7 +467,7 @@ class edoC(commands.AutoShardedBot):
             return None
         return members[0]
 
-    async def get_context(self, message, *, cls=Context):
+    async def get_context(self, message, *, cls=edoCContext):
         return await super().get_context(message, cls=cls)
 
     async def on_ready(self):
@@ -506,18 +516,18 @@ class edoC(commands.AutoShardedBot):
         except KeyError:
             pass
         self.total_commands_ran += 1
-        if ctx.author.id in BannedUsers:
-            return
-        else:
-            blocked = False
+        # if ctx.author.id in BannedUsers:
+        #    return
+        # else:
+        #    blocked = False
         try:
             try:
                 try:
                     print(
-                        f"{ctx.guild.name} > {ctx.author} > {ctx.message.clean_content} > Blocked {blocked}")
+                        f"{ctx.guild.name} > {ctx.author} > {ctx.message.clean_content} ")  # > Blocked {blocked}")
                     info(f'{ctx.guild.name} > {ctx.author} > {ctx.message.clean_content}')
                 except AttributeError:
-                    print(f"Private message > {ctx.author} > {ctx.message.clean_content} > Blocked {blocked}")
+                    print(f"Private message > {ctx.author} > {ctx.message.clean_content}")  # > Blocked {blocked}")
                     info(f'Private message > {ctx.author} ')
                     # {ctx.author} > {ctx.message.clean_content}
             except UnicodeEncodeError:
@@ -533,37 +543,37 @@ class edoC(commands.AutoShardedBot):
 
     async def fill_cache(self):
         """Loading up the blacklisted users."""
-        #query = 'SELECT * FROM (SELECT guild_id AS snowflake_id, blacklisted  FROM guild_config  UNION ALL SELECT user_id AS snowflake_id, blacklisted  FROM users_data) WHERE blacklisted="TRUE"'
-        #cur = await self.db.execute(query)
-        #data = await cur.fetchall()
-        #self.cache["blacklisted_users"] = {r[0] for r in data} or set()
-#
-        #"""Loading up premium users."""
-        #query = 'SELECT * FROM (SELECT guild_id AS snowflake_id, premium  FROM guild_config  UNION ALL SELECT user_id AS snowflake_id, premium  FROM users_data) WHERE premium="TRUE"'
-        #cur = await self.db.execute(query)
-        #data = await cur.fetchall()
-        #self.cache["premium_users"] = {r[0] for r in data} or set()
-#
-        #"""Loading up users that have tips enabled"""
-        #query = 'SELECT user_id FROM users_data WHERE tips = "TRUE"'
-        #cur = await self.db.execute(query)
-        #data = await cur.fetchall()
-        #self.cache["tips_are_on"] = {r[0] for r in data} or set()
-#
-        #"""Loading up users that have mentions enabled"""
-        #query = 'SELECT user_id FROM users_data WHERE mentions = "TRUE"'
-        #cur = await self.db.execute(query)
-        #data = await cur.fetchall()
-        #self.cache["mentions_are_on"] = {r[0] for r in data} or set()
-#
-        #"""Loads up all disabled_commands"""
-        #query = "SELECT command_name, snowflake_id FROM disabled_commands ORDER BY command_name"
-        #cur = await self.db.execute(query)
-        #data = await cur.fetchall()
-        #self.cache["disabled_commands"] = {
+        # query = 'SELECT * FROM (SELECT guild_id AS snowflake_id, blacklisted  FROM guild_config  UNION ALL SELECT user_id AS snowflake_id, blacklisted  FROM users_data) WHERE blacklisted="TRUE"'
+        # cur = await self.db.execute(query)
+        # data = await cur.fetchall()
+        # self.cache["blacklisted_users"] = {r[0] for r in data} or set()
+        #
+        # """Loading up premium users."""
+        # query = 'SELECT * FROM (SELECT guild_id AS snowflake_id, premium  FROM guild_config  UNION ALL SELECT user_id AS snowflake_id, premium  FROM users_data) WHERE premium="TRUE"'
+        # cur = await self.db.execute(query)
+        # data = await cur.fetchall()
+        # self.cache["premium_users"] = {r[0] for r in data} or set()
+        #
+        # """Loading up users that have tips enabled"""
+        # query = 'SELECT user_id FROM users_data WHERE tips = "TRUE"'
+        # cur = await self.db.execute(query)
+        # data = await cur.fetchall()
+        # self.cache["tips_are_on"] = {r[0] for r in data} or set()
+        #
+        # """Loading up users that have mentions enabled"""
+        # query = 'SELECT user_id FROM users_data WHERE mentions = "TRUE"'
+        # cur = await self.db.execute(query)
+        # data = await cur.fetchall()
+        # self.cache["mentions_are_on"] = {r[0] for r in data} or set()
+        #
+        # """Loads up all disabled_commands"""
+        # query = "SELECT command_name, snowflake_id FROM disabled_commands ORDER BY command_name"
+        # cur = await self.db.execute(query)
+        # data = await cur.fetchall()
+        # self.cache["disabled_commands"] = {
         #    cmd: [r[1] for r in _group]
         #    for cmd, _group in itertools.groupby(data, key=operator.itemgetter(0))
-        #}
+        # }
 
         self.cache["users"] = {}
         self.cache['afk_users'] = {}
@@ -571,6 +581,7 @@ class edoC(commands.AutoShardedBot):
         self.cache["disabled_commands"] = {}
         self.cache["premium_users"] = {}
         self.cache["blacklisted_users"] = {}
+
 
 def UpdateBlacklist(newblacklist, filename: str = "blacklist"):
     try:
@@ -714,37 +725,14 @@ def naturalsize(size_in_bytes: int):
     return f"{size_in_bytes / (1024 ** power):.2f} {units[power]}"
 
 
-async def send(ctx, content=None, embed=None, ttl=None):
-    perms = ctx.channel.permissions_for(ctx.me).embed_links
-    ttl = None if ctx.message.content.endswith(' stay') else ttl
-    try:
-        if ttl and perms:
-            await ctx.message.edit(content=content, embed=embed)
-            await asyncio.sleep(ttl)
-            try:
-                await ctx.message.delete()
-            except:
-                log.error('Failed to delete Message in {}, #{}'.format(ctx.guild.name, ctx.channel.name))
-                pass
-        elif ttl is None and perms:
-            await ctx.message.edit(content=content, embed=embed)
-        elif embed is None:
-            await ctx.message.edit(content=content, embed=embed)
-        elif embed and not perms:
-            await ctx.message.edit(content='\N{HEAVY EXCLAMATION MARK SYMBOL} No Perms for Embeds', delete_after=5)
-    except:
-        if embed and not perms:
-            await ctx.message.edit(content='\N{HEAVY EXCLAMATION MARK SYMBOL} No Perms for Embeds', delete_after=5)
-        else:
-            await ctx.send(content=content, embed=embed, delete_after=ttl, file=None)
 def renderBar(
-    value: int,
-    *,
-    gap: int = 0,
-    length: int = 32,
-    point: str = "",
-    fill: str = "-",
-    empty: str = "-",
+        value: int,
+        *,
+        gap: int = 0,
+        length: int = 32,
+        point: str = "",
+        fill: str = "-",
+        empty: str = "-",
 ) -> str:
     # make the bar not wider than 32 even with gaps > 0
     length = int(length / int(gap + 1))

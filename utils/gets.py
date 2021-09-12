@@ -1,10 +1,21 @@
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#  Copyright (c) 2021. Jason Cameron                                                               +
+#  All rights reserved.                                                                            +
+#  This file is part of the edoC discord bot project ,                                             +
+#  and is released under the "MIT License Agreement". Please see the LICENSE                       +
+#  file that should have been included as part of this package.                                    +
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 import datetime
 import re
 
 from colour import Color
 from discord import utils
 
+
 # Get time difference obviously
+
+
 def getTimeDiff(t, now=None):
     if now is None:
         now = datetime.datetime.utcnow()
@@ -89,6 +100,7 @@ def getRole(ctx, msg):
     else:
         return utils.find(lambda r: msg.strip().lower() in r.name.lower(), ctx.guild.roles)
 
+
 def getEmote(ctx, content):
     emoji_reg = re.compile(r'<:.+?:([0-9]{15,21})>').findall(content)
     if emoji_reg:
@@ -96,6 +108,7 @@ def getEmote(ctx, content):
     elif content.strip().isdigit():
         return ctx.bot.get_emoji(int(content.strip()))
     return None
+
 
 def getColor(incolor):
     if len(incolor.split(',')) == 3:
@@ -130,3 +143,4 @@ def getColor(incolor):
             except:
                 outcolor = None
     return outcolor
+

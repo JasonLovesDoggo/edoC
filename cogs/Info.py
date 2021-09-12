@@ -5,8 +5,10 @@
 #  and is released under the "MIT License Agreement". Please see the LICENSE                       +
 #  file that should have been included as part of this package.                                    +
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+import asyncio
 import contextlib
 import inspect
+from datetime import datetime as dt
 from datetime import timezone
 from os import path
 from pathlib import Path
@@ -15,18 +17,24 @@ from random import choice
 from textwrap import dedent
 from typing import List, Tuple
 
+from PyDictionary import PyDictionary
 from discord import HTTPException
-from discord.ext.commands import ColourConverter
+from discord.ext.commands import ColourConverter, command, Cog, BucketType, cooldown, BadArgument, has_permissions, \
+    clean_content
 from discord.ext.menus import ListPageSource
 from googletrans import Translator
-from humanize import precisedelta
+from humanize import precisedelta, naturaltime as nt
 from pyshorteners import Shortener
+from textblob import TextBlob
 
+from utils.apis.mojang.mojang import MojangAPI as MoI
+from utils.checks import guild_only, UrlSafe
 from utils.curse import ProfanitiesFilter
 from utils.default import *
 from utils.http import get
 from utils.info import fetch_info
-from utils.pagination import Paginator
+from utils.pagination import IndexedListSource, CatchAllMenu
+from utils.text_formatting import hyperlink
 from utils.vars import *
 
 
@@ -46,16 +54,23 @@ class Menu(ListPageSource):
         return embed
 
 
-# Hex to RGB
-def hex_to_rgb(value):
-    print(value)
-    v = str(value)
-    v = v.replace('#', '')
-    lv = len(v)
-    return tuple(int(v[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
+def no_dict(word):
+    w = str(word)
+    return w.replace("['", '').replace("']", '').replace("'", '')
 
 
-class Info(commands.Cog, description='Informational and useful commands'):
+def meanings(word):
+    toreturn = ''
+    count = 0
+    word = no_dict(word)
+    print(word)
+    for wrd in word.split(','):
+        count += 1
+        toreturn += f'\n**#{count}** {wrd}'
+    return toreturn if len(toreturn) > 1 else word
+
+
+class Info(Cog, description='Informational and useful commands'):
     def __init__(self, bot):
         self.bot = bot
         self.config = config()
@@ -69,11 +84,50 @@ class Info(commands.Cog, description='Informational and useful commands'):
         self.logs = self.bot.get_channel(self.config["edoc_logs"])
         self.pf = ProfanitiesFilter()
         self.pf.inside_words = True
+        self.dict = PyDictionary()
+        self.db = self.bot.db
 
-    @commands.command(aliases=("spotify", "spot"),
-                      brief="Show what song a member listening to in Spotify", )
-    @commands.cooldown(1, 5, commands.BucketType.user)
-    @commands.guild_only()
+    async def get_word(self, ctx, word: UrlSafe):
+        async with ctx.session.get(f"https://some-random-api.ml/dictionary?word={word}") as ses:
+            if ses.status != 200:
+                if ses.status == 404:
+                    return await ctx.error('Word Not found.')
+                elif ses.status == 429:
+                    return await ctx.error(f'Too many requests, please try again later.')
+        return await ses.json()
+
+    @command(aliases=['McUser', 'MCI'], brief='Gets info about a minecraft user')
+    async def mcinfo(self, ctx, user: str):
+        uuid = await MoI.get_uuid(user)
+        if not uuid:
+            return await ctx.error(f'User **{user}** Doesnt exist')
+        prof = await MoI.get_profile(uuid)
+        em = Embed(color=random_color()).set_image(url=f'https://minotar.net/armor/body/{prof.name}/550.png')
+        em.description = f'**UUID :** {uuid}\n' \
+                         f'**Skin Type :** {prof.skin_model}\n' \
+                         f'**Legacy Profile :** {prof.is_legacy_profile}\n' \
+                         f'{hyperlink("Skin Url", prof.skin_url)}'
+        em.set_author(name=f'Info About {prof.name}', url=f'https://namemc.com/profile/{prof.name}', icon_url=f'https://minotar.net/helm/{prof.name}/25.png')
+        namehistory = await MoI.get_name_history(uuid)
+        names = ''
+        for name in reversed(namehistory):
+            ts = name["changed_to_at"]
+            if ts == 0:
+                names += f'\n**{name["name"]} :** Original name'
+                continue
+            ts /= 1000
+            names += f'\n**{name["name"]} :** <t:{int(ts)}:R>'
+        em.add_field(name='Name Histoy', value=names, inline=False)
+        await ctx.try_reply(embed=em)
+    @command(aliases=['spelling', 'fixspelling', 'autocorrect'], brief='Corrects the spelling of the input')
+    async def correct(self, ctx, *, words: str):
+        tb = TextBlob(text=words)
+        await ctx.invis(str(tb.correct()))
+
+    @command(aliases=("spotify", "spot"),
+             brief="Show what song a member listening to in Spotify", )
+    @cooldown(1, 5, BucketType.user)
+    @guild_only()
     async def spotifyinfo(self, ctx, user: discord.Member = None):
         user = user or ctx.author
 
@@ -134,8 +188,17 @@ class Info(commands.Cog, description='Informational and useful commands'):
                 embed_.add_field(name=name, value=value, inline=inline)
         return embed_
 
-    @commands.command(aliases=['trans'])
-    async def translate(self, ctx, *, message: commands.clean_content = None):
+    @command(aliases=['definiton', 'meaning'])
+    async def word(self, ctx, *, word: str):
+        # data = await self.get_word(ctx, word)
+        # await ctx.invis(type(data))
+        # em = Embed(title=data['word'], description=data['definition'], color=invis)
+        # await ctx.try_reply(embed=em)
+        # other
+        return await ctx.error('placeholder')
+
+    @command(aliases=['trans'])
+    async def translate(self, ctx, *, message: clean_content = None):
         """Translates a message to English using Google translate."""
 
         loop = self.bot.loop
@@ -162,7 +225,7 @@ class Info(commands.Cog, description='Informational and useful commands'):
         except HTTPException:
             await ctx.reply('msg too long')
 
-    @commands.command(name="report")
+    @command(name="report")
     async def _report(self, ctx):
         """Used to report something."""
         questions = [
@@ -180,7 +243,7 @@ class Info(commands.Cog, description='Informational and useful commands'):
                     check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
                 )
             except asyncio.TimeoutError:
-                raise commands.BadArgument(
+                raise BadArgument(
                     "`60s` are over. I ended your report session, "
                     "since you didn't answer fast enough. Please be quicker next time."
                 )
@@ -189,7 +252,7 @@ class Info(commands.Cog, description='Informational and useful commands'):
                 answers.append(answer)
 
         if len(answers[1]) < 20:
-            raise commands.BadArgument("Sorry, your answer must be a little longer.")
+            raise BadArgument("Sorry, your answer must be a little longer.")
         if answers:
             em = Embed(title=answers[0], description=answers[1], timestamp=datetime.utcnow())
             em.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
@@ -213,11 +276,11 @@ class Info(commands.Cog, description='Informational and useful commands'):
                 else:
                     return await ctx.send("Cancelled your report.")
             except asyncio.TimeoutError:
-                raise commands.BadArgument(
+                raise BadArgument(
                     "`60s` are over. I ended your report session, since you didn't answer fast enough. Next time please be quicker."
                 )
 
-    @commands.command(name="suggest")
+    @command(name="suggest")
     async def _suggest_feature(self, ctx, *, suggestion: str):
         """Used to suggest a feature for edoC."""
         channel = self.bot.get_channel(878486511794929664)
@@ -233,11 +296,11 @@ class Info(commands.Cog, description='Informational and useful commands'):
         await msg.add_reaction("👎")
         await ctx.send(f"Submitted your suggestion. Join the support server to see the status of your suggestion.")
 
-    @commands.command()
+    @command()
     async def nohi(self, ctx):
         await ctx.try_reply('https://nohello.net/')
 
-    @commands.command(brief="Shows the bot's uptime")
+    @command(brief="Shows the bot's uptime")
     async def uptime(self, ctx):
         """
         Shows the bot's uptime in days | hours | minutes | seconds
@@ -250,7 +313,7 @@ class Info(commands.Cog, description='Informational and useful commands'):
         em.set_footer(text=f"Requested by {ctx.author}", icon_url=ctx.author.display_avatar.url)
         await ctx.send(embed=em)
 
-    @commands.command(aliases=['RC', 'Rcolor', 'RandColor'])
+    @command(aliases=['RC', 'Rcolor', 'RandColor'])
     async def RandomColor(self, ctx):
         random_number = randint(0, 16777215)
         hexhex = str(hex(random_number))
@@ -265,7 +328,7 @@ class Info(commands.Cog, description='Informational and useful commands'):
         embed.set_thumbnail(url=f'https://api.popcatdev.repl.co/color/image/{hex_number}?width=100&height=100')
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=['C', 'Colour'])
+    @command(aliases=['C', 'Colour'])
     async def Color(self, ctx, colorname: ColourConverter):
         """
         The following formats are accepted:
@@ -299,7 +362,7 @@ class Info(commands.Cog, description='Informational and useful commands'):
         """
 
         # Check if our required argument inp is missing.
-        if isinstance(error, commands.BadArgument):
+        if isinstance(error, BadArgument):
             embed = discord.Embed(
                 description=f"Please do {ctx.prefix}help Color for more info",
                 color=colors["error"]
@@ -314,62 +377,154 @@ class Info(commands.Cog, description='Informational and useful commands'):
         embed.add_field(name="Command description", value=command.help)
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=["todomenu"])
+    # @command(aliases=["todomenu"])
+    # async def todo(self, ctx):
+    #     """Shows this message."""
+    #     file = open("todo.txt", "r")
+    #     embeds = []
+    #     if len(list(file)) <= 2000:
+    #         return await ctx.reply(embed=discord.Embed(
+    #             title="TodoPagination",
+    #             color=blue,
+    #             description=file.readlines()))
+    #     i = 0
+    #
+    #     while True:
+    #         filelines = len(file.readlines())
+    #         if len(list(file)) - i > 200:
+    #             embeds.append(discord.Embed(
+    #                 title="TodoPagination",
+    #                 description=list(file)[i:i + 1999],
+    #                 color=blue))
+    #         elif len(list(file)) - i <= 0:
+    #             break
+    #         else:
+    #             embeds.append(discord.Embed(
+    #                 title="TodoPagination",
+    #                 description=list(file)[i:len(list(file)) - 1],
+    #                 color=blue))
+    #             break
+    #         i += 1999
+    #
+    #     return await ctx.reply(embed=embeds[0], view=Paginator(ctx=ctx, embeds=embeds))
+    async def get_all_todo(self, identifier: int = None):
+        if not identifier:
+            return self.db.fetch("SELECT * FROM todo")
+        else:
+            return self.db.fetch("SELECT * FROM todo WHERE user_id = ?", (identifier,))
+
+    @commands.group(invoke_without_command=True)
     async def todo(self, ctx):
-        """Shows this message."""
-        file = open("todo.txt", "r")
-        embeds = []
-        if len(list(file)) <= 2000:
-            return await ctx.reply(embed=discord.Embed(
-                title="TodoPagination",
-                color=blue,
-                description=file.readlines()))
-        i = 0
-
-        while True:
-            filelines = len(file.readlines())
-            if len(list(file)) - i > 200:
-                embeds.append(discord.Embed(
-                    title="TodoPagination",
-                    description=list(file)[i:i + 1999],
-                    color=blue))
-            elif len(list(file)) - i <= 0:
-                break
+        """Shows your current todo list"""
+        items = []
+        results = sorted((await self.get_all_todo(ctx.author.id)), key=lambda x: x['time'])
+        for each in results:
+            time = dt.utcfromtimestamp(each['time'])
+            since = nt(dt.utcnow() - time)
+            if each['description']:
+                desc_em = "`\U00002754`"
             else:
-                embeds.append(discord.Embed(
-                    title="TodoPagination",
-                    description=list(file)[i:len(list(file)) - 1],
-                    color=blue))
-                break
-            i += 1999
+                desc_em = ""
+            items.append(f"[{each['todo']}]({each['message_url']}) (ID: {each['id']} | Created {since}) {desc_em}")
+        source = IndexedListSource(data=items, embed=discord.Embed(colour=invis),
+                                   title="Items (`\U00002754` indicates that the todo has a description)", per_page=5)
+        menu = CatchAllMenu(source=source)
+        menu.add_info_fields({"`\U00002754`": "Indicates that the todo has a description"})
+        await menu.start(ctx)
 
-        return await ctx.reply(embed=embeds[0], view=Paginator(ctx=ctx, embeds=embeds))
+    @todo.command()
+    async def add(self, ctx, *, todo):
+        """Adds an item to your todo list"""
+        if len(todo) > 50:
+            return await ctx.send("Your todo is too long. Please be more consice.")
+        id = randint(1, 99999)
+        await self.bot.db.execute(
+            "INSERT INTO todo (todo, id, time, message_url, user_id) VALUES ($1, $2, $3, $4, $5)", todo, id,
+            time.time(),
+            str(ctx.message.jump_url), ctx.author.id)
+        await ctx.send(f"{ctx.tick()} Inserted `{todo}` into your todo list! (ID: `{id}`)")
 
-    @commands.command(aliases=['len'])
+    @todo.command(aliases=['rm', 'remove'])
+    async def resolve(self, ctx, *id: int):
+        """Resolves an item from your todo list"""
+        items = await self.get_all_todo(ctx.author.id)
+        todos = [item[0] for item in items]
+        ids = [item[1] for item in items]
+        if any(item not in ids for item in id):
+            return await ctx.send("You passed in invalid id's!")
+        message = []
+        for i in id:
+            message.append(f"• {todos[ids.index(i)]}")
+            await self.bot.db.execute("DELETE FROM todo WHERE user_id = $1 AND id = $2", ctx.author.id, i)
+        await ctx.send(
+            f"{ctx.tick()} Deleted **{len(id)}** items from your todo list:\n" + "\n".join(message))
+
+    @todo.command()
+    async def list(self, ctx):
+        """Shows your todo list"""
+        command = self.bot.get_command('todo')
+        await ctx.invoke(command)
+
+    @todo.command()
+    async def clear(self, ctx):
+        """Clears all of your todos"""
+        num = len((await self.bot.db.fetch("SELECT * FROM todo WHERE user_id = $1", ctx.author.id)))
+        await self.bot.db.execute("DELETE FROM todo WHERE user_id = $1", ctx.author.id)
+        await ctx.send(f"{ctx.tick()} Deleted **{num}** items from your todo list!")
+
+    @todo.command(aliases=['show'])
+    async def info(self, ctx, id: int):
+        """Shows you info on a todo"""
+        results = await self.bot.db.fetch("SELECT * FROM todo WHERE id = $1", id)
+        if not results:
+            raise commands.BadArgument(f'{id} is not a valid todo!')
+        results = results[0]
+        embed = discord.Embed(colour=self.bot.colour)
+        embed.title = f"{results['todo']} » `{results['id']}`"
+        time = dt.utcfromtimestamp(results['time'])
+        since = nt(dt.utcnow() - time)
+        embed.description = f'{results["description"] or ""}\n'
+        embed.description += f"<:clock:738186842343735387> **{since}**\n"
+        embed.description += f"**{time.strftime('%A %B %d, %Y at %I:%M %p')}**"
+        await ctx.send(embed=embed)
+
+    @todo.command(aliases=['add_desc', 'ad'])
+    async def describe(self, ctx, id: int, *, description):
+        """Add a description for your todo"""
+        results = await self.bot.db.fetch("SELECT * FROM todo WHERE id = $1", id)
+        if not results:
+            raise commands.BadArgument(f'{id} is not a valid todo!')
+        if len(description) > 250:
+            return await ctx.send("That description is too long!")
+        await self.bot.db.execute("UPDATE todo SET description = $1 WHERE id = $2", description, id)
+        await ctx.send(
+            f"{ctx.tick()} Set todo description for `{id}` ({results[0]['todo']}) to `{description}`")
+
+    @command(aliases=['len'])
     async def length(self, ctx, *, word):
         await ctx.reply(len(word))
 
-    @commands.command(aliases=["URLshorten"])
+    @command(aliases=["URLshorten"])
     async def shorten(self, ctx, *, url):
         s = Shortener()
         ShortenedUrl = s.owly.short(url)
         await ctx.reply(embed=discord.Embed(description=ShortenedUrl, colour=random_color()))
 
-    @commands.command(aliases=["URLexpand"])
+    @command(aliases=["URLexpand"])
     async def expand(self, ctx, *, url):
         s = Shortener()
         ExpandedUrl = s.owly.expand(url)
-        await ctx.reply(embed=discord.Embed(description=ExpandedUrl, colour=random_color))
+        await ctx.reply(embed=discord.Embed(description=ExpandedUrl, colour=random_color()))
 
-    # @commands.command()
+    # @command()
     # async def time(self, ctx):
     #    """ Check what the time is for me (the bot) """
     #    time = datetime.utcnow().strftime("%d %B %Y, %H:%M")
     #    await ctx.send(f"Currently the time for me is **{time}**")
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~
-    @commands.command()
-    # @commands.cooldown(rate=1, per=300, type=commands.BucketType.guild)
+    @command()
+    # @cooldown(rate=1, per=300, type=BucketType.guild)
     async def CmdStats(self, ctx):
         try:
             cmdsran = self.bot.commands_ran
@@ -399,13 +554,13 @@ class Info(commands.Cog, description='Informational and useful commands'):
         except StopIteration as e:
             await ctx.send(f'{e} e')
 
-    @commands.command(hidden=True)
-    @commands.cooldown(rate=2, per=300, type=commands.BucketType.user)
+    @command(hidden=True)
+    @cooldown(rate=2, per=300, type=BucketType.user)
     async def Yellow(self, ctx):
         """Allows you to Toggle having the yellow role"""
         await toggle_role(ctx, 879084837451993099)
 
-    @commands.command(aliases=['credits'])
+    @command(aliases=['credits'])
     async def contributors(self, ctx):
         emb = discord.Embed(title=f'Contributors Of edoC', color=random_color(), description='')
         emb.set_footer(text='Created by Jake CEO of annoyance#1904',
@@ -414,7 +569,7 @@ class Info(commands.Cog, description='Informational and useful commands'):
             emb.add_field(name=f'***{k}***', value=f'{v}', inline=False)
         await ctx.send(embed=emb)
 
-    @commands.command()
+    @command()
     async def donate(self, ctx):
         class DonateView(discord.ui.View):
             def __init__(self):
@@ -429,8 +584,9 @@ class Info(commands.Cog, description='Informational and useful commands'):
                          The sole purpose of donating is to support edoC\'s development.'
 
         await ctx.send(embed=em, view=DonateView())
+
     # ~~~
-    @commands.command(name='in', aliases=["stats", "status", "botinfo", 'info', 'about'])
+    @command(name='in', aliases=["stats", "status", "botinfo", 'info', 'about'])
     async def _in(self, ctx):
         """ edoC information/stats cmd """
         lines = fetch_info()
@@ -485,21 +641,21 @@ Comments: {comments}"""
             infemb.set_footer(text=f"Prefix in this server: {prefix}")
         await ctx.reply(embed=infemb)
 
-    @commands.command(aliases=["SAF"])
-    @commands.has_permissions(attach_files=True)
+    @command(aliases=["SAF"])
+    @has_permissions(attach_files=True)
     async def sendasfile(self, ctx, *, text: str):
         """ sends whatever the user sent as a file"""
         data = BytesIO(text.encode("utf-8"))
         await ctx.reply(file=discord.File(data, filename=f"{timetext('Text')}"))
 
-    @commands.command(aliases=["SAFF"])
-    @commands.has_permissions(attach_files=True)
+    @command(aliases=["SAFF"])
+    @has_permissions(attach_files=True)
     async def sendasformatedfile(self, ctx, filetype: str, *, text: str):
         """ sends whatever the user sent as a file BUT with a specified filetype"""
         data = BytesIO(text.encode("utf-8"))
         await ctx.reply(file=discord.File(data, filename=f"{CustomTimetext(filetype, 'Text')}"))
 
-    @commands.command(aliases=['src'])
+    @command(aliases=['src'])
     async def source(self, ctx, *, command: str = None):
         """Displays my full source code or for a specific command.
         To display the source code of a subcommand you can separate it by
@@ -532,7 +688,8 @@ Comments: {comments}"""
             @discord.ui.button(emoji='<:trashcan:882779835737460846>')
             async def delete(self, button: discord.ui.Button, interaction: discord.Interaction):
                 if interaction.user != self.ctx.author:
-                    return await interaction.response.send_message('Oops. This is not your interaction.', ephemeral=True)
+                    return await interaction.response.send_message('Oops. This is not your interaction.',
+                                                                   ephemeral=True)
                 with contextlib.suppress(discord.HTTPException):
                     await self.ctx.message.delete()
                 await interaction.message.delete()
@@ -540,9 +697,11 @@ Comments: {comments}"""
             @discord.ui.button(label='Source File')
             async def send_file(self, button: discord.ui.Button, interaction: discord.Interaction):
                 if interaction.user != self.ctx.author:
-                    return await interaction.response.send_message('Oops. This is not your interaction.', ephemeral=True)
+                    return await interaction.response.send_message('Oops. This is not your interaction.',
+                                                                   ephemeral=True)
 
-                await interaction.channel.send(file=discord.File(BytesIO(dedent(''.join(lines)).encode('ascii')), 'source.py'))
+                await interaction.channel.send(
+                    file=discord.File(BytesIO(dedent(''.join(lines)).encode('ascii')), 'source.py'))
                 button.disabled = True
                 await interaction.response.edit_message(view=self)
 
@@ -555,23 +714,24 @@ Comments: {comments}"""
             em.description = '```\nSource was too long to be shown here. Click Source File/Source URL below to see it.```'
         await ctx.send(embed=em, view=SourceView(ctx))
 
-    @commands.command(help="Shows the bot's latency in miliseconds.Useful if you want to know if the bot is lagging or not",
-                      brief="Shows the bots latency")
+    @command(help="Shows the bot's latency in miliseconds.Useful if you want to know if the bot is lagging or not",
+             brief="Shows the bots latency")
     async def ping(self, ctx):
         start = time.perf_counter()
         msg = await ctx.invis("<a:disloading:879146777767473174> pinging...")
         end = time.perf_counter()
         typing_ping = (end - start) * 1000
 
-        #start = time.perf_counter()
-        #await self.bot.db.execute('SELECT 1')
-        #end = time.perf_counter()
-        #sql_ping = (end - start) * 1000
-        e = discord.Embed(description=f"{self.bot.icons['typing']} ** | Typing**: {round(typing_ping, 1)} ms\n{self.bot.icons['edoc']} ** | Websocket**: {round(self.bot.latency*1000)} ms",
-                          color=invis) #\n{self.bot.icons['database']} **" | Database**: {round(sql_ping, 1)} ms")
+        # start = time.perf_counter()
+        # self.db.execute('SELECT 1')
+        # end = time.perf_counter()
+        # sql_ping = (end - start) * 1000
+        e = discord.Embed(
+            description=f"{self.bot.icons['typing']} ** | Typing**: {round(typing_ping, 1)} ms\n{self.bot.icons['edoc']} ** | Websocket**: {round(self.bot.latency * 1000)} ms",
+            color=invis)  # \n{self.bot.icons['database']} **" | Database**: {round(sql_ping, 1)} ms")
         await msg.edit(embed=e)
 
-    @commands.command()
+    @command()
     async def lines(self, ctx):
         """ gets all lines"""
         global color
@@ -621,7 +781,7 @@ Comments: {comments}"""
         e.set_footer(text=f"Requested by {ctx.author.name}\n{embedfooter}")
         await ctx.send(embed=e)
 
-    @commands.command()
+    @command()
     async def changehelp(self, ctx):
         """ Give Info on ~change """
         await ctx.reply("""~change 
@@ -634,21 +794,21 @@ Comments: {comments}"""
                         Type ~help command for more info on a command.
                         You can also type ~help category for more info on a category.""")
 
-    @commands.command(aliases=["code"])
+    @command(aliases=["code"])
     async def repo(self, ctx):
         """ Check out my source code <3 """
         # Do not remove this command, this has to stay due to the GitHub LICENSE.
         # TL:DR, you have to disclose source according to MIT.
         await ctx.reply(f"**{ctx.bot.user}** is powered by this source code:\nhttps://github.com/JakeWasChosen/edoC")
 
-    @commands.command(aliases=["supportserver", "feedbackserver"])
+    @command(aliases=["supportserver", "feedbackserver"])
     async def botserver(self, ctx):
         """ Get an invite to our support server! """
         if isinstance(ctx.channel, discord.DMChannel) or ctx.guild.id != 819282410213605406:
             return await ctx.send(f"**Here you go {ctx.author.name} 🍻\n<{self.config['botserver']}>**")
         await ctx.reply(f"**{ctx.author.name}** this is my home you know :3")
 
-    @commands.command()
+    @command()
     async def covid(self, ctx, *, country: str):
         """Covid-19 Statistics for any countries"""
         country = country.title()
@@ -680,7 +840,7 @@ Comments: {comments}"""
                 embed=embed
             )
 
-    @commands.command(aliases=["bs"])
+    @command(aliases=["bs"])
     async def botstats(self, ctx):
         """ About the bot """
         ramUsage = self.process.memory_full_info().rss / 1024 ** 2
@@ -708,8 +868,8 @@ Comments: {comments}"""
         await ctx.send(content=f"About **{ctx.bot.user}** | **{version_info['version']}**", embed=em)
         await ctx.send("||https://bio.link/edoC||")
 
-    @commands.guild_only()
-    @commands.command()
+    @guild_only()
+    @command()
     async def emote(self, ctx, msg: str = None):
         """List all emotes in this server."""
         if msg:
@@ -720,10 +880,6 @@ Comments: {comments}"""
             server = ctx.message.server
         emojis = [str(x) for x in server.emojis]
         await ctx.say(" ".join(emojis))
-
-    def top10(self):
-        for key, v in self.items():
-            return key
 
 
 def setup(bot):

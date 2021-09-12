@@ -30,6 +30,7 @@ from lib.db.db import cur
 from utils import default, http
 from utils.vars import *
 
+logger = logging.getLogger(__name__)
 on = False
 
 
@@ -37,7 +38,7 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
     def __init__(self, bot):
         self.highest_num = 0
         self.bot = bot
-        self.config = default.config()
+        self.config = bot.config
         self._last_result = None
         self.DoggoPath = r"C:/Users/Jason/edoC/data/img/Dog Picks"
         self._last_result = None
@@ -426,6 +427,7 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
         await ctx.send("Shuting down now...")
         logging.warning('Shutting down now')
         await self.bot.session.close()
+
     @commands.command()
     @commands.is_owner()
     async def todoadd(self, ctx, *, message: str):

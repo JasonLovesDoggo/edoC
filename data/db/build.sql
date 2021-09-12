@@ -28,15 +28,10 @@ CREATE TABLE IF NOT EXISTS botban (
 	Reason TEXT DEFAULT None
 );
 
-CREATE TABLE playlists (
-    user_id BIGINT NOT NULL,
-    playlist_name VARTEXT(32) NOT NULL,
-    playlist_id INT NOT NULL PRIMARY KEY
-);
-
-CREATE TABLE playlist_songs (
-    playlist_id INT NOT NULL,
-    playlist_song TEXT NOT NULL,
-    playlist_url TEXT NOT NULL,
-    song_id INT NOT NULL DEFAULT -1
+CREATE TABLE "todo" (
+	"todo"	TEXT,
+	"id"	NUMERIC,
+	"time"	NUMERIC,
+	"message_url"	TEXT,
+	"user_id"	NUMERIC
 );

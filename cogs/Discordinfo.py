@@ -13,15 +13,10 @@ from unicodedata import name
 
 import discord
 from discord.ext import commands
-from discord.utils import format_dt
 
 from utils.default import spacefill, date, CustomTimetext, config, mod_or_permissions
-from utils.text_formatting import hyperlink
+from utils.text_formatting import hyperlink, format_relative, format_date
 from utils.vars import random_color, error, status
-
-
-def format_relative(dt):
-    return format_dt(dt, 'R')
 
 
 def diff(num1, num2):
@@ -339,11 +334,6 @@ class Discord(commands.Cog, description="Discord Information commands"):
         bottag = '<:bot_tag:880193490556944435>'
         e.set_author(name=f'{user}{bottag if user.bot else ""}')
         join_position = sorted(ctx.guild.members, key=lambda m: m.joined_at).index(user) + 1
-
-        def format_date(dt):
-            if dt is None:
-                return 'N/A'
-            return f'{format_dt(dt, "F")} ({format_relative(dt)})'
 
         e.add_field(name='Join Position', value=join_position)
         e.add_field(name='ID', value=user.id, inline=False)

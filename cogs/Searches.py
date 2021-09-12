@@ -11,7 +11,6 @@ import wikipedia
 from discord.ext import commands
 from wikipedia.exceptions import WikipediaException
 
-from utils import default
 from utils.vars import *
 
 
@@ -74,7 +73,7 @@ async def embed_maker(ctx, url: str, icon: str, color: str, title: str):
 class Searches(commands.Cog, description='Search commands probably going to be rooted out sooner or later'):
     def __init__(self, bot):
         self.bot = bot
-        self.config = default.config()
+        self.config = bot.config
 
 
 

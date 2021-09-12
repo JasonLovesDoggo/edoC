@@ -101,6 +101,10 @@ class Weather:
     def temperature(self):
         return self.temp
 
+    @property
+    def feelslike(self):
+        return self.feelslike
+
 
 class OpenWeatherAPI:
     def __init__(self, key, session=None):

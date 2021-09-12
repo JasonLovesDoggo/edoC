@@ -20,6 +20,16 @@ environ["JISHAKU_NO_UNDERSCORE"] = "True"
 NO_LOAD_COG = ''
 
 
+#@bot.slash_command(guild_ids=[
+#    819282410213605406])  # if guild_ids is not given, the command will be released globally, although it will take atmost 1 hour to release due to API limitations of Discord
+#async def hello(
+#        ctx,
+#        name: Option(str, "Enter your name"),
+#        gender: Option(str, "Choose your gender", choices=["Male", "Female", "Other"]),
+#        age: Option(int, "Enter your age", required=False, default=18),
+#):
+#    await ctx.send(f"Hello {name} {gender} {age}")
+
 # async def process_commands(self, message):
 #    ctx = await self.get_context(message, cls=Context)
 #

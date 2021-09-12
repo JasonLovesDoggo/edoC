@@ -7,20 +7,13 @@
 #  file that should have been included as part of this package.                                    +
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-import time
-import discord
-import psutil
-import os
-
-from datetime import datetime
 from discord.ext import commands
-from utils import default
 
 
 class Calender(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.config = default.config()
+        self.config = bot.config
 
 
 def setup(bot):

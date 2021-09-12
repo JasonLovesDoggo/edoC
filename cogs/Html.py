@@ -34,7 +34,7 @@ class coggers(commands.Cog, description='e'):
             </div>
             <br>""")
 
-    @commands.command(breif='sends a formmated html of all the commands (tis for the website)')
+    @commands.command(brief='sends a formmated html of all the commands (tis for the website)')
     @commands.is_owner()
     async def form(self, ctx):
         tosend = ''

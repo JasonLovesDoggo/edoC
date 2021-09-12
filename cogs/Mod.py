@@ -132,7 +132,7 @@ def can_mute():
 class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
     def __init__(self, bot):
         self.bot = bot
-        self.config = default.config()
+        self.config = bot.config
         self.prefix = self.bot.prefix
 
     async def _basic_cleanup_strategy(self, ctx, search):
@@ -752,17 +752,17 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
     async def announcerole(self, ctx, *, role: discord.Role):
         """ Makes a role mentionable and removes it whenever you mention the role """
         if role == ctx.guild.default_role:
-            return await ctx.send("To prevent abuse, I won't allow mentionable role for everyone/here role.")
+            return await ctx.warn("To prevent abuse, I won't allow mentionable role for everyone/here role.")
 
         if ctx.author.top_role.position <= role.position:
-            return await ctx.send(
+            return await ctx.warn(
                 "It seems like the role you attempt to mention is over your permissions, therefore I won't allow you.")
 
         if ctx.me.top_role.position <= role.position:
-            return await ctx.send("This role is above my permissions, I can't make it mentionable ;-;")
+            return await ctx.error("This role is above my permissions, I can't make it mentionable ;-;")
 
         await role.edit(mentionable=True, reason=f"[ {ctx.author} ] announcerole command")
-        msg = await ctx.send(
+        msg = await ctx.success(
             f"**{role.name}** is now mentionable, if you don't mention it within 30 seconds, I will revert the changes.")
 
         while True:

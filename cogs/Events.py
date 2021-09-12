@@ -19,6 +19,7 @@ from psutil import Process
 
 from lib.db import db
 from utils import default
+from utils.checks import GuildNotFound
 from utils.vars import *
 
 getLogger("events")
@@ -55,7 +56,7 @@ class Events(commands.Cog, description='Event handling if u can see this ping th
         # self.blacklist = Blacklist
         self.bot = bot
         self.ready = False
-        self.config = default.config()
+        self.config = bot.config
         self.process = Process(getpid())
         self.scheduler = apscheduler.schedulers.asyncio.AsyncIOScheduler()
         self.critlogschannel = self.config["edoc_logs"]
@@ -118,10 +119,6 @@ class Events(commands.Cog, description='Event handling if u can see this ping th
     #    await asyncio.sleep(21600.0)
 
     def update_db(self):
-        for member in self.allmembers:
-            if member.bot:
-                continue
-            db.execute("INSERT OR IGNORE INTO User (UserID) VALUES (?)", member.id)
 
         db.multiexec("INSERT OR IGNORE INTO guilds (GuildID, Prefix, GuildName) VALUES (?, ?, ?)",
                      ((guild.id, self.config["default_prefix"], guild.name,) for guild in self.guilds))
@@ -227,6 +224,9 @@ class Events(commands.Cog, description='Event handling if u can see this ping th
         elif isinstance(err, HTTPException):
             await self.erroremb(ctx=ctx,
                                 description=f'The returned message was too long')
+        elif isinstance(err, GuildNotFound):
+            await self.erroremb(ctx=ctx,
+                                description=f'You can only use this command in a server')
         else:
             print('Unknown error!')
             await self.erroremb(ctx, description="Sorry but this is an unknown error the devs has been notified!")

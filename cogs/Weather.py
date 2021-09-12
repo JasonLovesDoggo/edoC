@@ -12,14 +12,13 @@ import discord
 import psutil
 from discord.ext import commands
 
-from utils import default
 from utils.apis.openweathermap import *
 
 
 class Weather(commands.Cog, description='Weather cmd'):
     def __init__(self, bot):
         self.bot = bot
-        self.config = default.config()
+        self.config = bot.config
         self.process = psutil.Process(os.getpid())
         self.openweathermap_api_key = self.config["open_weather_map_api_key"]
         self.openweather = OpenWeatherAPI(

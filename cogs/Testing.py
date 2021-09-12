@@ -56,7 +56,7 @@ class Test(commands.Cog, description='Testing cog for... testing'):
                 gender: Option(str, "Choose your gender", choices=["Male", "Female", "Other"]),
                 age: Option(int, "Enter your age", required=False, default=18),
         ):
-            await ctx.send(f"Hello {name}")
+            await ctx.send(f"Hello E {name}")
 
         @bot.command()
         async def google(ctx, *, query: str):

@@ -7,6 +7,7 @@
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 import discord
+from discord.utils import format_dt
 
 
 def bold(text: str, escape_formatting: bool = True) -> str:
@@ -65,7 +66,13 @@ def escape(text: str, *, mass_mentions: bool = False, formatting: bool = False) 
         text = discord.utils.escape_markdown(text)
     return text
 
+def format_relative(dt):
+    return format_dt(dt, 'R')
 
+def format_date(dt):
+    if dt is None:
+        return 'N/A'
+    return f'{format_dt(dt, "F")} ({format_relative(dt)})'
 def hyperlink(text: str, link: str):
     """Turns text into a hyperlink.
     Parameters

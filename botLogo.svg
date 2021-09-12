@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  - Copyright (c) 2021. Jason Cameron
+  - All rights reserved.
+  - This file is part of the edoC discord bot project ,
+  - and is released under the "MIT License Agreement". Please see the LICENSE
+  - file that should have been included as part of this package.
+  -->
+
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+        width="210mm"
+        height="297mm"
+        viewBox="0 0 210 297"
+        version="1.1"
+        id="svg5"
+        inkscape:version="1.1 (c68e22c387, 2021-05-23)"
+        sodipodi:docname="edoC Logo.svg"
+        xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+        xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+        xmlns="http://www.w3.org/2000/svg"
+>
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:pageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:object-paths="true"
+     inkscape:snap-intersection-paths="true"
+     inkscape:snap-smooth-nodes="true"
+     inkscape:snap-midpoints="true"
+     inkscape:snap-nodes="true"
+     showborder="false"
+     inkscape:snap-others="false"
+     inkscape:zoom="2"
+     inkscape:cx="-3120.0251"
+     inkscape:cy="-3190.2826"
+     inkscape:window-width="1366"
+     inkscape:window-height="715"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2">
+    <rect
+       x="-3285.138"
+       y="-3131.1181"
+       width="1922.8593"
+       height="1530.9566"
+       id="rect37775" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <circle
+       id="path36262"
+       style="fill:#ffffff;stroke:#1a1a1a;stroke-width:0.264583"
+       cx="-595.17487"
+       cy="48.31427"
+       r="2.8195572" />
+    <circle
+       id="path36264"
+       style="fill:#ffffff;stroke:#1a1a1a;stroke-width:0.264583"
+       cx="-595.17487"
+       cy="48.31427"
+       r="2.8195572" />
+    <text
+       xml:space="preserve"
+       transform="scale(0.26458333)"
+       id="text37773"
+       style="fill:black;fill-opacity:1;line-height:1.25;stroke:none;font-family:sans-serif;font-style:normal;font-weight:normal;font-size:40px;white-space:pre;shape-inside:url(#rect37775)" />
+    <g
+       id="g67605">
+      <path
+         sodipodi:type="star"
+         style="opacity:1;fill:#2a2a2a;fill-opacity:1;stroke:none;stroke-width:19;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+         id="path48880"
+         inkscape:flatsided="true"
+         sodipodi:sides="6"
+         sodipodi:cx="-3140.2341"
+         sodipodi:cy="-3172.2976"
+         sodipodi:r1="58.53418"
+         sodipodi:r2="50.692085"
+         sodipodi:arg1="1.5707963"
+         sodipodi:arg2="2.0943951"
+         inkscape:rounded="0"
+         inkscape:randomized="0"
+         transform="matrix(0.26458333,0,0,0.26458333,0.55890072,-0.09906217)"
+         inkscape:transform-center-x="-1.0467447e-05"
+         inkscape:transform-center-y="1.0574326e-05"
+         inkscape:export-filename="C:\Users\shawn\Downloads\edoC.png"
+         inkscape:export-xdpi="355.66409"
+         inkscape:export-ydpi="355.66409"
+         d="m -3140.2341,-3113.7634 -50.6921,-29.2671 0,-58.5342 50.6921,-29.2671 50.6921,29.2671 0,58.5342 z" />
+      <path
+         style="fill:#2a2a2a;fill-opacity:1;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         d="m -830.2947,-854.92328 v 30.97435 l -13.41228,-7.74359 v -15.48717 z"
+         id="path50517"
+         inkscape:export-filename="C:\Users\shawn\Downloads\edoC.png"
+         inkscape:export-xdpi="355.66409"
+         inkscape:export-ydpi="355.66409" />
+      <path
+         style="fill:none;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         d="m -830.2947,-842.80682 v 6.276 h 4.51893 v -2.85398 l -0.0188,-0.5497 v -2.89232 z"
+         id="path50731"
+         inkscape:export-filename="C:\Users\shawn\Downloads\edoC.png"
+         inkscape:export-xdpi="355.66409"
+         inkscape:export-ydpi="355.66409" />
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-variant:normal;font-weight:800;font-stretch:normal;font-size:4.34266px;line-height:1.25;font-family:Montserrat;-inkscape-font-specification:'Montserrat, Ultra-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.238125;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         x="-841.2171"
+         y="-837.52374"
+         id="text57207"
+         transform="scale(0.99918257,1.0008181)"
+         inkscape:export-filename="C:\Users\shawn\Downloads\edoC.png"
+         inkscape:export-xdpi="355.66409"
+         inkscape:export-ydpi="355.66409"><tspan
+           sodipodi:role="line"
+           id="tspan57205"
+           style="font-style:normal;font-variant:normal;font-weight:800;font-stretch:normal;font-size:4.34266px;font-family:Montserrat;-inkscape-font-specification:'Montserrat, Ultra-Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.238125;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           x="-841.2171"
+           y="-837.52374">edo</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-weight:normal;font-size:16.8593px;line-height:1.25;font-family:sans-serif;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583"
+         x="-832.16254"
+         y="-833.66235"
+         id="text66172"
+         inkscape:export-filename="C:\Users\shawn\Downloads\edoC.png"
+         inkscape:export-xdpi="355.66409"
+         inkscape:export-ydpi="355.66409"><tspan
+           sodipodi:role="line"
+           id="tspan66170"
+           style="font-style:italic;font-variant:normal;font-weight:800;font-stretch:normal;font-size:16.8593px;font-family:Montserrat;-inkscape-font-specification:'Montserrat, Ultra-Bold Italic';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;stroke-width:0.264583"
+           x="-832.16254"
+           y="-833.66235">C</tspan></text>
+    </g>
+  </g>
+</svg>
