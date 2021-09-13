@@ -5,7 +5,6 @@
 #  and is released under the "MIT License Agreement". Please see the LICENSE                       +
 #  file that should have been included as part of this package.                                    +
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 from datetime import datetime
 from logging import getLogger
 from os import getpid
@@ -17,6 +16,7 @@ from discord.ext import commands
 from discord.ext.commands import MissingPermissions, CheckFailure, MaxConcurrencyReached, CommandOnCooldown
 from psutil import Process
 
+from cogs.Music import music_
 from lib.db import db
 from utils import default
 from utils.checks import GuildNotFound
@@ -359,17 +359,25 @@ class Events(commands.Cog, description='Event handling if u can see this ping th
             pass
 
     @commands.Cog.listener()
-    async def on_voice_state_update(self, member, prev, cur):
-        noncritlogschannel = self.bot.get_channel(self.noncritlogschannel)
-        user = f"{member.name}#{member.discriminator}"
-        if cur.afk and not prev.afk:
-            await noncritlogschannel.send(f"{user} went AFK!")
-        elif prev.afk and not cur.afk:
-            await noncritlogschannel.send(f"{user} is no longer AFK!")
-        elif cur.self_mute and not prev.self_mute:  # Would work in a push to talk channel
-            await noncritlogschannel.send(f"{user} stopped talking!")
-        elif prev.self_mute and not cur.self_mute:  # As would this one
-            await noncritlogschannel.send(f"{user} started talking!")
+    async def on_voice_state_update(self, member, before, after):
+        if before.channel:
+            if member.id == self.bot.user.id:
+                return
+
+            elif not before.channel.guild.me.voice:
+                return
+
+            elif after.channel is None:
+                player = music_.get_player(guild_id=before.channel.guild.id)
+                if player:
+                    try:
+                        await player.stop()
+                        await player.delete()
+                    except Exception:
+                        pass
+                if len(before.channel.members) == 1:
+                    guild = self.bot.get_guild(before.channel.guild.id)
+                    await guild.voice_client.disconnect()
 
     @commands.Cog.listener()
     async def premium_guild_subscription(self, ctx):

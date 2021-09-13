@@ -613,7 +613,8 @@ class Info(Cog, description='Informational and useful commands'):
         infos[
             'Stats'] = f'{lang}\nMember Count: {sum(g.member_count for g in self.bot.guilds)}\nChannel Count: {chancount}\n' \
                        f'Guild Count: {len(self.bot.guilds)}\nAvg users/server: {avgmembers:,.2f}\n' \
-                       f'Commands Loaded: {len([x.name for x in self.bot.commands])}\nCommands Ran this boot: {cmds}'
+                       f'Commands Loaded: {len([x.name for x in self.bot.commands])}\nCommands Ran this boot: {cmds}\n' \
+                       f'Total Messages seen: {self.bot.seen_messages:,}'
 
         infos['Lines'] = f"""{lang}\n
 Python Files: {pyfiles}

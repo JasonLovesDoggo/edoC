@@ -425,8 +425,7 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
     async def shutdown(self, ctx):
         """ shut down the bot """
         await ctx.send("Shuting down now...")
-        logging.warning('Shutting down now')
-        await self.bot.session.close()
+        await self.bot.close()
 
     @commands.command()
     @commands.is_owner()

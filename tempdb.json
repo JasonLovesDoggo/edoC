@@ -1,0 +1,21 @@
+{
+  "MsgsSeen": "61261",
+  "MemberCount": "40765",
+  "GuildCount": "9",
+  "hobbies": [
+    "running",
+    "sky diving",
+    "singing"
+  ],
+  "age": 35,
+  "children": [
+    {
+      "firstName": "Alice",
+      "age": 6
+    },
+    {
+      "firstName": "Bob",
+      "age": 8
+    }
+  ]
+}

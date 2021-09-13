@@ -5,7 +5,6 @@
 #  and is released under the "MIT License Agreement". Please see the LICENSE                       +
 #  file that should have been included as part of this package.                                    +
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 import functools
 import json
 import logging
@@ -24,7 +23,7 @@ import apscheduler.schedulers.asyncio
 import discord
 import timeago as timesince
 from discord import Embed
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord.ext.commands import NoPrivateMessage, when_mentioned_or
 from discord.utils import utcnow
 from psutil import Process
@@ -384,7 +383,12 @@ class edoC(commands.AutoShardedBot):
                          chunk_guilds_at_startup=False, heartbeat_timeout=150.0,
                          allowed_mentions=allowed_mentions, intents=intents,
                          owner_ids=confi["owners"], case_insensitive=True,
-                         command_attrs=dict(hidden=True), help_command=PaginatedHelpCommand(), )
+                         command_attrs=dict(hidden=True), help_command=PaginatedHelpCommand(),
+                         activity=discord.Game(
+                             type=discord.ActivityType.listening,
+                             name=f"Listening to over {self.get_data('MemberCount')} Members spread over {self.get_data('GuildCount')} Guilds!\nPrefix: ~"
+                         ), status=discord.Status.idle,)
+
         self.session = HTTPSession(loop=self.loop)
         self.prefix = '~'
         self.process = Process(getpid())
@@ -393,6 +397,7 @@ class edoC(commands.AutoShardedBot):
         self.icons = {}
         self.ready = False
         self.db = sqlite.Database()
+        self.seen_messages = 0
         self.scheduler = apscheduler.schedulers.asyncio.AsyncIOScheduler()
         self.total_commands_ran = 0
         self.alex_api = alexflipnote.Client(confi['alexflipnote_api'],
@@ -404,14 +409,44 @@ class edoC(commands.AutoShardedBot):
     # async def on_guild_join(self, guild):
     #    if guild.id in self.blacklist:
     #        await guild.leave()
+    def backup_data(self):
+        self.save_data('MsgsSeen', str(self.seen_messages))
+        self.save_data('MemberCount', str(sum(g.member_count for g in self.guilds)))
+        self.save_data('GuildCount', str(len(self.guilds)))
+
+    def save_data(self, endpoint: str, changeto: str):
+        """ Temp db system """
+        db_name = 'C:\\Users\\Jason\\edoC\\tempdb.json'
+        with open(db_name, "r") as jsonFile:
+            data = json.load(jsonFile)
+        data[endpoint] = changeto
+        with open(db_name, "w") as jsonFile:
+            json.dump(data, jsonFile, indent=2)
+        jsonFile.close()
+
+    def get_data(self, endpoint):
+        """ Temp db system """
+        try:
+            with open('C:\\Users\\Jason\\edoC\\tempdb.json', 'r', encoding='utf8') as data:
+                jsondata = json.load(data)
+                return jsondata[endpoint]
+        except FileNotFoundError:
+            raise FileNotFoundError("JSON file wasn't found")
+
+    @tasks.loop(seconds=25)
+    async def update_data(self):
+        self.backup_data()
 
     async def on_message(self, msg):
+        self.seen_messages += 1
         if not self.is_ready() or msg.author.bot or not can_handle(msg, "send_messages"):
             return
 
         await self.process_commands(msg)
 
-    async def close(self):
+    async def close(self) -> None:
+        self.update_data.stop()
+        self.backup_data()
         await self.session.close()
         await super().close()
 
@@ -472,25 +507,10 @@ class edoC(commands.AutoShardedBot):
 
     async def on_ready(self):
         """ The function that activates when boot was completed """
-        invite_link_cache = []
+        self.update_data.start()
+        self.seen_messages = int(self.get_data('MsgsSeen'))
         await emptyfolder(self.tempimgpath)
         logschannel = self.get_channel(self.config["edoc_non_critical_logs"])
-        # Check if user desires to have something other than online
-        status = self.config["status_type"].lower()
-        status_type = {"idle": discord.Status.idle, "dnd": discord.Status.dnd}
-
-        # Check if user desires to have a different type of activity
-        activity = self.config["activity_type"].lower()
-        activity_type = {"listening": 2, "watching": 3, "competing": 5}
-        totalmembers = sum(g.member_count for g in self.guilds)
-
-        await self.change_presence(
-            activity=discord.Game(
-                type=activity_type.get(activity, 3),
-                name=f"Watching over {totalmembers} Members spread over {len(self.guilds)} Guilds!\nPrefix: ~"
-            ),
-            status=status_type.get(status, discord.Status.online)
-        )
 
         if not self.ready:
             self.ready = True
@@ -498,7 +518,7 @@ class edoC(commands.AutoShardedBot):
             await logschannel.send(f"{self.user} has been booted up")
             # Indicate that the bot has successfully booted up
             print(
-                f"Ready: {self.user} | Total members {totalmembers} | Guild count: {len(self.guilds)} | Guilds")
+                f"Ready: {self.user} | Total members {sum(g.member_count for g in self.guilds)} | Guild count: {len(self.guilds)} | Guilds")
             guilds = {}
             for Server in self.guilds:
                 gprefix = db.field('SELECT Prefix FROM guilds WHERE GuildID = ?', Server.id)

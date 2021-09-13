@@ -14,3 +14,4 @@ humanfriendly~=9.2
 colour~=0.1.5
 pyjokes>=0.6.0
 googletrans>=3.1.0a0
+pillow>=8.3.2
