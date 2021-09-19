@@ -25,6 +25,7 @@ from discord.utils import find
 from cogs.Discordinfo import format_relative, plural
 from lib.db import db
 from utils import checks, default
+from utils.checks import MemberConver
 from utils.default import mod_or_permissions
 from utils.vars import *
 
@@ -98,10 +99,10 @@ async def BannedU(ctx):
 
 async def BanUser(ctx, userid: MemberID, reason):
     BannedUsers + userid
-    db.execute("INSERT INTO users (?, ?)", userid, reason)
+    db.execute("INSERT INTO users (?, ?)", (userid, reason,))
     # db.execute("INSERT INTO users (Reason)", reason)
     db.commit()
-    return await ctx.send(userid + " Was banned from using the bot")
+    return await ctx.send(f'{userid} Was banned from using the bot')
 
 
 def can_execute_action(ctx, user, target):
@@ -242,7 +243,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
     @commands.command()
     @commands.guild_only()
     @mod_or_permissions(kick_members=True)
-    async def kick(self, ctx, member: discord.Member, *, reason: ActionReason = None):
+    async def kick(self, ctx, member: MemberConver, *, reason: ActionReason = None):
         """Kicks a member from the server.
         In order for this to work, the bot must have Kick Member permissions.
         To use this command you must have Kick Members permission.
@@ -271,7 +272,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
     @commands.command(aliases=["nick"])
     @commands.guild_only()
     @commands.has_permissions(manage_nicknames=True)
-    async def nickname(self, ctx, member: discord.Member, *, name: str = None):
+    async def nickname(self, ctx, member: MemberConver, *, name: str = None):
         """ Nicknames a user from the current server. """
         if await checks.check_priv(ctx, member):
             return
@@ -407,7 +408,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
         # can be a User even in a guild only context
         # Rather than trying to work out the kink with it
         # Just upgrade the member itself.
-        if not isinstance(ctx.author, discord.Member):
+        if not isinstance(ctx.author, MemberConver):
             try:
                 author = await ctx.guild.fetch_member(ctx.author.id)
             except discord.HTTPException:
@@ -479,7 +480,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
 
         # member filters
         predicates = [
-            lambda m: isinstance(m, discord.Member) and can_execute_action(ctx, author, m),  # Only if applicable
+            lambda m: isinstance(m, MemberConver) and can_execute_action(ctx, author, m),  # Only if applicable
             lambda m: not m.bot,  # No bots
             lambda m: m.discriminator != '0000',  # No deleted users
         ]
@@ -686,7 +687,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
 
     @commands.group(name='mute', invoke_without_command=True)
     @can_mute()
-    async def _mute(self, ctx, members: commands.Greedy[discord.Member], *, reason: ActionReason = None):
+    async def _mute(self, ctx, members: commands.Greedy[MemberConver], *, reason: ActionReason = None):
         """Mutes members using the configured mute role.
         The bot must have Manage Roles permission and be
         above the muted role in the hierarchy.
@@ -717,7 +718,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
 
     @commands.command(name='unmute')
     @can_mute()
-    async def _unmute(self, ctx, members: commands.Greedy[discord.Member], *, reason: ActionReason = None):
+    async def _unmute(self, ctx, members: commands.Greedy[MemberConver], *, reason: ActionReason = None):
         """Unmutes members using the configured mute role.
         The bot must have Manage Roles permission and be
         above the muted role in the hierarchy.
@@ -969,7 +970,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
         await self.do_removal(ctx, search, lambda e: True)
 
     @prune.command()
-    async def user(self, ctx, member: discord.Member, search=100):
+    async def user(self, ctx, member: MemberConver, search=100):
         """Removes all messages by the member."""
         await self.do_removal(ctx, search, lambda e: e.author == member)
 

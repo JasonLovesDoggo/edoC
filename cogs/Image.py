@@ -11,10 +11,10 @@ from os import listdir
 
 import discord
 from aiohttp import ClientConnectorError, ContentTypeError
-from discord import Embed, File, Option
+from discord import Embed, File  # , Option
 from discord.ext.commands import *
 
-from utils.checks import UrlSafe
+from utils.checks import UrlSafe, MemberConver
 from utils.http import get
 from utils.vars import *
 
@@ -30,34 +30,36 @@ class Image(Cog, description='Image Related commands are here'):
         self.logschannel = self.bot.get_channel(self.config["edoc_logs"])
         self.dogphotospath = listdir("C:/Users/Jason/edoC/data/img/Dog Picks")
 
-        @bot.slash_command(guild_ids=[819282410213605406], aliases=['blurify', 'makeblury'], brief='outputs the members pfp blury')
-        async def blur(ctx,
-                       comment: Option(str, "Enter The Message"),
-                       member: discord.Member,
-                       username: Option(str, "Choose The Username", required=False)
-                       ):
-            member = member or ctx.author
-            username = username or ctx.author.display_name
-            async with self.bot.session.get(
-                    f'https://some-random-api.ml/canvas/youtube-comment?avatar{member.avatar.url}&username={username}&comment={comment}'
-            ) as af:
-                if 300 > af.status >= 200:
-                    fp = BytesIO(await af.read())
-                    file = discord.File(fp, "blury.png")
-                    em = discord.Embed(color=invis).set_image(url="attachment://blury.png")
-                    await ctx.send(embed=em, file=file)
-                else:
-                    await ctx.send('The blurification procsess must have stopped working :(')
+        # @bot.slash_command(guild_ids=[819282410213605406], aliases=['blurify', 'makeblury'], brief='outputs the members pfp blury')
+        # async def blur(ctx,
+        #               comment: Option(str, "Enter The Message"),
+        #               member: MemberConver,
+        #               username: Option(str, "Choose The Username", required=False)
+        #               ):
+        #    member = member or await authorOrReferenced(ctx)
+        #    username = username or ctx.author.display_name
+        #    async with self.bot.session.get(
+        #            f'https://some-random-api.ml/canvas/youtube-comment?avatar{member.avatar.url}&username={username}&comment={comment}'
+        #    ) as af:
+        #        if 300 > af.status >= 200:
+        #            fp = BytesIO(await af.read())
+        #            file = discord.File(fp, "blury.png")
+        #            em = discord.Embed(color=invis).set_image(url="attachment://blury.png")
+        #            await ctx.send(embed=em, file=file)
+        #        else:
+        #            await ctx.send('The blurification procsess must have stopped working :(')
 
     # TODO swap custom alexflipnote 'wrapper' to the more official one
+    def check_endpoint(self, endpoints: list, endpoint, type):
+        endpoint = endpoint.lower()
+        if endpoint not in endpoints:
+            raise Invalid_endpoint(
+                f'{endpoint} isnt an valid endpoint\nthe list of valid {type} ones are {endpoints}')
 
     async def get_r_animal(self, ctx, endpoint: str):
         availible_endpoints = ['panda', 'dog', 'cat', 'fox', 'red_panda', 'koala',
                                'birb', 'raccoon', 'kangaroo', 'whale']
-        endpoint = endpoint.lower()
-        if endpoint not in availible_endpoints:
-            raise Invalid_endpoint(
-                f'{endpoint} isnt an valid endpoint\nthe list of valid animal ones are {availible_endpoints}')
+        self.check_endpoint(availible_endpoints, endpoint, 'animal')
         async with ctx.session.get(f"https://some-random-api.ml/animal/{endpoint}") as r:
             if r.status != 429:
                 content = await r.json()
@@ -66,6 +68,16 @@ class Image(Cog, description='Image Related commands are here'):
         e = Embed(color=invis)
         e.set_footer(text=content['fact'])
         e.set_image(url=content['image'])
+        await ctx.try_reply(embed=e)
+
+    async def editpfp(self, ctx, member, endpoint):
+        availible_endpoints = ['gay', 'glass', 'wasted', 'passed', 'jail', 'comrade']
+        self.check_endpoint(availible_endpoints, endpoint, 'pfp')
+        avatar = member.avatar.url
+
+        img = f'https://some-random-api.ml/canvas/{endpoint}?avatar={avatar}'
+        e = Embed(color=invis)
+        e.set_image(url=img)
         await ctx.try_reply(embed=e)
 
     async def alexflipnote(self, ctx, url: str, endpoint: str, token: str = None):
@@ -79,6 +91,39 @@ class Image(Cog, description='Image Related commands are here'):
         except ContentTypeError:
             return await ctx.send("The API returned an error or didn't return JSON...")
         await ctx.send(r[endpoint])
+
+    @command(aliases=['howgay', 'gay'], brief="Rates your gayness")
+    async def gayrate(self, ctx, member: MemberConver = None):
+        """Rate your gayness or another users gayness. 1-100% is returned"""
+        await ctx.trigger_typing()
+        user = member.name + " is" if member else "You are"
+        gaynes = f'{int(str(abs(hash(user)))[:2]):.2f}'
+        avatar = member.avatar.url
+        img = f'https://some-random-api.ml/canvas/gay?avatar={avatar}'
+        emb = Embed(
+            title="gay r8 machine",
+            description=f"{user} **{gaynes}%** gay \U0001f308",
+            color=discord.Color.random(),
+        ).set_thumbnail(url=img)
+        await ctx.send(embed=emb)
+
+    @gayrate.error
+    async def gayrate_error(self, ctx, error):
+        if isinstance(error, MemberNotFound):
+            gaynes = f'{int(str(abs(hash(error.argument)))[:2]):.2f}'
+            emb = Embed(
+                title="gay r8 machine",
+                description=f"{error.argument} is **{gaynes} \U0001f308",
+                color=discord.Color.random(),
+            )
+            await ctx.send(embed=emb)
+        else:
+            raise error
+
+    @group(aliases=['profilepic'], brief='Modify a pfp')
+    async def pfp(self, ctx):
+        if ctx.invoked_subcommand is None:
+            await ctx.send_help(str(ctx.command))
 
     @group(aliases=['cate', 'kat', 'kate', 'catoo'], brief='Gives you a random cat.')
     @cooldown(2, 6, type=BucketType.user)
@@ -126,8 +171,7 @@ class Image(Cog, description='Image Related commands are here'):
         await ctx.send(embed=embed, file=image)
 
     @command(aliases=['horny'], brief='Horny license just for u')
-    async def hornylicense(self, ctx, member: discord.Member = None):
-        member = member or ctx.author
+    async def hornylicense(self, ctx, member: MemberConver = None):
         await ctx.trigger_typing()
         async with ctx.session.get(
                 f'https://some-random-api.ml/canvas/horny?avatar={member.avatar.url}'
@@ -145,8 +189,7 @@ class Image(Cog, description='Image Related commands are here'):
                 await ctx.error('No horny :(')
 
     @command(aliases=['simpid', 'simpcard'], brief='Simp id just for u')
-    async def simp(self, ctx, member: discord.Member = None):
-        member = member or ctx.author
+    async def simp(self, ctx, member: MemberConver = None):
         await ctx.trigger_typing()
         async with ctx.session.get(
                 f'https://some-random-api.ml/canvas/simpcard?avatar={member.avatar.url}'
@@ -164,8 +207,7 @@ class Image(Cog, description='Image Related commands are here'):
                 await ctx.error('No simpy :(')
 
     @command(aliases=['pixelify', 'makepixely'], brief='outputs the members pfp pixelated')
-    async def pixelate(self, ctx, member: discord.Member = None):
-        member = member or ctx.author
+    async def pixelate(self, ctx, member: MemberConver = None):
         await ctx.trigger_typing()
         async with ctx.session.get(
                 f'https://some-random-api.ml/canvas/pixelate?avatar={member.avatar.url}'
@@ -179,8 +221,7 @@ class Image(Cog, description='Image Related commands are here'):
                 await ctx.error('The pixel generator seems to be having a meltdown :(')
 
     @command(aliases=['blurify', 'makeblury'], brief='outputs the members pfp blury')
-    async def blur(self, ctx, member: discord.Member = None):
-        member = member or ctx.author
+    async def blur(self, ctx, member: MemberConver = None):
         await ctx.trigger_typing()
         async with ctx.session.get(
                 f'https://some-random-api.ml/canvas/blur?avatar={member.avatar.url}'
@@ -255,6 +296,39 @@ class Image(Cog, description='Image Related commands are here'):
     @cooldown(2, 6, BucketType.user)
     async def dog(self, ctx):
         await self.get_r_animal(ctx, 'dog')
+
+    @pfp.command(breif='Gayifies a pfp', name='gay')
+    async def pfp_gay(self, ctx, member: MemberConver):
+        await self.editpfp(ctx, member, 'gay')
+
+    @pfp.command(breif='glassifies a pfp', name='glass', aliases=['glassy'])
+    async def pfp_glass(self, ctx, member: MemberConver):
+        await self.editpfp(ctx, member, 'glass')
+
+    @pfp.command(breif='makes a pfp wasted', name='wasted', aliases=['waste'])
+    async def pfp_wasted(self, ctx, member: MemberConver):
+        await self.editpfp(ctx, member, 'wasted')
+
+    @pfp.command(breif='passes a pfp', name='passed', aliases=['pass'])
+    async def pfp_passed(self, ctx, member: MemberConver):
+        await self.editpfp(ctx, member, 'passed')
+
+    @pfp.command(breif='jails a pfp', name='jail', aliases=['jailed'])
+    async def pfp_jail(self, ctx, member: MemberConver):
+        await self.editpfp(ctx, member, 'jail')
+
+    @pfp.command(breif='comradifies a pfp', name='comrade')
+    async def pfp_comrade(self, ctx, member: MemberConver):
+        await self.editpfp(ctx, member, 'comrade')
+
+    @pfp.command(name='triggered', aliases=['trig', 'triggers'], brief='sends a img of the dudes pfp triggered')
+    async def pfp_triggered(self, ctx, member: MemberConver):
+        avatar = member.avatar.url
+        e = Embed(color=invis)
+        e.set_image(url="attachment://triggered.gif")
+        async with ctx.session.get(f'https://some-random-api.ml/canvas/triggered?avatar={avatar}') as trigImg:
+            imageData = BytesIO(await trigImg.read())  # read the image/bytes
+            await ctx.try_reply(embed=e, file=discord.File(imageData, 'triggered.gif'))
 
 
 def setup(bot):

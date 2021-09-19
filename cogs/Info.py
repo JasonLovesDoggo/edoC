@@ -8,15 +8,17 @@
 import asyncio
 import contextlib
 import inspect
+import pathlib
+import platform
 from datetime import datetime as dt
 from datetime import timezone
 from os import path
 from pathlib import Path
-from platform import python_version, system
 from random import choice
 from textwrap import dedent
 from typing import List, Tuple
 
+import discord.ui
 from PyDictionary import PyDictionary
 from discord import HTTPException
 from discord.ext.commands import ColourConverter, command, Cog, BucketType, cooldown, BadArgument, has_permissions, \
@@ -28,7 +30,7 @@ from pyshorteners import Shortener
 from textblob import TextBlob
 
 from utils.apis.mojang.mojang import MojangAPI as MoI
-from utils.checks import guild_only, UrlSafe
+from utils.checks import guild_only, UrlSafe, stealer_check, MemberConver
 from utils.curse import ProfanitiesFilter
 from utils.default import *
 from utils.http import get
@@ -107,7 +109,8 @@ class Info(Cog, description='Informational and useful commands'):
                          f'**Skin Type :** {prof.skin_model}\n' \
                          f'**Legacy Profile :** {prof.is_legacy_profile}\n' \
                          f'{hyperlink("Skin Url", prof.skin_url)}'
-        em.set_author(name=f'Info About {prof.name}', url=f'https://namemc.com/profile/{prof.name}', icon_url=f'https://minotar.net/helm/{prof.name}/25.png')
+        em.set_author(name=f'Info About {prof.name}', url=f'https://namemc.com/profile/{prof.name}',
+                      icon_url=f'https://minotar.net/helm/{prof.name}/25.png')
         namehistory = await MoI.get_name_history(uuid)
         names = ''
         for name in reversed(namehistory):
@@ -119,6 +122,7 @@ class Info(Cog, description='Informational and useful commands'):
             names += f'\n**{name["name"]} :** <t:{int(ts)}:R>'
         em.add_field(name='Name Histoy', value=names, inline=False)
         await ctx.try_reply(embed=em)
+
     @command(aliases=['spelling', 'fixspelling', 'autocorrect'], brief='Corrects the spelling of the input')
     async def correct(self, ctx, *, words: str):
         tb = TextBlob(text=words)
@@ -128,7 +132,7 @@ class Info(Cog, description='Informational and useful commands'):
              brief="Show what song a member listening to in Spotify", )
     @cooldown(1, 5, BucketType.user)
     @guild_only()
-    async def spotifyinfo(self, ctx, user: discord.Member = None):
+    async def spotifyinfo(self, ctx, user: MemberConver = None):
         user = user or ctx.author
 
         spotify: discord.Spotify = discord.utils.find(
@@ -439,9 +443,10 @@ class Info(Cog, description='Informational and useful commands'):
             return await ctx.send("Your todo is too long. Please be more consice.")
         id = randint(1, 99999)
         await self.bot.db.execute(
-            "INSERT INTO todo (todo, id, time, message_url, user_id) VALUES ($1, $2, $3, $4, $5)", todo, id,
-            time.time(),
-            str(ctx.message.jump_url), ctx.author.id)
+            "INSERT INTO todo (todo, id, time, message_url, user_id) VALUES (?, ?, ?, ?, ?)", (todo, id,
+                                                                                                    time.time(),
+                                                                                                    str(ctx.message.jump_url),
+                                                                                                    ctx.author.id,))
         await ctx.send(f"{ctx.tick()} Inserted `{todo}` into your todo list! (ID: `{id}`)")
 
     @todo.command(aliases=['rm', 'remove'])
@@ -576,6 +581,8 @@ class Info(Cog, description='Informational and useful commands'):
                 super().__init__(timeout=30)
                 self.add_item(discord.ui.Button(label='Ko-Fi', url='https://ko-fi.com/edocthebot'))
                 self.add_item(discord.ui.Button(label='Buy me a coffee', url='https://www.buymeacoffee.com/edoC'))
+                self.add_item(
+                    discord.ui.Button(label='Donate Bot', url='https://donatebot.io/checkout/819282410213605406'))
 
         em = Embed(title='Donate to edoC', color=invis)
         em.set_thumbnail(url=self.bot.user.avatar.url)
@@ -589,6 +596,17 @@ class Info(Cog, description='Informational and useful commands'):
     @command(name='in', aliases=["stats", "status", "botinfo", 'info', 'about'])
     async def _in(self, ctx):
         """ edoC information/stats cmd """
+
+        class InfoView(discord.ui.View):
+            def __init__(self):
+                super().__init__(timeout=35)
+                self.add_item(discord.ui.Button(label='Website', url='https://jakewaschosen.github.io/edocSite/'))
+                self.add_item(discord.ui.Button(label='Invite',
+                                                url='https://discord.com/api/oauth2/authorize?client_id=845186772698923029&permissions=8&scope=bot%20applications.commands'))
+                self.add_item(discord.ui.Button(label='Dev\'s links', url='https://bio.link/edoC'))
+                self.add_item(
+                    discord.ui.Button(label='Support me', url='https://donatebot.io/checkout/819282410213605406', ))
+
         lines = fetch_info()
         avgmembers = sum(g.member_count for g in self.bot.guilds) / len(self.bot.guilds)
         comments = lines.get('total_python_comments')
@@ -609,7 +627,7 @@ class Info(Cog, description='Informational and useful commands'):
         infos[f'{emoji("dev")}Developer'] = f'ini\n{version_info["dev"]}'
         infos[f'{status(str(ctx.guild.me.status))} Uptime'] = precisedelta(discord.utils.utcnow() - self.bot.start_time,
                                                                            format='%.0f')
-        infos[f'System'] = system()
+        infos[f'System'] = platform.system()
         infos[
             'Stats'] = f'{lang}\nMember Count: {sum(g.member_count for g in self.bot.guilds)}\nChannel Count: {chancount}\n' \
                        f'Guild Count: {len(self.bot.guilds)}\nAvg users/server: {avgmembers:,.2f}\n' \
@@ -633,14 +651,10 @@ Comments: {comments}"""
             for k, v in infos.items():
                 infemb.add_field(name=k, value=f'```{v}```', inline=False)
             infemb.add_field(name='<:dpy:596577034537402378> Discord.py version', value=f'```{discord.__version__}```')
-            infemb.add_field(name='<:python:868285625877557379> Python Version', value=f'```{python_version()}```')
+            infemb.add_field(name='<:python:868285625877557379> Python Version', value=f'```{platform.python_version()}```')
             infemb.add_field(name='<:edoC:874868276256202782> edoC Version', value=f'```{version_info["version"]}```')
-            infemb.description += ":link: **Links** \n" \
-                                  "  [dev links](https://bio.link/edoC) " \
-                                  "| [support me](https://www.buymeacoffee.com/edoC) " \
-                                  "| [invite](https://discord.com/api/oauth2/authorize?client_id=845186772698923029&permissions=8&scope=bot%20applications.commands)"
             infemb.set_footer(text=f"Prefix in this server: {prefix}")
-        await ctx.reply(embed=infemb)
+        await ctx.try_reply(embed=infemb, view=InfoView())
 
     @command(aliases=["SAF"])
     @has_permissions(attach_files=True)
@@ -663,28 +677,31 @@ Comments: {comments}"""
         periods, e.g. cat.hi for the hi subcommand of the cat command
         or by spaces.
         """
-        source_url = 'https://github.com/JakeWasChosen/edoC'
-        branch = 'main'
-        if command is None:
-            return await ctx.send(source_url)
+        check = await stealer_check(ctx, ctx.author.id, self.bot)
+        if check is False:
+            source_url = 'https://github.com/JakeWasChosen/edoC/blob'
+            branch = 'master'
+            if command is None:
+                return await ctx.send(source_url)
 
-        obj = self.bot.get_command(command.replace('.', ' '))
-        if obj is None:
-            return await ctx.send('Could not find command.')
+            obj = self.bot.get_command(command.replace('.', ' '))
+            if obj is None:
+                return await ctx.send('Could not find command.')
 
-        src = obj.callback.__code__
-        filename = src.co_filename
+            src = obj.callback.__code__
+            filename = src.co_filename
 
-        lines, firstlineno = inspect.getsourcelines(src)
-        location = path.relpath(filename).replace('\\', '/')
+            lines, firstlineno = inspect.getsourcelines(src)
+            location = path.relpath(filename).replace('\\', '/')
 
-        final_url = f'{source_url}/tree/{branch}/main/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}'
+            final_url = f'{source_url}/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}'
 
         class SourceView(discord.ui.View):
             def __init__(self, ctx):
                 super().__init__()
                 self.ctx = ctx
                 self.add_item(discord.ui.Button(label='Source URL', url=final_url))
+                self.command = ctx.command
 
             @discord.ui.button(emoji='<:trashcan:882779835737460846>')
             async def delete(self, button: discord.ui.Button, interaction: discord.Interaction):
@@ -700,9 +717,12 @@ Comments: {comments}"""
                 if interaction.user != self.ctx.author:
                     return await interaction.response.send_message('Oops. This is not your interaction.',
                                                                    ephemeral=True)
-
+                try:
+                    filename = pathlib.Path(inspect.getfile(self.command.callback)).name
+                except (TypeError, OSError):
+                    filename = 'source.py'
                 await interaction.channel.send(
-                    file=discord.File(BytesIO(dedent(''.join(lines)).encode('ascii')), 'source.py'))
+                    file=discord.File(BytesIO(dedent(''.join(lines)).encode('ascii')), filename))
                 button.disabled = True
                 await interaction.response.edit_message(view=self)
 
@@ -715,7 +735,7 @@ Comments: {comments}"""
             em.description = '```\nSource was too long to be shown here. Click Source File/Source URL below to see it.```'
         await ctx.send(embed=em, view=SourceView(ctx))
 
-    @command(help="Shows the bot's latency in miliseconds.Useful if you want to know if the bot is lagging or not",
+    @command(help="Shows the bot's latency in miliseconds Useful if you want to know if the bot is lagging or not",
              brief="Shows the bots latency")
     async def ping(self, ctx):
         start = time.perf_counter()
@@ -853,7 +873,7 @@ Comments: {comments}"""
                            description="")
         info = {}
         info["Discord.py version"] = discord.__version__
-        info["Python Version"] = f"{python_version()}"
+        info["Python Version"] = f"{platform.python_version()}"
         info["Avg users/server"] = f"{avgmembers:,.2f}"
         info["Bot owners"] = len(self.config["owners"])
         info["Prefix in this server"] = db.field("SELECT Prefix FROM guilds WHERE GuildID = ?",

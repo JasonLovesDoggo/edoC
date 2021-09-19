@@ -7,7 +7,7 @@
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 import aiohttp
-import requests
+import discord
 from discord.ext import commands
 from discord.ext.commands.errors import CommandInvokeError
 
@@ -87,11 +87,15 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
 
     """ SKILLS """
 
-    def get_name(self, name):
-        return requests.get(self.MojangUrl + name).json()['name']
+    async def get_name(self, name: str) -> str:
+        ses = await self.bot.session.get(self.MojangUrl + name)
+        data = await ses.json()
+        return data['name']
 
-    def get_uuid(self, name):
-        return requests.get(self.MojangUrl + name).json()['id']
+    async def get_uuid(self, name):
+        ses = await self.bot.session.get(self.MojangUrl + name)
+        data = await ses.json()
+        return data['id']
 
     async def edget_name(self, uuid):
         async with aiohttp.ClientSession() as session:
@@ -116,7 +120,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
     @commands.command(aliases=['coins'])
     async def balance(self, ctx, name, pname=None):
         try:
-            name = self.get_name(name)
+            name = await self.get_name(name)
         except:
             return await ctx.error('Name not found')
         async with ctx.session.get("https://sky.shiiyu.moe/api/v2/coins/" + name) as api:
@@ -150,7 +154,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
 
     @commands.command(name='taming', description='Shows your Taming statistics.')
     async def taming(self, ctx, name, pname=None):
-        nameApi = self.get_name(name)
+        nameApi = await self.get_name(name)
 
         async with ctx.session.get(self.SkyV2 + name) as api:
             data = await api.json()
@@ -193,7 +197,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
 
     @commands.command(name='farming', description='Shows your Farming statistics.')
     async def farming(self, ctx, name, pname=None):
-        nameApi = self.get_name(name)
+        nameApi = await self.get_name(name)
         async with ctx.session.get(self.SkyV2 + name) as api:
             data = await api.json()
 
@@ -286,7 +290,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
 
     @commands.command(name='mining', description='Shows your Mining statistics.')
     async def mining(self, ctx, name, pname=None):
-        nameApi = self.get_name(name)
+        nameApi = await self.get_name(name)
 
         async with ctx.session.get(self.SkyV2 + name) as api:
             data = await api.json()
@@ -338,7 +342,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
 
     @commands.command(name='combat', description='Shows your Combat statistics.')
     async def combat(self, ctx, name, pname=None):
-        nameApi = self.get_name(name)
+        nameApi = await self.get_name(name)
 
         async with ctx.session.get(self.SkyV2 + name) as api:
             data = await api.json()
@@ -390,7 +394,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
 
     @commands.command(name='foraging', description='Shows your Foraging statistics.')
     async def foraging(self, ctx, name, pname=None):
-        nameApi = self.get_name(name)
+        nameApi = await self.get_name(name)
 
         async with ctx.session.get(self.SkyV2 + name) as api:
             data = await api.json()
@@ -442,7 +446,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
 
     @commands.command(description='Shows your Fishing statistics.')
     async def fishing(self, ctx, name, pname=None):
-        nameApi = self.get_name(name)
+        nameApi = await self.get_name(name)
 
         async with ctx.session.get(self.SkyV2 + str(name)) as api:
             data = await api.json()
@@ -494,7 +498,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
 
     @commands.command(aliases=['ench'], description='Shows your Enchanting statistics.')
     async def enchanting(self, ctx, name, pname=None):
-        nameApi = self.get_name(name)
+        nameApi = await self.get_name(name)
 
         async with ctx.session.get(self.SkyV2 + name) as api:
             data = await api.json()
@@ -546,7 +550,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
 
     @commands.command(aliases=['alch'], description='Shows your Alchemy statistics.')
     async def alchemy(self, ctx, name, pname=None):
-        nameApi = self.get_name(name)
+        nameApi = await self.get_name(name)
 
         async with ctx.session.get(self.SkyV2 + name) as api:
             data = await api.json()
@@ -598,7 +602,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
 
     @commands.command(name='carpentry', description='Shows your Carpentry statistics.')
     async def carpentry(self, ctx, name, pname=None):
-        nameApi = self.get_name(name)
+        nameApi = await self.get_name(name)
 
         async with ctx.session.get(self.SkyV2 + name) as api:
             data = await api.json()
@@ -650,7 +654,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
 
     @commands.command(name='runecrafting', description='Shows your Runecrafting statistics.')
     async def runecrafting(self, ctx, name, pname=None):
-        nameApi = self.get_name(name)
+        nameApi = await self.get_name(name)
 
         async with ctx.session.get(self.SkyV2 + name) as api:
             data = await api.json()
@@ -705,7 +709,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
     @commands.command(name='dungeons', aliases=['dungeon', 'catacombs', 'cata'],
                       description='Shows your Dungeoneering statistics.')
     async def dungeons(self, ctx, name, pname=None):
-        name = self.get_name(name)
+        name = await self.get_name(name)
 
         async with ctx.session.get(self.SkyV2 + name) as api:
             data = await api.json()
@@ -812,7 +816,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
     @commands.command(name='slayer', aliases=['slayers'],
                       description='Shows all of your Zombie, Spider, Wolf and Enderman Slayer statistics.')
     async def slayers(self, ctx, name, pname=None):
-        nameApi = self.get_name(name)
+        nameApi = await self.get_name(name)
 
         async with ctx.session.get(self.SkyV2 + name) as api:
             data = await api.json()

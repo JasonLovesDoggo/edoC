@@ -1,12 +1,20 @@
 {
-  "MsgsSeen": "61262",
-  "MemberCount": "40765",
+  "MsgsSeen": "118793",
+  "MemberCount": "40943",
   "GuildCount": "9",
-  "hobbies": [
-    "running",
-    "sky diving",
-    "singing"
+  "codestealers": [
+    332512426249682953,
+    538791688504606738
   ],
+  "prefixs": {
+    "123": [
+      "1",
+      "12"
+    ],
+    "12": [
+      "122"
+    ]
+  },
   "age": 35,
   "children": [
     {

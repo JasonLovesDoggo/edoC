@@ -58,6 +58,10 @@ class coggers(commands.Cog, description='e'):
             try:
                 if command.description and command.short_doc:
                     description = f'{command.description}\n{command.short_doc}'
+                elif command.description:
+                    description = f'{command.description}'
+                elif command.short_doc:
+                    description = f'{command.short_doc}'
                 else:
                     description = 'No Info Given...'
                 sig = str(command.signature)
@@ -66,34 +70,17 @@ class coggers(commands.Cog, description='e'):
                 parent = command.full_parent_name
                 name = command.name if not parent else f'{parent} {command.name}'
                 description = description.replace('```', '').replace('yaml', '').replace('|', '')  # .replace('', '')
-                if isinstance(command, commands.Group):
-                    for comand in command.commands:
-
-                        tosend += f"""
-                    <br><button type="button" class="collapsible">{name}<span></span></button>
-                    <div class="content">
-                        <h4 style="color: #cccccc;">Category:</h4>
-                        <p style="color: #464f7a;">{y[2].split()[0]}</p>
-                        {'<h4 style="color: #cccccc;">Aliases:</h4>'
-                         f'<p>{aliases}</p>' if aliases else ''}
-                        <h4 style="color: #cccccc;">Usage:</h4>
-                        <p>{self.bot.prefix}{name} {finalsig}</p>
-                        <h4 style="color: #cccccc;">Help:</h4>
-                        <p> {description} </p>
-                        <h4 style="color: #cccccc;">Sub Commands:</h4>
-                      f'<p>{command.walk_commands}</p>'
-                    </div><br>\n"""
 
                 tosend += f"""
                 <br><button type="button" class="collapsible">{name}<span></span></button>
                 <div class="content">
-                    <h4 style="color: #cccccc;">Category:</h4>
+                    <h4 style="color: silver;">Category:</h4>
                     <p style="color: #464f7a;">{y[2].split()[0]}</p>
-                    {'<h4 style="color: #cccccc;">Aliases:</h4>'
+                    {'<h4 style="color: silver;">Aliases:</h4>'
                      f'<p>{aliases}</p>' if aliases else ''}
-                    <h4 style="color: #cccccc;">Usage:</h4>
+                    <h4 style="color: silver;">Usage:</h4>
                     <p>{self.bot.prefix}{name} {finalsig}</p>
-                    <h4 style="color: #cccccc;">Help:</h4>
+                    <h4 style="color: silver">Help:</h4>
                     <p> {description} </p>                    
                 </div><br>\n"""
             except IndexError:

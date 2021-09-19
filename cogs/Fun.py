@@ -27,6 +27,7 @@ from pyfiglet import figlet_format
 from pyjokes import pyjokes
 
 from cogs.Discordinfo import plural
+from utils.checks import MemberConver
 from utils.default import config, CustomTimetext
 from utils.http import get
 from utils.pagination import UrbanSource
@@ -166,15 +167,6 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
     #    """ Posts a random dog """
     #    await self.randomimageapi(ctx, "https://rng.dog/woof.json", "url")
 
-    @commands.command(aliases=['trig'], brief='sends a img of the dudes pfp triggered')
-    async def triggered(self, ctx, member: discord.Member = None):
-        member = member or ctx.author
-
-        async with ctx.session.get(
-                f'https://some-random-api.ml/canvas/triggered?avatar={member.avatar.url}') as trigImg:
-            imageData = BytesIO(await trigImg.read())  # read the image/bytes
-            await ctx.try_reply(file=discord.File(imageData, 'triggered.gif'))
-
     @commands.command(aliases=["flip", "coin"])
     async def coinflip(self, ctx):
         """ Coinflip! """
@@ -205,7 +197,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
         await ctx.reply(joke)
 
     @commands.command(aliases=['renamedchuckJokes', 'gudjokesherenoscam', 'CJ'])
-    async def ChuckJoke(self, ctx, person: discord.Member = None):
+    async def ChuckJoke(self, ctx, person: MemberConver = None):
         """ChuckNorris is the only man to ever defeat a brick wall in a game of tennis."""
         joke = rng.choice(chuckjoke)
         if person is not None:
@@ -501,7 +493,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
         await sleep(2)
         await message.delete()
 
-        if ctx.author == ctx.guild.owner or 511724576674414600:
+        if ctx.author == ctx.guild.owner or ctx.channel.permissions_for(ctx.author).manage_channel:
             hiarchypos = ctx.channel.position
             cloned = await ctx.channel.clone()
             await ctx.channel.delete()
@@ -572,7 +564,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
         await ctx.send(f"`{person1}` and `{person2}` are **{round(ship_amount, 4)} compatible **")
 
     @commands.command()
-    async def beer(self, ctx, user: discord.Member = None, *, reason: commands.clean_content = ""):
+    async def beer(self, ctx, user: MemberConver = None, *, reason: commands.clean_content = ""):
         """ Give someone a beer! 🍻 """
         if not user or user.id == ctx.author.id:
             return await ctx.send(f"**{ctx.author.name}**: paaaarty!🎉🍺")
@@ -607,7 +599,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
             return await ctx.unknown('uhm unknown error with the beer command', ctx.command)
 
     @commands.command(aliases=["howhot", "hot"])
-    async def hotcalc(self, ctx, *, user: discord.Member):
+    async def hotcalc(self, ctx, *, user: MemberConver):
         """ Returns a random percent for how hot is a discord user """
         rng.seed(user.id)
         r = rng.randint(1, 100)
@@ -625,32 +617,6 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
             emoji = "💔"
 
         await ctx.send(f"**{user.name}** is **{hot:.2f}%** hot {emoji}")
-
-    @commands.command(aliases=['howgay', 'gay'], brief="Rates your gayness")
-    async def gayrate(self, ctx, member: discord.Member = None):
-        """Rate your gayness or another users gayness. 1-100% is returned"""
-        user = member.name + " is" if member else "You are"
-        gaynes = f'{int(str(abs(hash(user)))[:2]):.2f}'
-
-        emb = Embed(
-            title="gay r8 machine",
-            description=f"{user} **{gaynes}%** gay 🌈",
-            color=discord.Color.random(),
-        )
-        await ctx.send(embed=emb)
-
-    @gayrate.error
-    async def gayrate_error(self, ctx, error):
-        if isinstance(error, commands.MemberNotFound):
-            gaynes = f'{int(str(abs(hash(error.argument)))[:2]):.2f}'
-            emb = Embed(
-                title="gay r8 machine",
-                description=f"{error.argument} is **{gaynes}%** gay 🌈",
-                color=discord.Color.random(),
-            )
-            await ctx.send(embed=emb)
-        else:
-            raise error
 
     @commands.command(aliases=["memes"], brief="Shows a meme from reddit")
     @commands.cooldown(1, 1.5, type=BucketType.user)
@@ -674,7 +640,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
 
     @commands.command(name="fight")
     @commands.max_concurrency(1, commands.BucketType.user)
-    async def fight(self, ctx, member: discord.Member):
+    async def fight(self, ctx, member: MemberConver):
         """
         Challenge an user to a duel!
         The user cannot be a bot.

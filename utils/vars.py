@@ -246,7 +246,7 @@ async def ErrorEmbed(ctx, err):
 
 
 contributors = {
-    'StickyRunnerTR#9676': 'For the entirety of the skyblock cog',
+    'StickyRunnerTR#9676': 'For the entirety of the skyblock cog\nOh wait nvm he steals my code too',
     'AlexFlipnote#0001': '#1 For getting me into Python,\n#2 [The core of edoc](https://github.com/AlexFlipnote/discord_bot.py),\n#3 For just being cool',
     'Shawn In Disguise#1010': 'All the art and logos besides emojis related with the bot',
     'Danny#0007': 'For creating the amazing discord API wrapper',

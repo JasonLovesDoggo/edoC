@@ -17,10 +17,12 @@ import textwrap
 import traceback
 from contextlib import redirect_stdout
 from io import BytesIO
+from random import random
 
 import aiohttp
 import discord
 from discord.ext import commands
+from discord.ext.commands import command, is_owner
 from jishaku.models import copy_context_with
 from jishaku.paginators import WrappedPaginator, PaginatorInterface
 
@@ -285,7 +287,6 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
     async def prefix(self, ctx, next_prefix: str):
         """
          Change the value of prefix for the guild and insert it into the guilds table
-         @param next_prefix:
          """
         await ctx.send("this command currently does not exist its just a placeholder")
         db.execute("UPDATE guilds SET Prefix=? WHERE GuildId=?", (next_prefix, ctx.guild.id))
@@ -424,8 +425,15 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
     @commands.is_owner()
     async def shutdown(self, ctx):
         """ shut down the bot """
-        await ctx.send("Shuting down now...")
+        await ctx.warn("Shuting down now...", log=True)
         await self.bot.close()
+
+    @command()
+    @is_owner()
+    async def restart(self, ctx):
+        """ restarts the bot using pm2 """
+        await ctx.warn('Restarting..', log=True)
+        await self.bot.restart()
 
     @commands.command()
     @commands.is_owner()
@@ -594,7 +602,7 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
         path = self.DoggoPath
         files = os.listdir(path)
         for count, file in enumerate(files):
-            os.rename(os.path.join(path, file), os.path.join(path, ''.join(f"{random.random()}.jpg")))
+            os.rename(os.path.join(path, file), os.path.join(path, ''.join(f"{random()}.jpg")))
         await ctx.send(f"done")
 
     @commands.is_owner()

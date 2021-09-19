@@ -1,12 +1,14 @@
-
 {
-  "apps": [
-    {
-      "name": "edoc",
-      "script": "index.py",
-      "interpreter": "python",
-      "interpreter_args": "-u",
-      "no-autorestart": ""
-    }
-  ]
+  "apps": [{
+    "name":"edoC",
+    "script":"index.py",
+    "interpreter" : "venv/Scripts/python.exe",
+    "interpreter_args": "-u",
+    "watch": false,
+    "ignore_watch": ["log.log", "ConsoleLog.log"],
+    "instances": 1,
+    "min_uptime" : "600",
+    "max_restarts": 3,
+    "stop-exit-codes": [600]
+  }]
 }

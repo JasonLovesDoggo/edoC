@@ -11,12 +11,13 @@ import logging
 import math
 import time
 import traceback
+from asyncio import sleep
 from calendar import calendar
 from datetime import datetime
 from distutils.log import info
 from glob import glob
 from io import BytesIO
-from os import getpid, remove
+from os import getpid, remove, _exit
 
 import alexflipnote
 import apscheduler.schedulers.asyncio
@@ -325,10 +326,12 @@ class edoCContext(commands.Context):
         e.description = str(success_message)
         return await self.try_reply(embed=e)
 
-    async def warn(self, warn_message: str = None):
+    async def warn(self, warn_message: str = None, log=False):
         e = Embed(color=yellow)
         e.description = str(warn_message)
-        return await self.try_reply(embed=e)
+        await self.try_reply(embed=e)
+        if log:
+            logging.debug(warn_message)
 
     async def invis(self, invis_message):
         e = Embed(color=invis)
@@ -437,16 +440,36 @@ class edoC(commands.AutoShardedBot):
     async def update_data(self):
         self.backup_data()
 
+    async def get_url(self, url) -> dict:
+        async with self.session.get(url) as ses:
+            data = await ses.json()
+        return data
+
     async def on_message(self, msg):
-        self.seen_messages += 1
         if not self.is_ready() or msg.author.bot or not can_handle(msg, "send_messages"):
             return
-
+        self.seen_messages += 1
+        if bool(msg.raw_mentions):
+            if msg.raw_mentions[0] == 845186772698923029 and len(msg.content) == 22:
+                context = await self.get_context(msg, cls=edoCContext)
+                await context.send_help()
         await self.process_commands(msg)
+
+    async def exit(self, code):
+        await sleep(4)
+        _exit(code)
 
     async def close(self) -> None:
         self.update_data.stop()
         self.backup_data()
+        await self.session.close()
+        await self.exit(600)
+        await super().close()
+
+    async def restart(self) -> None:
+        self.update_data.stop()
+        self.backup_data()
+        await self.exit(601)
         await self.session.close()
         await super().close()
 
@@ -502,7 +525,7 @@ class edoC(commands.AutoShardedBot):
             return None
         return members[0]
 
-    async def get_context(self, message, *, cls=edoCContext):
+    async def get_context(self, message, *, cls=edoCContext) -> edoCContext:
         return await super().get_context(message, cls=cls)
 
     async def on_ready(self):
