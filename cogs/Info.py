@@ -12,11 +12,9 @@ import pathlib
 import platform
 from datetime import datetime as dt
 from datetime import timezone
-from os import path
 from pathlib import Path
-from random import choice
 from textwrap import dedent
-from typing import List, Tuple
+from typing import Tuple
 
 import discord.ui
 from PyDictionary import PyDictionary
@@ -30,7 +28,7 @@ from pyshorteners import Shortener
 from textblob import TextBlob
 
 from utils.apis.mojang.mojang import MojangAPI as MoI
-from utils.checks import guild_only, UrlSafe, stealer_check, MemberConver
+from utils.checks import guild_only, UrlSafe, stealer_check, MemberConverterr
 from utils.curse import ProfanitiesFilter
 from utils.default import *
 from utils.http import get
@@ -132,7 +130,7 @@ class Info(Cog, description='Informational and useful commands'):
              brief="Show what song a member listening to in Spotify", )
     @cooldown(1, 5, BucketType.user)
     @guild_only()
-    async def spotifyinfo(self, ctx, user: MemberConver = None):
+    async def spotifyinfo(self, ctx, user: MemberConverterr = None):
         user = user or ctx.author
 
         spotify: discord.Spotify = discord.utils.find(
@@ -444,9 +442,9 @@ class Info(Cog, description='Informational and useful commands'):
         id = randint(1, 99999)
         await self.bot.db.execute(
             "INSERT INTO todo (todo, id, time, message_url, user_id) VALUES (?, ?, ?, ?, ?)", (todo, id,
-                                                                                                    time.time(),
-                                                                                                    str(ctx.message.jump_url),
-                                                                                                    ctx.author.id,))
+                                                                                               time.time(),
+                                                                                               str(ctx.message.jump_url),
+                                                                                               ctx.author.id,))
         await ctx.send(f"{ctx.tick()} Inserted `{todo}` into your todo list! (ID: `{id}`)")
 
     @todo.command(aliases=['rm', 'remove'])
@@ -651,7 +649,8 @@ Comments: {comments}"""
             for k, v in infos.items():
                 infemb.add_field(name=k, value=f'```{v}```', inline=False)
             infemb.add_field(name='<:dpy:596577034537402378> Discord.py version', value=f'```{discord.__version__}```')
-            infemb.add_field(name='<:python:868285625877557379> Python Version', value=f'```{platform.python_version()}```')
+            infemb.add_field(name='<:python:868285625877557379> Python Version',
+                             value=f'```{platform.python_version()}```')
             infemb.add_field(name='<:edoC:874868276256202782> edoC Version', value=f'```{version_info["version"]}```')
             infemb.set_footer(text=f"Prefix in this server: {prefix}")
         await ctx.try_reply(embed=infemb, view=InfoView())
@@ -678,7 +677,9 @@ Comments: {comments}"""
         or by spaces.
         """
         check = await stealer_check(ctx, ctx.author.id, self.bot)
-        if check is False:
+        if check is not False:
+            return check
+        else:
             source_url = 'https://github.com/JakeWasChosen/edoC/blob'
             branch = 'master'
             if command is None:
@@ -743,14 +744,15 @@ Comments: {comments}"""
         end = time.perf_counter()
         typing_ping = (end - start) * 1000
 
-        # start = time.perf_counter()
-        # self.db.execute('SELECT 1')
-        # end = time.perf_counter()
-        # sql_ping = (end - start) * 1000
+        start = time.perf_counter()
+        db.execute('SELECT 1')
+        end = time.perf_counter()
+        sql_ping = (end - start) * 1000
         e = discord.Embed(
-            description=f"{self.bot.icons['typing']} ** | Typing**: {round(typing_ping, 1)} ms\n{self.bot.icons['edoc']} ** | Websocket**: {round(self.bot.latency * 1000)} ms",
-            color=invis)  # \n{self.bot.icons['database']} **" | Database**: {round(sql_ping, 1)} ms")
-        await msg.edit(embed=e)
+            description=f"{self.bot.icons['typing']} ** | Typing**: {round(typing_ping, 1)} ms\n{self.bot.icons['edoc']} ** | Websocket**: {round(self.bot.latency * 1000)} ms\n{self.bot.icons['database']} ** | Database**: {round(sql_ping, 1)} ms",
+            color=invis)
+        await msg.delete()
+        await ctx.try_reply(embed=e)
 
     @command()
     async def lines(self, ctx):

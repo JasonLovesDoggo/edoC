@@ -7,10 +7,10 @@
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 import asyncio
 import json
-import random as rng
 from asyncio import sleep
 from collections import Counter
 from io import BytesIO
+from random import *
 from secrets import token_urlsafe
 from typing import Optional
 
@@ -20,14 +20,17 @@ from aiotrivia import TriviaClient, AiotriviaException
 from bs4 import BeautifulSoup
 from discord import Embed, HTTPException
 from discord.ext import commands
-from discord.ext.commands import BucketType, command
+from discord.ext.commands import BucketType, command, max_concurrency, cooldown
 from discord.ext.menus import MenuPages
+from faker import Faker
 from nekos import InvalidArgument, why, owoify, img
+from phone_gen import PhoneNumber
 from pyfiglet import figlet_format
 from pyjokes import pyjokes
 
 from cogs.Discordinfo import plural
-from utils.checks import MemberConver
+from utils.apis.Somerandomapi import SRA
+from utils.checks import MemberConverterr
 from utils.default import config, CustomTimetext
 from utils.http import get
 from utils.pagination import UrbanSource
@@ -40,6 +43,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
         self.config = config()
         self.alex_api_token = self.config["alexflipnote_api"]
         self.trivia = TriviaClient()
+        self.sra = SRA(session=self.bot.session)
 
     @command()
     async def trivia(self, ctx, difficulty: str):
@@ -51,7 +55,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
                 return await ctx.error('Invalid Difficulty Please use either easy, medium or hard')
             return await ctx.error(f"{error.__class__.__name__}: {error}")
         answers = question.responses
-        rng.shuffle(answers)
+        shuffle(answers)
         final_answers = '\n'.join([f"{index}. {value}" for index, value in enumerate(answers, 1)])
         message = await ctx.invis(
             f"**{question.question}**\n{final_answers}\n{question.type.capitalize()} Question about {question.category}")
@@ -64,6 +68,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
                     return await ctx.success(f"{answer} was correct! ({question.answer})")
         except asyncio.TimeoutError:
             await ctx.invis(f"The correct answer was {question.answer}")
+
     @commands.command(aliases=["sayagain", 'repeat'])
     async def echo(self, ctx, *, what_to_say: commands.clean_content):
         """ repeats text """
@@ -72,14 +77,14 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
     @commands.command(aliases=["8ball"])
     async def eightball(self, ctx, *, question: commands.clean_content):
         """ Consult 8ball to receive an answer """
-        answer = rng.choice(ballresponse)
+        answer = choice(ballresponse)
         tosend = f"🎱 **Question:** {question}\n**Answer:** {answer}"
-        emb = discord.Embed(description=tosend, color=rng.choice(ColorsList))
+        emb = discord.Embed(description=tosend, color=choice(ColorsList))
         await ctx.reply(embed=emb)
 
     @command(aliases=['ouija'], brief="Asks the mystical Ouija Board a question...")
     async def askouija(self, ctx, *, question: str):
-        ouija_choice = rng.choice(ouija_responses)
+        ouija_choice = choice(ouija_responses)
         ouija_says = f"You asked me... '_{question}_'... I respond... {ouija_choice}"
         await ctx.success(ouija_says)
 
@@ -97,7 +102,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
 
     @commands.command(aliases=["roll", "dice"])
     async def rolldice(self, ctx, guess):
-        answer = rng.randint(1, 6)
+        answer = randint(1, 6)
         await ctx.reply(embed=discord.Embed(color=green if guess == answer else red,
                                             description=f"{'True' if guess == answer else 'False'} your guess was {guess} and the answer was {answer}"))
 
@@ -146,8 +151,8 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
     @commands.cooldown(rate=1, per=2, type=commands.BucketType.user)
     async def RandomFact(self, ctx):
         """ Legit just posts a random fact"""
-        fact = rng.choice(random_facts)
-        emb = discord.Embed(description=fact, color=rng.choice(ColorsList))
+        fact = choice(random_facts)
+        emb = discord.Embed(description=fact, color=choice(ColorsList))
         await ctx.reply(embed=emb, mention_author=False)
 
     async def api_img_creator(self, ctx, url: str, filename: str, content: str = None):
@@ -165,13 +170,13 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
     # @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
     # async def dog(self, ctx):
     #    """ Posts a random dog """
-    #    await self.randomimageapi(ctx, "https://rng.dog/woof.json", "url")
+    #    await self.randomimageapi(ctx, "https://dog/woof.json", "url")
 
     @commands.command(aliases=["flip", "coin"])
     async def coinflip(self, ctx):
         """ Coinflip! """
         coinsides = ["Heads", "Tails"]
-        await ctx.send(f"**{ctx.author.name}** flipped a coin and got **{rng.choice(coinsides)}**!")
+        await ctx.send(f"**{ctx.author.name}** flipped a coin and got **{choice(coinsides)}**!")
 
     @commands.command(aliases=["flip", "coin"])
     async def coinflip(self, ctx, *, toss='Heads'):
@@ -179,13 +184,13 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
         responses = ['Heads', 'Tails']
         if len(toss) > 100:
             return await ErrorEmbed(ctx=ctx, err='Please keep the length of your toss down')
-        value = rng.randint(0, 0xffffff)
+        value = randint(0, 0xffffff)
         embed = discord.Embed(
 
             colour=value,
 
         )
-        embed.add_field(name=f'**User Side:** {toss}\n**Result:** {rng.choice(responses)}',
+        embed.add_field(name=f'**User Side:** {toss}\n**Result:** {choice(responses)}',
                         value="Someone is gonna go cry to mommy.", inline=False)
 
         await ctx.send(embed=embed)
@@ -197,9 +202,9 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
         await ctx.reply(joke)
 
     @commands.command(aliases=['renamedchuckJokes', 'gudjokesherenoscam', 'CJ'])
-    async def ChuckJoke(self, ctx, person: MemberConver = None):
+    async def ChuckJoke(self, ctx, person: MemberConverterr = None):
         """ChuckNorris is the only man to ever defeat a brick wall in a game of tennis."""
-        joke = rng.choice(chuckjoke)
+        joke = choice(chuckjoke)
         if person is not None:
             try:
                 nj = joke.replace('Chuck Norris', person)
@@ -261,12 +266,12 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
         if minimum >= maximum:
             return await ctx.send('Maximum is smaller than minimum.')
 
-        await ctx.send(rng.randint(minimum, maximum))
+        await ctx.send(randint(minimum, maximum))
 
     @commands.command(aliases=['random-lenny', 'rl'])
     async def rlenny(self, ctx):
         """Displays a random lenny face."""
-        lenny = rng.choice([
+        lenny = choice([
             "( ͡° ͜ʖ ͡°)", "( ͠° ͟ʖ ͡°)", "ᕦ( ͡° ͜ʖ ͡°)ᕤ", "( ͡~ ͜ʖ ͡°)",
             "( ͡o ͜ʖ ͡o)", "͡(° ͜ʖ ͡ -)", "( ͡͡ ° ͜ ʖ ͡ °)﻿", "(ง ͠° ͟ل͜ ͡°)ง",
             "ヽ༼ຈل͜ຈ༽ﾉ"
@@ -281,7 +286,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
         if len(choices) < 2:
             return await ctx.send('Not enough choices to pick from.')
 
-        await ctx.send(rng.choice(choices))
+        await ctx.send(choice(choices))
 
     @commands.command(aliases=['CBO'])
     async def choosebestof(self, ctx, times: Optional[int], *choices: commands.clean_content):
@@ -296,7 +301,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
             times = (len(choices) ** 2) + 1
 
         times = min(10001, max(1, times))
-        results = Counter(rng.choice(choices) for i in range(times))
+        results = Counter(choice(choices) for i in range(times))
         builder = []
         if len(results) > 15:
             builder.append('Only showing top 15 results...')
@@ -311,7 +316,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
     async def gtn(self, ctx):
         """Play a guess the number game! You have three chances to guess the number 1-10"""
 
-        no = rng.randint(1, 10)  # randrange to randint
+        no = randint(1, 10)  # randrange to randint
         await ctx.success(
             "A number between **1 and 10** has been chosen, You have 3 attempts to guess the right number! Type your guess in the chat as a valid number!"
             # no f
@@ -434,12 +439,12 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
         """ Press F to pay respect """
         hearts = ["❤", "💛", "💚", "💙", "💜"]
         reason = f"for **{text}** " if text else ""
-        await ctx.send(f"**{ctx.author.name}** has paid their respect {reason}{rng.choice(hearts)}")
+        await ctx.send(f"**{ctx.author.name}** has paid their respect {reason}{choice(hearts)}")
 
     @commands.command(aliases=['ans'])
     async def answer(self, ctx):
         """ purely just says yes or no randomly """
-        ans = rng.choice(["yes", "no"])
+        ans = choice(["yes", "no"])
         await ctx.reply(ans)
 
     @commands.command(aliases=["uwuify", "makeuwu", "makeowo"])
@@ -558,13 +563,43 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
     @commands.command()
     async def ship(self, ctx, person1: commands.clean_content, person2: commands.clean_content):
         """ Rates what you desire """
-        ship_amount = rng.uniform(0.0, 100.0)
+        ship_amount = uniform(0.0, 100.0)
         if "jake" or "jason" or "edoc" in person1.lower() or person2.lower():
             ship_amount = 69.42069
         await ctx.send(f"`{person1}` and `{person2}` are **{round(ship_amount, 4)} compatible **")
 
+    @command()
+    @max_concurrency(1, BucketType.channel)
+    @cooldown(1, 1, BucketType.user)
+    async def hack(self, ctx, member: discord.Member = None):
+        member = member or await ctx.replied_author
+        message = await ctx.cembed(0x346c35, f'Hacking {member.mention} ...')
+        fake = Faker()
+        email = f'{member.name}{randrange(1000, 9999)}@{choice(email_ends)}'.replace(' ', '')
+        times = randrange(8, 20)
+        password = ''
+        for x in range(times):
+            password += choice(chars)
+        embed = discord.Embed(
+            title=f'Succesfully Hacked {member}!',
+            description=f'{ctx.author.mention}: Here is what i got from discord\'s DB',
+            colour=0x346c35
+        )
+        country = choice(countrys)
+        phnum = PhoneNumber(country)
+        phnum = phnum.get_number()
+        embed.add_field(name='Login:', value=f'```ahk\nEmail: {email}\nPassword: {password}\nPhone Number: {phnum}```',
+                        inline=False)
+        embed.add_field(name='Personal:',
+                        value=f'```ahk\nIP: {fake.ipv4()}\nCountry: {country}\nCurrent Device: {device}```', inline=False)
+        embed.add_field(name='Discord Stuff:',
+                        value=f'```ahk\nID: {member.id}\nUsername: {member.name}\nNickname: {member.nick}\nToken: {await self.sra.bot_token(id=member.id)}\nActivity: {member.activity}\nStatus: {member.status}\nTotal Servers: {randrange(1, 100)}\nJoined Discord At: {member.created_at.strftime("%d %b %Y %I:%M")}```',
+                        inline=False)
+        await asyncio.sleep(10)
+        await message.edit(embed=embed)
+
     @commands.command()
-    async def beer(self, ctx, user: MemberConver = None, *, reason: commands.clean_content = ""):
+    async def beer(self, ctx, user: MemberConverterr = None, *, reason: commands.clean_content = ""):
         """ Give someone a beer! 🍻 """
         if not user or user.id == ctx.author.id:
             return await ctx.send(f"**{ctx.author.name}**: paaaarty!🎉🍺")
@@ -599,10 +634,10 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
             return await ctx.unknown('uhm unknown error with the beer command', ctx.command)
 
     @commands.command(aliases=["howhot", "hot"])
-    async def hotcalc(self, ctx, *, user: MemberConver):
+    async def hotcalc(self, ctx, *, user: MemberConverterr):
         """ Returns a random percent for how hot is a discord user """
-        rng.seed(user.id)
-        r = rng.randint(1, 100)
+        seed(user.id)
+        r = randint(1, 100)
         hot = r / 1.17
         if user.id == 511724576674414600:
             hot = 100
@@ -640,7 +675,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
 
     @commands.command(name="fight")
     @commands.max_concurrency(1, commands.BucketType.user)
-    async def fight(self, ctx, member: MemberConver):
+    async def fight(self, ctx, member: MemberConverterr):
         """
         Challenge an user to a duel!
         The user cannot be a bot.
@@ -650,7 +685,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
 
         users = [ctx.author, member]
 
-        user1 = rng.choice(users)
+        user1 = choice(users)
         user2 = ctx.author if user1 == member else member
 
         user1_hp = 100
@@ -667,7 +702,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
                 loser = user2 if winner == user1 else user1
                 winner_hp = user1_hp if user2_hp <= 0 else user2_hp
                 await ctx.send(
-                    rng.choice(
+                    choice(
                         [
                             f"Wow! **{winner.name}** totally melted down **{loser.name}**, winning with just `{winner_hp} HP` left!",
                             f"YEET! **{winner.name}** REKT **{loser.name}**, winning with `{winner_hp} HP` left.",
@@ -699,14 +734,14 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
                 return
 
             if msg.content.lower() == "punch":
-                damage = rng.choice(
+                damage = choice(
                     [
-                        rng.randint(20, 60),
-                        rng.randint(0, 50),
-                        rng.randint(30, 70),
-                        rng.randint(0, 40),
-                        rng.randint(10, 30),
-                        rng.randint(5, 10),
+                        randint(20, 60),
+                        randint(0, 50),
+                        randint(30, 70),
+                        randint(0, 40),
+                        randint(10, 30),
+                        randint(5, 10),
                     ]
                 )
 
@@ -717,7 +752,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
                     user1_hp -= damage
                     hpover = 0 if user1_hp < 0 else user1_hp
 
-                randommsg = rng.choice(
+                randommsg = choice(
                     [
                         f"**{alpha.name}** deals **{damage}** damage with an OP punch.\n**{beta.name}** is left with {hpover} HP",
                         f"**{alpha.name}** lands an amazing punch on **{beta.name}** dealing **{damage}** damage!\n**{beta.name}** is left over with {hpover} HP!",
@@ -727,12 +762,12 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
                 await ctx.send(f"{randommsg}")
 
             elif msg.content.lower() == "kick":
-                damage = rng.choice(
+                damage = choice(
                     [
-                        rng.randint(30, 45),
-                        rng.randint(30, 60),
-                        rng.randint(-50, -1),
-                        rng.randint(-40, -1),
+                        randint(30, 45),
+                        randint(30, 60),
+                        randint(-50, -1),
+                        randint(-40, -1),
                     ]
                 )
                 if damage > 0:
@@ -745,7 +780,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
                         hpover = 0 if user1_hp < 0 else user1_hp
 
                     await ctx.send(
-                        rng.choice(
+                        choice(
                             [
                                 f"**{alpha.name}** kicks **{beta.name}** and deals **{damage}** damage\n**{beta.name}** is left over with **{hpover}** HP",
                                 f"**{alpha.name}** lands a dank kick on **{beta.name}**, dealing **{damage}** damage.\n**{beta.name}** is left over with **{hpover}** HP",
@@ -762,7 +797,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
                         hpover = 0 if user2_hp < 0 else user2_hp
 
                     await ctx.send(
-                        rng.choice(
+                        choice(
                             [
                                 f"**{alpha.name}** flipped over while kicking their opponent, dealing **{-damage}** damage to themselves.",
                                 f"{alpha.name} tried to kick {beta.name} but FELL DOWN! They took {-damage} damage!",
@@ -771,14 +806,14 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
                     )
 
             elif msg.content.lower() == "slap":
-                damage = rng.choice(
+                damage = choice(
                     [
-                        rng.randint(20, 60),
-                        rng.randint(0, 50),
-                        rng.randint(30, 70),
-                        rng.randint(0, 40),
-                        rng.randint(10, 30),
-                        rng.randint(5, 10),
+                        randint(20, 60),
+                        randint(0, 50),
+                        randint(30, 70),
+                        randint(0, 40),
+                        randint(10, 30),
+                        randint(5, 10),
                     ]
                 )
 
@@ -819,7 +854,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
     @commands.command(brief="Let me tell a joke!")
     async def joke(self, ctx):
         """
-        Returns a random joke from https://official-joke-api.appspot.com/jokes/rng.
+        Returns a random joke from https://official-joke-api.appspot.com/jokes/
         """
         res = await self.bot.session.get("https://official-joke-api.appspot.com/jokes/random")
         data = await res.json()
@@ -873,9 +908,9 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
     async def slot(self, ctx):
         """ Roll the slot machine """
         emojis = "🍎🍊🍐🍋🍉🍇🍓🍒"
-        a = rng.choice(emojis)
-        b = rng.choice(emojis)
-        c = rng.choice(emojis)
+        a = choice(emojis)
+        b = choice(emojis)
+        c = choice(emojis)
 
         slotmachine = f"**[ {a} {b} {c} ]\n{ctx.author.name}**,"
 

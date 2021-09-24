@@ -15,7 +15,7 @@ from discord.ext import commands
 
 #from discord_slash import cog_ext, SlashContext
 #@interactions.application_command(...)
-#async def second_borrowing(ctx, member: MemberConver):
+#async def second_borrowing(ctx, member: MemberConverterr):
 #    await ctx.send(f"Member ID: {member.id}")
 
 

@@ -88,13 +88,11 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
     """ SKILLS """
 
     async def get_name(self, name: str) -> str:
-        ses = await self.bot.session.get(self.MojangUrl + name)
-        data = await ses.json()
+        data = await self.bot.get_url(self.MojangUrl + name)
         return data['name']
 
     async def get_uuid(self, name):
-        ses = await self.bot.session.get(self.MojangUrl + name)
-        data = await ses.json()
+        data = await self.bot.get_url(self.MojangUrl + name)
         return data['id']
 
     async def edget_name(self, uuid):
@@ -117,7 +115,7 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
                 elif r.status == 204:
                     return None
 
-    @commands.command(aliases=['coins'])
+    @commands.command(aliases=['coins', 'bal'])
     async def balance(self, ctx, name, pname=None):
         try:
             name = await self.get_name(name)
@@ -125,31 +123,40 @@ class Skyblock(commands.Cog, description='Skyblock cog for.. SKYBLOCK related co
             return await ctx.error('Name not found')
         async with ctx.session.get("https://sky.shiiyu.moe/api/v2/coins/" + name) as api:
             data = await api.json()
-        async with ctx.session.get(self.SkyV2 + name) as api:
-            pdata = await api.json()
-        target_profile = None
-        # latest profile finder
-        for profile in pdata["profiles"].values():
-            if pname is None:
-                if profile['current']:
-                    target_profile = profile
-                    pname = profile['profile_id']
+        max_bal = 0
+        purse = 0
+        bank = 0
+        if pname is None:
+            for profile in data["profiles"].values():
+                try:
+                    total_bal = profile['purse'] + profile['bank']
+                except KeyError:
+                    total_bal = profile['purse']
+                if total_bal > max_bal:
+                    max_bal = total_bal
+                    try:
+                        purse, bank = profile['purse'], profile['bank']
+                    except KeyError:
+                        purse = profile['purse']
+        else:
+            for profile in data["profiles"].values():
+                if pname.lower() == profile['cute_name'].lower():
+                    try:
+                        purse, bank = profile['purse'], profile['bank']
+                    except KeyError:
+                        purse = profile['purse']
                     break
-            elif pname.lower() == profile['cute_name'].lower():
-                target_profile = profile
-                pname = profile['profile_id']
-                break
-        if target_profile is None:
-            raise CommandInvokeError
 
         embed = discord.Embed(
-            title="Balance for " + name,
-            color=discord.Colour.blue()
+            title="Balance for " + name.capitalize(),
+            color=random_color()
         )
         embed.set_thumbnail(url="https://mc-heads.net/avatar/" + name)
-        num = round(data['profiles'][pname]['purse'], 2)
+        num = round(purse, 2)
+        ban = round(bank, 2)
 
         embed.add_field(name="Purse", value=f"$ {num:,}")
+        embed.add_field(name='Bank', value=f"$ {ban:,}", inline=False)
         await ctx.send(embed=embed)
 
     @commands.command(name='taming', description='Shows your Taming statistics.')

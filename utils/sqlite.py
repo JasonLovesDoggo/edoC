@@ -6,8 +6,9 @@
 #  file that should have been included as part of this package.                                    +
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 import sqlite3
-
 from collections import OrderedDict
+
+from apscheduler.triggers.cron import CronTrigger
 
 
 def dict_factory(cursor, row):
@@ -49,6 +50,11 @@ class Database:
         data = self.db.execute(sql, prepared).fetchone()
         return data
 
+    def commit(self):
+        self.conn.commit()
+
+    def autosave(self, sched):
+        sched.add_job(self.commit, CronTrigger(second=0))
 
 class Column:
     def __init__(self, column_type: str, primary_key: bool = False, index: bool = False,
@@ -155,6 +161,13 @@ class Table(metaclass=TableMeta):
         Database().execute(sql)
         return True
 
+    @classmethod
+    def drop(cls, *, filename: str = None, verbose: bool = False):
+        sql = "DROP TABLE {0} CASCADE;".format(cls.__tablename__)
+        if verbose:
+            print(sql)
+        Database(filename=filename).execute(sql)
+        return True
     @classmethod
     def all_tables(cls):
         return cls.__subclasses__()

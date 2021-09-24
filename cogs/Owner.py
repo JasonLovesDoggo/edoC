@@ -27,8 +27,6 @@ from jishaku.models import copy_context_with
 from jishaku.paginators import WrappedPaginator, PaginatorInterface
 
 from cogs.Mod import BanUser, MemberID
-from lib.db import db
-from lib.db.db import cur
 from utils import default, http
 from utils.vars import *
 
@@ -48,11 +46,15 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
 
     @commands.command(aliases=['ExitGuild'])
     @commands.is_owner()
-    async def LeaveGuild(self, ctx, *, guild_name):
-        guild = discord.utils.get(self.bot.guilds, name=guild_name)
+    async def LeaveGuild(self, ctx, *, name_or_id):
+        if type(name_or_id) == str:
+            guild = discord.utils.get(self.bot.guilds, name=name_or_id)
+        elif type(name_or_id) == int:
+            guild = self.bot.get_guild(name_or_id)
+        else:
+            return await ctx.warn('I either could not get that guild or my quantum phase disruptor is out of sync')
         if guild is None:
-            await ctx.send("I don't recognize that guild.")
-            return
+            return await ctx.warn("I don't recognize that guild.")
         confirmcode = randint(0, 99999)
         confirm_msg = await ctx.send(f"Type `{confirmcode}` within 30s to confirm this choice\n")
 
@@ -61,7 +63,6 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
                 if m.content.startswith(str(confirmcode)):
                     return True
             return False
-
         try:
             user = await self.bot.wait_for('message', timeout=30.0, check=check_confirm)
         except asyncio.TimeoutError:
@@ -282,16 +283,16 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
         await ctx.message.delete()
         await ctx.send(f'{what_to_say}')
 
-    @commands.command()
-    @commands.has_permissions(manage_guild=True)
-    async def prefix(self, ctx, next_prefix: str):
-        """
-         Change the value of prefix for the guild and insert it into the guilds table
-         """
-        await ctx.send("this command currently does not exist its just a placeholder")
-        db.execute("UPDATE guilds SET Prefix=? WHERE GuildId=?", (next_prefix, ctx.guild.id))
-        db.commit()
-        return cur.lastrowid
+    # @commands.command()
+    # @commands.has_permissions(manage_guild=True)
+    # async def prefix(self, ctx, next_prefix: str):
+    #    """
+    #     Change the value of prefix for the guild and insert it into the guilds table
+    #     """
+    #    await ctx.send("this command currently does not exist its just a placeholder")
+    #    db.execute("UPDATE  SET Prefix=? WHERE GuildId=?", (next_prefix, ctx.guild.id))
+    #    self.bot.db.commit()
+    #    return cur.lastrowid todo make this a group
 
     @commands.command(aliases=["rp", "saymore"])
     @commands.is_owner()
@@ -581,8 +582,8 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
         except TypeError:
             await ctx.send("You need to either provide an image URL or upload one with the command")
 
-    #@commands.Cog.listener()
-    #async def on_ready(self):
+    # @commands.Cog.listener()
+    # async def on_ready(self):
     #    path = self.DoggoPath
     #    files = os.listdir(path)
     #    for filename in files:

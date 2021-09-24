@@ -7,10 +7,9 @@
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 from urllib.parse import quote
 
-import discord
 from discord import Member
 from discord.ext import commands
-from discord.ext.commands import CommandError, MemberNotFound
+from discord.ext.commands import CommandError
 
 from utils.default import config
 
@@ -30,13 +29,14 @@ async def authorOrReferenced(ctx):
         )
     return ctx.author
 
-
-class MemberConver(commands.Converter, discord.Member):
+class MemberConverterr(commands.Converter, Member):
     async def convert(self, ctx, argument):
+        ctx = await ctx.bot.get_context(message=ctx.message)
         try:
             return await authorOrReferenced(ctx) or await Member(argument)
-        except MemberNotFound:
-            return discord.Member(argument)
+        except Exception as e:
+            print(e)
+            return ctx.author
 
 
 class UrlSafe(commands.Converter):

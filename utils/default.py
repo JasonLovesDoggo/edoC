@@ -16,25 +16,27 @@ from calendar import calendar
 from datetime import datetime
 from distutils.log import info
 from glob import glob
+from importlib import import_module
 from io import BytesIO
-from os import getpid, remove, _exit
+from os import getpid, remove
 
 import alexflipnote
 import apscheduler.schedulers.asyncio
 import discord
 import timeago as timesince
-from discord import Embed
 from discord.ext import commands, tasks
 from discord.ext.commands import NoPrivateMessage, when_mentioned_or
 from discord.utils import utcnow
 from psutil import Process
 
-from lib.db import db
+# from lib.db import db
 from utils import sqlite
+from utils.Context import edoCContext
+from utils.apis.Somerandomapi import SRA
 from utils.cache import CacheManager
 from utils.help import PaginatedHelpCommand
 from utils.http import HTTPSession
-from utils.vars import dark_blue, error, green, yellow, invis, colors, INVALID_ERRORS
+from utils.vars import dark_blue
 
 BannedUsers = {}
 logger = logging.getLogger(__name__)
@@ -235,135 +237,6 @@ class EEmbed(discord.Embed):
     ):
         return cls(title="{} {}".format(emoji, title), **kwargs)
 
-
-class edoCContext(commands.Context):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    @property
-    def session(self):
-        return self.bot.session
-
-    def tick(self, val=True):
-        # inspired by Rapptz' RoboDanny
-        # (no code was used)
-        return {
-            True: self.bot.get_emoji(879161311353778247),
-            False: self.bot.get_emoji(879146899322601495),
-            None: self.bot.get_emoji(879146777842962454)
-        }.get(val)
-
-    async def try_reply(self, content=None, *, mention_author=False, **kwargs):
-        """Try reply, if failed do send instead"""
-        try:
-            action = self.safe_reply
-            return await action(content, mention_author=mention_author, **kwargs)
-        except BaseException:
-            if mention_author:
-                content = f"{self.author.mention} " + content if content else ""
-
-            action = self.safe_send
-            return await self.safe_send(content, **kwargs)
-
-    async def safe_send(self, content, *, escape_mentions=True, channel=False, **kwargs):
-        """Same as send except with some safe guards.
-        1) If the message is too long then it sends a file with the results instead.
-        2) If ``escape_mentions`` is ``True`` then it escapes mentions.
-        """
-        if escape_mentions:
-            content = discord.utils.escape_mentions(content)
-
-        if channel:
-            channel = self.bot.get_channel(channel)
-        else:
-            channel = self
-
-        if len(content) > 2000:
-            fp = BytesIO(content.encode())
-            kwargs.pop('file', None)
-            return await channel.send(file=discord.File(fp, filename='message_too_long.txt'), **kwargs)
-        else:
-            return await channel.send(content)
-
-    async def safe_reply(self, content, *, escape_mentions=True, **kwargs):
-        return await self.safe_send_reply(
-            content, escape_mentions=escape_mentions, type="reply", **kwargs
-        )
-
-    async def safe_send_reply(
-            self, content, *, escape_mentions=True, type="send", **kwargs
-    ):
-        action = getattr(self, type)
-
-        if escape_mentions and content is not None:
-            content = discord.utils.escape_mentions(content)
-
-        if content is not None and len(content) > 2000:
-            fp = BytesIO(content.encode())
-            kwargs.pop("file", None)
-            return await action(
-                file=discord.File(fp, filename="message_too_long.txt"), **kwargs
-            )
-        else:
-            if content is not None:
-                kwargs["content"] = content
-            return await action(**kwargs)
-
-    async def error(self, error_message, real=False):
-        e = Embed(color=colors['error'])
-        e.description = str(error_message)
-        await self.try_reply(embed=e)
-        if real:
-            for error in INVALID_ERRORS:
-                if str(error_message).startswith(error):
-                    return
-            dbug = self.bot.get_channel(self.bot.config['debug'])
-            await dbug.send(embed=e)
-            logging.debug(error_message)
-
-    async def success(self, success_message: str = None):
-        e = Embed(color=green)
-        e.description = str(success_message)
-        return await self.try_reply(embed=e)
-
-    async def warn(self, warn_message: str = None, log=False):
-        e = Embed(color=yellow)
-        e.description = str(warn_message)
-        await self.try_reply(embed=e)
-        if log:
-            logging.debug(warn_message)
-
-    async def invis(self, invis_message):
-        e = Embed(color=invis)
-        e.description = str(invis_message)
-        return await self.try_reply(embed=e)
-
-    async def unknown(self, unknownerror, command):
-        e = Embed(color=error, title=command.name)
-        e.description = str(unknownerror)
-        channel = self.bot.get_channel(867828022752444416)
-        await self.try_reply(f'An unknown error happend with {command.name}')
-        return await channel.send(embed=e)
-
-    async def report(self, ctx, msg):
-        channel = self.bot.get_channel(877724111420391515)
-        if len(msg) > 300:
-            return self.error('Too Long please keep under 300 characters')
-        elif len(msg) < 20:
-            return self.warn('Too short please keep over 20 characters')
-        e = Embed(color=green)
-        e.description = str(msg)
-        e.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar)
-        await channel.send(embed=e)
-
-    @discord.utils.cached_property
-    def replied_reference(self):
-        ref = self.message.reference
-        if ref and isinstance(ref.resolved, discord.Message):
-            return ref.resolved.to_reference()
-        return None
-
-
 class edoC(commands.AutoShardedBot):
     def __init__(self):
         if not hasattr(self, 'uptime'):
@@ -399,7 +272,15 @@ class edoC(commands.AutoShardedBot):
         self.ownerid = 511724576674414600
         self.icons = {}
         self.ready = False
+        self.sra = SRA(session=self.session)
+        import os
+        for root, dirs, files in os.walk("utils"):
+            for f in files:
+                if f.endswith('.py'):
+                    import_module(str(os.path.relpath(os.path.join(root, f), "."))[:-3].replace('\\', '.'))
         self.db = sqlite.Database()
+        if not self.create_drop_tables("create"):
+            print('hi')
         self.seen_messages = 0
         self.scheduler = apscheduler.schedulers.asyncio.AsyncIOScheduler()
         self.total_commands_ran = 0
@@ -412,6 +293,18 @@ class edoC(commands.AutoShardedBot):
     # async def on_guild_join(self, guild):
     #    if guild.id in self.blacklist:
     #        await guild.leave()
+
+    def create_drop_tables(self, method: str):
+        all_tables = [g for g in sqlite.Table.all_tables()]
+        for table in all_tables:
+            try:
+                getattr(table, method)()
+            except Exception as e:
+                print(f'Could not {method} {table.__tablename__}.\n\nError: {e}')
+            else:
+                print(f'[{table.__module__}] {method}ed {table.__tablename__}.')
+        return all_tables
+
     def backup_data(self):
         self.save_data('MsgsSeen', str(self.seen_messages))
         self.save_data('MemberCount', str(sum(g.member_count for g in self.guilds)))
@@ -440,6 +333,11 @@ class edoC(commands.AutoShardedBot):
     async def update_data(self):
         self.backup_data()
 
+    #async def get_prefix(self, message: Message) -> Union[List[str], str]:
+    #    data = self.db.fetchrow(
+    #        "SELECT prefix FROM guild_config WHERE guild_id=?", (message.guild.id,)
+    #    )
+    #    return data
     async def get_url(self, url) -> dict:
         async with self.session.get(url) as ses:
             data = await ses.json()
@@ -457,7 +355,7 @@ class edoC(commands.AutoShardedBot):
 
     async def exit(self, code):
         await sleep(4)
-        _exit(code)
+        exit(code)
 
     async def close(self) -> None:
         self.update_data.stop()
@@ -486,7 +384,7 @@ class edoC(commands.AutoShardedBot):
             'dnd': '<:dnd:817035352925536307>',
             'boosters': '<:Boosters:814930829461553152>',
             'typing': '<a:typing:884860688164597841>',
-            'database': '<:database:857553072909189191>',
+            'database': '<:database:889257927762919424>',
             'edoc': '<:edoC:874868276256202782>',
             'loading': '<a:loadshuffle:879146779235471430>'
         }
@@ -530,12 +428,11 @@ class edoC(commands.AutoShardedBot):
 
     async def on_ready(self):
         """ The function that activates when boot was completed """
-        self.update_data.start()
-        self.seen_messages = int(self.get_data('MsgsSeen'))
-        await emptyfolder(self.tempimgpath)
         logschannel = self.get_channel(self.config["edoc_non_critical_logs"])
-
         if not self.ready:
+            self.seen_messages = int(self.get_data('MsgsSeen'))
+            await emptyfolder(self.tempimgpath)
+            self.update_data.start()
             self.ready = True
             self.scheduler.start()
             await logschannel.send(f"{self.user} has been booted up")
@@ -544,7 +441,7 @@ class edoC(commands.AutoShardedBot):
                 f"Ready: {self.user} | Total members {sum(g.member_count for g in self.guilds)} | Guild count: {len(self.guilds)} | Guilds")
             guilds = {}
             for Server in self.guilds:
-                gprefix = db.field('SELECT Prefix FROM guilds WHERE GuildID = ?', Server.id)
+                gprefix = self.db.fetch('SELECT prefix FROM prefixs WHERE id = ?', (Server.id,))
                 print(
                     f"{Server.id} ~ {Server} ~ {Server.owner} ~ {Server.member_count} ~ Prefix {gprefix}")
             self.loading_emojis()
@@ -717,7 +614,6 @@ def date(target, clock: bool = True, seconds: bool = False, ago: bool = False, o
         if only_ago:
             timestamp = f"<t:{unix}:R>"
         return timestamp
-
 
 def responsible(target, reason):
     """ Default responsible maker targeted to find user in AuditLogs """

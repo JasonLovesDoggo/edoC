@@ -14,7 +14,7 @@ from unicodedata import name
 import discord
 from discord.ext import commands
 
-from utils.checks import MemberConver
+from utils.checks import MemberConverterr
 from utils.default import spacefill, date, CustomTimetext, config, mod_or_permissions
 from utils.text_formatting import hyperlink, format_relative, format_date
 from utils.vars import random_color, error, status
@@ -94,7 +94,7 @@ class Discord(commands.Cog, description="Discord Information commands"):
         aliases=("av", "userpfp"), brief="Get member's avatar image"
     )
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def avatar(self, ctx, user: MemberConver = None):
+    async def avatar(self, ctx, user: MemberConverterr = None):
         jpg = user.avatar.with_format("jpg").url
         png = user.avatar.with_format("png").url
         webp = user.avatar.with_format("webp").url
@@ -141,7 +141,7 @@ class Discord(commands.Cog, description="Discord Information commands"):
 
     @commands.command(aliases=['JoinPos'])
     @commands.guild_only()
-    async def joinedat(self, ctx, *, user: MemberConver = None):
+    async def joinedat(self, ctx, *, user: MemberConverterr = None):
         """ Check when a user joined the current server """
         user = user or ctx.author
 
@@ -312,7 +312,7 @@ class Discord(commands.Cog, description="Discord Information commands"):
         await ctx.send(embed=e)
 
     @commands.command(aliases=["aboutuser", "about_user", "userinfo", "user_info", "whoisme"])
-    async def whois(self, ctx, *, user: Union[MemberConver, discord.User] = None):
+    async def whois(self, ctx, *, user: Union[MemberConverterr, discord.User] = None):
         """Shows info about a user."""
 
         user = user or ctx.author
@@ -357,7 +357,7 @@ class Discord(commands.Cog, description="Discord Information commands"):
 
     @commands.command()
     @commands.guild_only()
-    async def permissions(self, ctx, member: MemberConver = None, channel: discord.TextChannel = None):
+    async def permissions(self, ctx, member: MemberConverterr = None, channel: discord.TextChannel = None):
         """Shows a member's permissions in a specific channel.
         If no channel is given then it uses the current one.
         You cannot use this in private messages. If no member is given then

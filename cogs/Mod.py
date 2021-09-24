@@ -23,9 +23,9 @@ from discord.ext.commands import Converter, BadArgument
 from discord.utils import find
 
 from cogs.Discordinfo import format_relative, plural
-from lib.db import db
+# from lib.db import db
 from utils import checks, default
-from utils.checks import MemberConver
+from utils.checks import MemberConverterr
 from utils.default import mod_or_permissions
 from utils.vars import *
 
@@ -80,8 +80,8 @@ class ActionReason(commands.Converter):
 BannedUsers = {}
 
 
-async def Get_Banned_Users():
-    bans = db.field("SELECT UserID FROM users WHERE Banned = ?", "True")
+async def Get_Banned_Users(bot):
+    bans = bot.db.field("SELECT UserID FROM users WHERE Banned = ?", "True")
     for UserID in bans:
         BannedUsers + UserID
 
@@ -99,9 +99,9 @@ async def BannedU(ctx):
 
 async def BanUser(ctx, userid: MemberID, reason):
     BannedUsers + userid
-    db.execute("INSERT INTO users (?, ?)", (userid, reason,))
+    ctx.bot.db.execute("INSERT INTO users (?, ?)", (userid, reason,))
     # db.execute("INSERT INTO users (Reason)", reason)
-    db.commit()
+    ctx.bot.db.commit()
     return await ctx.send(f'{userid} Was banned from using the bot')
 
 
@@ -124,9 +124,16 @@ def can_mute():
             return False
 
         # This will only be used within this cog.
-        role = next((g for g in ctx.guild.roles if g.name == "Muted"), None)
+
+        role = discord.utils.get(ctx.guild.roles, name='Muted')
+        for channel in ctx.guild.text_channels:
+            await channel.set_permissions(role, overwrite=discord.PermissionOverwrite(send_messages=False,
+                                                                                      add_reactions=False))
+        for channel in ctx.guild.voice_channels:
+            await channel.set_permissions(role, overwrite=discord.PermissionOverwrite(speak=False))
         if role is None:
-            raise NoMuteRole()
+            perms = ctx.guild.default_role.permissions
+            role = await ctx.guild.create_role(name="Muted", permissions=perms)
         return ctx.author.top_role > role
     return commands.check(predicate)
 
@@ -145,7 +152,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
         return {'Bot': count}
 
     async def _complex_cleanup_strategy(self, ctx, search):
-        prefixes = tuple(self.bot.get_guild_prefixes(ctx.guild))  # thanks startswith
+        prefixes = tuple(self.bot.get_guild_prefixes(ctx.guild))  # thanks startswith todo update this bc it wont work rn
 
         def check(m):
             return m.author == ctx.me or m.content.startswith(prefixes)
@@ -198,7 +205,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
 
         await ctx.send('\n'.join(messages), delete_after=10)
 
-    @commands.command(aliases=['newmembers'])
+    @commands.command(aliases=['newmembers', 'nu'])
     @commands.guild_only()
     async def newusers(self, ctx, *, count=5):
         """Tells you the newest members of the server.
@@ -243,7 +250,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
     @commands.command()
     @commands.guild_only()
     @mod_or_permissions(kick_members=True)
-    async def kick(self, ctx, member: MemberConver, *, reason: ActionReason = None):
+    async def kick(self, ctx, member: MemberConverterr, *, reason: ActionReason = None):
         """Kicks a member from the server.
         In order for this to work, the bot must have Kick Member permissions.
         To use this command you must have Kick Members permission.
@@ -272,7 +279,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
     @commands.command(aliases=["nick"])
     @commands.guild_only()
     @commands.has_permissions(manage_nicknames=True)
-    async def nickname(self, ctx, member: MemberConver, *, name: str = None):
+    async def nickname(self, ctx, member: MemberConverterr, *, name: str = None):
         """ Nicknames a user from the current server. """
         if await checks.check_priv(ctx, member):
             return
@@ -408,7 +415,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
         # can be a User even in a guild only context
         # Rather than trying to work out the kink with it
         # Just upgrade the member itself.
-        if not isinstance(ctx.author, MemberConver):
+        if not isinstance(ctx.author, MemberConverterr):
             try:
                 author = await ctx.guild.fetch_member(ctx.author.id)
             except discord.HTTPException:
@@ -480,7 +487,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
 
         # member filters
         predicates = [
-            lambda m: isinstance(m, MemberConver) and can_execute_action(ctx, author, m),  # Only if applicable
+            lambda m: isinstance(m, MemberConverterr) and can_execute_action(ctx, author, m),  # Only if applicable
             lambda m: not m.bot,  # No bots
             lambda m: m.discriminator != '0000',  # No deleted users
         ]
@@ -597,42 +604,38 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
         except Exception as e:
             await ctx.send(e)
 
-    """    # Mute a Member
-    @commands.command(aliases=['Mute'])
-    @commands.has_permissions(manage_roles=True)
-    @commands.has_permissions(manage_channels=True)
-    @commands.guild_only()
-    async def mute(self, ctx, mem: str):
-        member = getUser(ctx, mem)
-        if member:
-            if not utils.find(lambda r: "mute" in r.name.lower(), ctx.message.guild.roles):
-                if not utils.find(lambda r: "Muted" == r.name, ctx.message.guild.roles):
-                    perms = utils.find(lambda r: "@everyone" == r.name, ctx.message.guild.roles).permissions
-                    role = await ctx.guild.create_role(name="Muted", permissions=perms)
-                    log.info('Created role: Muted')
-                    for channel in ctx.guild.text_channels:
-                        await channel.set_permissions(role, overwrite=discord.PermissionOverwrite(send_messages=False, add_reactions=False))
-                    for channel in ctx.guild.voice_channels:
-                        await channel.set_permissions(role, overwrite=discord.PermissionOverwrite(speak=False))
-                    log.info('Prepared Mute role for mutes in channels')
-                role = utils.find(lambda r: "Muted" == r.name, ctx.message.guild.roles)
-            else:
-                role = utils.find(lambda r: "mute" in r.name.lower(), ctx.message.guild.roles)
-
+    @commands.group(invoke_without_command=True)
+    @can_mute()
+    async def mute(self, ctx, members: commands.Greedy[discord.Member], *, reason: ActionReason = None):
+        """Mutes members using the configured mute role.
+       The bot must have Manage Roles permission and be
+       above the muted role in the hierarchy.
+       To use this command you need to be higher than the
+       mute role in the hierarchy and have Manage Roles
+           permission at the server level."""
+        if reason is None:
+            reason = f'Action done by {ctx.author} (ID: {ctx.author.id})'
+        guild = ctx.guild
+        total = len(members)
+        if total == 0:
+            return await ctx.warn('Missing members to mute.')
+        elif total > 20:
+            return await ctx.error('You may only mute 20 people at a time')
+        role = discord.utils.get(guild.roles, name='Muted')
+        failed = 0
+        em = discord.Embed(colour=invis, description='')
+        for member in members:
             if role not in member.roles:
-                roles = member.roles
-                roles.append(role)
-                asyncio.sleep(0.5)
-                await member.edit(roles=roles)
-                log.info(f'Muted {member}')
+                try:
+                    await member.add_roles(role, reason=reason)
+                    em.description += f'{self.bot.icons["greenTick"]} {member.name} Sucsessfully muted'
+                except discord.HTTPException:
+                    failed += 1
+                    em.description += f'{self.bot.icons["RedTick"]} {member.name} Failed to mute muted'
+        em.set_footer(text=f'Muted [{total - failed}/{total}]')
+        await ctx.try_reply(embed=em)
 
-                e = discord.Embed(color=embedColor(self))
-                e.set_author(name="\N{SPEAKER WITH CANCELLATION STROKE} Muted " + str(member))
-                await edit(ctx, embed=e)
-            else:
-                await edit(ctx, content="\N{HEAVY EXCLAMATION MARK SYMBOL} Already muted", ttl=5)
-
-    # Mute a Member
+    """"# Mute a Member
     @commands.command(aliases=['Unmute'])
     @commands.has_permissions(manage_roles=True)
     @commands.guild_only()
@@ -685,40 +688,40 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
         for i in range(times):
             await new_ctx.reinvoke()
 
-    @commands.group(name='mute', invoke_without_command=True)
-    @can_mute()
-    async def _mute(self, ctx, members: commands.Greedy[MemberConver], *, reason: ActionReason = None):
-        """Mutes members using the configured mute role.
-        The bot must have Manage Roles permission and be
-        above the muted role in the hierarchy.
-        To use this command you need to be higher than the
-        mute role in the hierarchy and have Manage Roles
-        permission at the server level.
-        """
-
-        if reason is None:
-            reason = f'Action done by {ctx.author} (ID: {ctx.author.id})'
-
-        role = next((g for g in ctx.guild.roles if g.name == "Muted"), None)
-        total = len(members)
-        if total == 0:
-            return await ctx.send('Missing members to mute.')
-
-        failed = 0
-        for member in members:
-            try:
-                await member.add_roles(role, reason=reason)
-            except discord.HTTPException:
-                failed += 1
-
-        if failed == 0:
-            await ctx.send('\N{THUMBS UP SIGN}')
-        else:
-            await ctx.send(f'Muted [{total - failed}/{total}]')
-
+    #@commands.group(name='mute', invoke_without_command=True)
+    #@can_mute()
+    #async def _mute(self, ctx, members: commands.Greedy[MemberConverterr], *, reason: ActionReason = None):
+    #    """Mutes members using the configured mute role.
+    #    The bot must have Manage Roles permission and be
+    #    above the muted role in the hierarchy.
+    #    To use this command you need to be higher than the
+    #    mute role in the hierarchy and have Manage Roles
+    #    permission at the server level.
+    #    """
+#
+    #    if reason is None:
+    #        reason = f'Action done by {ctx.author} (ID: {ctx.author.id})'
+#
+    #    role = next((g for g in ctx.guild.roles if g.name == "Muted"), None)
+    #    total = len(members)
+    #    if total == 0:
+    #        return await ctx.send('Missing members to mute.')
+#
+    #    failed = 0
+    #    for member in members:
+    #        try:
+    #            await member.add_roles(role, reason=reason)
+    #        except discord.HTTPException:
+    #            failed += 1
+#
+    #    if failed == 0:
+    #        await ctx.send('\N{THUMBS UP SIGN}')
+    #    else:
+    #        await ctx.send(f'Muted [{total - failed}/{total}]')
+#
     @commands.command(name='unmute')
     @can_mute()
-    async def _unmute(self, ctx, members: commands.Greedy[MemberConver], *, reason: ActionReason = None):
+    async def _unmute(self, ctx, members: commands.Greedy[MemberConverterr], *, reason: ActionReason = None):
         """Unmutes members using the configured mute role.
         The bot must have Manage Roles permission and be
         above the muted role in the hierarchy.
@@ -970,7 +973,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
         await self.do_removal(ctx, search, lambda e: True)
 
     @prune.command()
-    async def user(self, ctx, member: MemberConver, search=100):
+    async def user(self, ctx, member: MemberConverterr, search=100):
         """Removes all messages by the member."""
         await self.do_removal(ctx, search, lambda e: e.author == member)
 
@@ -1150,14 +1153,14 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
             members = set()
 
         members.update(map(lambda m: m.id, role.members))
-        query = """INSERT INTO guild_mod_config (id, mute_role_id, muted_members)
-                   VALUES ($1, $2, $3::bigint[]) ON CONFLICT (id)
-                   DO UPDATE SET
-                       mute_role_id = EXCLUDED.mute_role_id,
-                       muted_members = EXCLUDED.muted_members
-                """
-        await self.bot.pool.execute(query, guild.id, role.id, list(members))
-        self.get_guild_config.invalidate(self, guild.id)
+        #query = """INSERT INTO guild_mod_config (id, mute_role_id, muted_members)
+        #           VALUES ($1, $2, $3::bigint[]) ON CONFLICT (id)
+        #           DO UPDATE SET
+        #               mute_role_id = EXCLUDED.mute_role_id,
+        #               muted_members = EXCLUDED.muted_members
+        #        """
+        #await self.bot.pool.execute(query, guild.id, role.id, list(members))
+        #self.get_guild_config.invalidate(self, guild.id)
 
 def setup(bot):
     bot.add_cog(Mod(bot))

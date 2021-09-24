@@ -16,6 +16,7 @@ from discord.ext import commands
 from discord.ext.commands.errors import BadArgument
 
 from utils import default, http
+from utils.apis.Somerandomapi import SRA
 from utils.vars import *
 
 
@@ -24,24 +25,7 @@ class Encryption(commands.Cog, description='Need to send a super secret encrypte
         self.PADDING = 5
         self.bot = bot
         self.config = bot.config
-
-    async def binary_encode(self, ctx, text):
-        text = str(text, 'utf-8')
-        async with ctx.session.get(f"https://some-random-api.ml/binary?encode={text}") as resp:
-            if 300 > resp.status >= 200:
-                data = await resp.json()
-            else:
-                return await ctx.error(f"Recieved a bad status code of {resp.status}.")
-            return data['binary']
-
-    async def binary_decode(self, ctx, text):
-        text = str(text, 'utf-8')
-        async with ctx.session.get(f"https://some-random-api.ml/binary?decode={text}") as resp:
-            if 300 > resp.status >= 200:
-                data = await resp.json()
-            else:
-                return await ctx.error(f"Recieved a bad status code of {resp.status}.")
-            return data['text']
+        self.sra = SRA(session=self.bot.session)
 
     @commands.group(aliases=['e'])
     async def encode(self, ctx):
@@ -224,13 +208,13 @@ class Encryption(commands.Cog, description='Need to send a super secret encrypte
     async def encode_to_binary(self, ctx, *, text: commands.clean_content = None):
         if not text:
             text = await self.detect_file(ctx)
-        await self.encryptout(ctx, "Text -> binary", await self.binary_encode(ctx, text.encode("utf-8")))
+        await self.encryptout(ctx, "Text -> binary", await self.sra.binary_encode(text.encode("utf-8")))
 
     @decode.command(name='binary', aliases=['b'], brief='Decode in binary')
     async def decode_to_binary(self, ctx, *, text: commands.clean_content = None):
         if not text:
             text = await self.detect_file(ctx)
-        await self.encryptout(ctx, "Binary -> Text", await self.binary_decode(ctx, text.encode("utf-8")))
+        await self.encryptout(ctx, "Binary -> Text", await self.sra.binary_decode(text.encode("utf-8")))
 
     # @decode.command(name='all')
     # async def decode_all(self, ctx, *, text=None):

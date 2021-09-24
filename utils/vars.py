@@ -5,7 +5,8 @@
 #  and is released under the "MIT License Agreement". Please see the LICENSE                       +
 #  file that should have been included as part of this package.                                    +
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-from random import randint
+from random import randint, choice
+
 INVALID_ERRORS = ['Invalid Difficulty']
 # EMOJIS
 emojis = {
@@ -231,7 +232,7 @@ def random_color():
 embedfooter = 'https://www.buymeacoffee.com/edoC Creating edoC is a tough task, if you would like me to continue with it, please consider donating!'
 
 version_info = {
-    'info': 'Updated to discord.py 2.0 alpha 4 (BETA)',
+    'info': '~pfp is kinda cool imo',
     'version': 0.9,
     'dev': 'Jake CEO of annoyance#1904 (511724576674414600)'
 
@@ -244,6 +245,14 @@ async def ErrorEmbed(ctx, err):
                 description=err)
     await ctx.send(embed=emb)
 
+
+countrys = ['Australia', 'Italy', 'England', 'Russia', 'Brazil', 'Canada']
+chars = 'abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_-+={}|[],./<>?~`'
+email_ends = [
+    'gmail.com', 'gmail.com', 'gmail.com', 'gmail.com', 'hotmail.com', 'outlook.com', 'optusnet.net',
+    'bigpond.com'
+]
+device = choice(['PC', 'Laptop', 'Mac', 'Phone', 'Windows', 'Linux', 'Chrome', 'Browser', 'Edge', 'Firefox', 'Opera'])
 
 contributors = {
     'StickyRunnerTR#9676': 'For the entirety of the skyblock cog\nOh wait nvm he steals my code too',

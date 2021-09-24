@@ -12,12 +12,12 @@ from os import getpid
 import apscheduler.schedulers.asyncio
 import discord
 from discord import HTTPException
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord.ext.commands import MissingPermissions, CheckFailure, MaxConcurrencyReached, CommandOnCooldown
 from psutil import Process
 
 from cogs.Music import music_
-from lib.db import db
+# from lib.db import db
 from utils import default
 from utils.checks import GuildNotFound
 from utils.vars import *
@@ -28,7 +28,6 @@ bla = {}
 default.MakeBlackList(bla)
 
 scheduler = apscheduler.schedulers.asyncio.AsyncIOScheduler()
-db.autosave(scheduler)
 
 
 async def Error(self, ctx, err):
@@ -63,6 +62,8 @@ class Events(commands.Cog, description='Event handling if u can see this ping th
         self.allmembers = self.bot.get_all_members()
         self.guilds = self.bot.guilds
         self.noncritlogschannel = self.config["edoc_non_critical_logs"]
+        self.db = self.bot.db
+        self.db.autosave(self.scheduler)
         self.update_db()
 
     async def erroremb(self, ctx, *, description: str, footer=None, title=None):
@@ -93,7 +94,7 @@ class Events(commands.Cog, description='Event handling if u can see this ping th
             chan for chan in sorted(guild.channels, key=lambda x: x.position)
             if chan.permissions_for(guild.me).send_messages and isinstance(chan, discord.TextChannel)
         ), None)
-        db.execute("INSERT OR IGNORE INTO Guilds (GuildID) VALUE (?)", guild.id, )
+        self.db.execute("INSERT OR IGNORE INTO Guilds (GuildID) VALUE (?)", guild.id, )
         channel = self.bot.get_channel(guild.system_channel) or to_send
         await channel.send("Thank you for inviting me to the server")
         await channel.send("Please do ~help to get started")
@@ -104,7 +105,7 @@ class Events(commands.Cog, description='Event handling if u can see this ping th
     # async def update_db(self):
     #    members = self.bot.get_all_members()
     #    for member in members:
-    #        db.execute("INSERT OR IGNORE INTO User (UserID) VALUES (?)", member.id)
+    #        self.db.execute("INSERT OR IGNORE INTO User (UserID) VALUES (?)", member.id)
     #    for server in self.bot.guilds:
     #        print(server.name)
     #        admins = None  # {}
@@ -112,44 +113,43 @@ class Events(commands.Cog, description='Event handling if u can see this ping th
     #        #    if
     #        #            admins += members
     #        # inthings = [server.id, self.config["default_prefix"], server.name, admins] #
-    #        db.execute("INSERT OR IGNORE INTO guilds (GuildID, Prefix, GuildName, GuildAdmins) VALUES (?, ?, ?, ?);",
+    #        self.db.execute("INSERT OR IGNORE INTO guilds (GuildID, Prefix, GuildName, GuildAdmins) VALUES (?, ?, ?, ?);",
     #                   (server.id, self.config["default_prefix"], server.name, admins))
-    #    db.commit()
+    #
     #    print("updated db")
     #    await asyncio.sleep(21600.0)
 
     def update_db(self):
+        for guild in self.guilds:
+            self.db.execute("INSERT OR IGNORE INTO guilds (GuildID, Prefix, GuildName) VALUES (?, ?, ?)",
+                            (guild.id, self.config["default_prefix"], guild.name,))
 
-        db.multiexec("INSERT OR IGNORE INTO guilds (GuildID, Prefix, GuildName) VALUES (?, ?, ?)",
-                     ((guild.id, self.config["default_prefix"], guild.name,) for guild in self.guilds))
-
-        db.multiexec("INSERT OR IGNORE INTO User (UserID) VALUES (?)",
-                     ((member.id,) for member in self.allmembers if not member.bot))
+        # self.db.multiexec("INSERT OR IGNORE INTO User (UserID) VALUES (?)",
+        #             ((member.id,) for member in self.allmembers if not member.bot))
 
         to_remove = []
         allmembers = self.bot.get_all_members()
-        stored_members = db.column("SELECT UserID FROM User")
+        stored_members = self.db.fetch("SELECT id FROM users")
         for id_ in stored_members:
             if id_ not in list(allmembers):
                 to_remove.append(id_)
-        db.multiexec("DELETE FROM User WHERE UserID = ?",
-                     ((id_,) for id_ in to_remove))
+        #self.db.multiexec("DELETE FROM User WHERE UserID = ?",
+        #                  ((id_,) for id_ in to_remove))
 
-        db.commit()
         print("updated db")
 
     # async def update_db(self):
     #    members = self.bot.get_all_members()
     #    for member in members:
-    #        db.execute("INSERT OR IGNORE INTO User (UserID) VALUES (?)", member.id)
+    #        self.db.execute("INSERT OR IGNORE INTO User (UserID) VALUES (?)", member.id)
     #    for server in self.bot.guilds:
     #        admins = None  # {}
     #        #`for member in guild.members:
     #        #    if
     #        #            admins += members
     #        # inthings = [server.id, self.config["default_prefix"], server.name, admins] #
-    #        db.execute("INSERT OR IGNORE INTO guilds (GuildID, Prefix, GuildName, GuildAdmins) VALUES (?, ?, ?, ?);", (server.id, self.config["default_prefix"], server.name, admins))
-    #    db.commit()
+    #        self.db.execute("INSERT OR IGNORE INTO guilds (GuildID, Prefix, GuildName, GuildAdmins) VALUES (?, ?, ?, ?);", (server.id, self.config["default_prefix"], server.name, admins))
+    #    self.db.commit()
     #    print("updated db")
 
     @commands.Cog.listener()
@@ -234,11 +234,19 @@ class Events(commands.Cog, description='Event handling if u can see this ping th
             await critlogschannel.send(
                 f"{ctx.message.author.mention} [in {ctx.message.guild.id}, #{ctx.message.channel}] made an error typing a command.```py\n{err}```")
 
+    @tasks.loop(hours=1, count=1, reconnect=True)
+    async def Leave_Guild(self, guildid: int):
+        guild = await self.bot.get_guild(guildid)
+        if guild:
+            print(guild)
+            return
+        else:
+            self.db.execute("DELETE FROM Guilds WHERE GuildID=?", (guild.id,))
+
     @commands.Cog.listener()
     async def on_guild_remove(self, guild):
-        db.execute("DELETE FROM Guilds WHERE GuildID=?", (guild.id,))
+        await self.remove_guild.start
         print(f"edoc has left {guild.name} it had {len(guild.members)} members")
-        # todo add a thing to remove said guild from the database after an hour
 
     @commands.Cog.listener()
     async def on_user_update(self, before, after):

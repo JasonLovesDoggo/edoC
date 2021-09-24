@@ -31,6 +31,7 @@ NO_LOAD_COG = ''
 #    await ctx.send(f"Hello {name} {gender} {age}")
 
 # async def process_commands(self, message):
+# async def process_commands(self, message):
 #    ctx = await self.get_context(message, cls=Context)
 #
 #    if ctx.command is not None and ctx.guild is not None:
