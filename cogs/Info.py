@@ -12,13 +12,14 @@ import pathlib
 import platform
 from datetime import datetime as dt
 from datetime import timezone
+from os.path import relpath
 from pathlib import Path
 from textwrap import dedent
-from typing import Tuple
+from typing import Tuple, List
 
 import discord.ui
 from PyDictionary import PyDictionary
-from discord import HTTPException
+from discord import HTTPException, Embed
 from discord.ext.commands import ColourConverter, command, Cog, BucketType, cooldown, BadArgument, has_permissions, \
     clean_content
 from discord.ext.menus import ListPageSource
@@ -615,8 +616,8 @@ class Info(Cog, description='Informational and useful commands'):
         files = lines.get('file_amount')
         pyfiles = lines.get('python_file_amount')
         lang = 'ahk'
-        prefix = db.field("SELECT Prefix FROM guilds WHERE GuildID = ?",
-                          ctx.guild.id)  # get_prefix(self.bot, ctx)
+        prefix = '~' #self.db.fetch("SELECT Prefix FROM guilds WHERE ID = ?",
+                  #        ctx.guild.id) or self.bot.prefix # get_prefix(self.bot, ctx)
         cmds = self.bot.total_commands_ran
         chancount = str(len(list(self.bot.get_all_channels())))
         infos = {}
@@ -693,7 +694,7 @@ Comments: {comments}"""
             filename = src.co_filename
 
             lines, firstlineno = inspect.getsourcelines(src)
-            location = path.relpath(filename).replace('\\', '/')
+            location = relpath(filename).replace('\\', '/')
 
             final_url = f'{source_url}/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}'
 
@@ -745,7 +746,7 @@ Comments: {comments}"""
         typing_ping = (end - start) * 1000
 
         start = time.perf_counter()
-        db.execute('SELECT 1')
+        self.db.execute('SELECT 1')
         end = time.perf_counter()
         sql_ping = (end - start) * 1000
         e = discord.Embed(
@@ -878,8 +879,8 @@ Comments: {comments}"""
         info["Python Version"] = f"{platform.python_version()}"
         info["Avg users/server"] = f"{avgmembers:,.2f}"
         info["Bot owners"] = len(self.config["owners"])
-        info["Prefix in this server"] = db.field("SELECT Prefix FROM guilds WHERE GuildID = ?",
-                                                 ctx.guild.id)  # get_prefix(self.bot, ctx)
+        info["Prefix in this server"] = '~'#db.field("SELECT Prefix FROM guilds WHERE GuildID = ?",
+                                        #         ctx.guild.id)  # get_prefix(self.bot, ctx)
         info["Total members"] = totalmembers
         info["Ram usage"] = f"{ramUsage:.2f} MB"
         info["Developer"] = "Jake CEO of annoyance#1904"
