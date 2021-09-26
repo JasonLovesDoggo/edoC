@@ -34,3 +34,15 @@ class prefixs(db.Table):
     timestamp = db.Column('timestamp', nullable=False, default=time())
 
 
+class stats(db.Table):
+    cmds_ran = db.Column('INT', nullable=False, default=0)
+    msgsseen = db.Column('INT', nullable=False, default=0)
+
+class cmd_stats(db.Table):
+    author = db.Column('INT', nullable=False)
+    server = db.Column('INT', nullable=False)
+    cmdName = db.Column('TEXT', nullable=False)
+    timestamp = db.Column('timestamp', nullable=False, default=time())
+
+
+

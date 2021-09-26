@@ -154,7 +154,6 @@ class Events(commands.Cog, description='Event handling if u can see this ping th
 
     @commands.Cog.listener()
     async def on_ready(self):
-        self.bot.commands_ran = {}
         for command in self.bot.walk_commands():
             self.bot.commands_ran[f'{command.qualified_name}'] = 0
 
@@ -245,7 +244,7 @@ class Events(commands.Cog, description='Event handling if u can see this ping th
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild):
-        await self.remove_guild.start
+        #await self.remove_guild.start
         print(f"edoc has left {guild.name} it had {len(guild.members)} members")
 
     @commands.Cog.listener()

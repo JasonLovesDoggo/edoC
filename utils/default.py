@@ -19,6 +19,7 @@ from glob import glob
 from importlib import import_module
 from io import BytesIO
 from os import getpid, remove
+from typing import Union, List
 
 import alexflipnote
 import apscheduler.schedulers.asyncio
@@ -36,7 +37,7 @@ from utils.apis.Somerandomapi import SRA
 from utils.cache import CacheManager
 from utils.help import PaginatedHelpCommand
 from utils.http import HTTPSession
-from utils.vars import dark_blue
+from utils.vars import dark_blue, invis
 
 BannedUsers = {}
 logger = logging.getLogger(__name__)
@@ -208,8 +209,8 @@ log = logging.getLogger(__name__)
 description = 'Relatively simply awesome bot. Developed by Jake CEO of annoyance#1904'
 
 
-class EEmbed(discord.Embed):
-    def __init__(self, color=0x3DB4FF, fields=(), field_inline=False, **kwargs):
+class BaseEmbed(discord.Embed):
+    def __init__(self, color=invis, fields=(), field_inline=False, **kwargs):
         super().__init__(color=color, **kwargs)
         for n, v in fields:
             self.add_field(name=n, value=v, inline=field_inline)
@@ -237,6 +238,7 @@ class EEmbed(discord.Embed):
     ):
         return cls(title="{} {}".format(emoji, title), **kwargs)
 
+
 class edoC(commands.AutoShardedBot):
     def __init__(self):
         if not hasattr(self, 'uptime'):
@@ -263,7 +265,7 @@ class edoC(commands.AutoShardedBot):
                          activity=discord.Game(
                              type=discord.ActivityType.listening,
                              name=f"Listening to over {self.get_data('MemberCount')} Members spread over {self.get_data('GuildCount')} Guilds!\nPrefix: ~"
-                         ), status=discord.Status.idle,)
+                         ), status=discord.Status.idle, )
 
         self.session = HTTPSession(loop=self.loop)
         self.prefix = '~'
@@ -271,6 +273,7 @@ class edoC(commands.AutoShardedBot):
         self.tempimgpath = 'data/img/temp/*'
         self.ownerid = 511724576674414600
         self.icons = {}
+        self.commands_ran = {}
         self.ready = False
         self.sra = SRA(session=self.session)
         import os
@@ -333,11 +336,9 @@ class edoC(commands.AutoShardedBot):
     async def update_data(self):
         self.backup_data()
 
-    #async def get_prefix(self, message: Message) -> Union[List[str], str]:
-    #    data = self.db.fetchrow(
-    #        "SELECT prefix FROM guild_config WHERE guild_id=?", (message.guild.id,)
-    #    )
-    #    return data
+    async def get_prefix(self, msg) -> Union[List[str], str]:
+       data = self.db.fetch('SELECT prefix FROM prefixs WHERE id = ?', msg.guild.id)
+       return data
     async def get_url(self, url) -> dict:
         async with self.session.get(url) as ses:
             data = await ses.json()
@@ -351,10 +352,16 @@ class edoC(commands.AutoShardedBot):
             if msg.raw_mentions[0] == 845186772698923029 and len(msg.content) == 22:
                 context = await self.get_context(msg, cls=edoCContext)
                 await context.send_help()
-        await self.process_commands(msg)
+        ctx = await self.get_context(msg)
+        is_command = ctx.valid
+        if is_command:
+            check = await self.get_guild_permissions(ctx)
+            if not check:
+                return await self.send_missing_perms(ctx)
+            await self.process_commands(msg)
 
     async def exit(self, code):
-        await sleep(4)
+        await sleep(3)
         exit(code)
 
     async def close(self) -> None:
@@ -373,7 +380,7 @@ class edoC(commands.AutoShardedBot):
 
     def loading_emojis(self):
         emojis = {
-            "greenTick": "<a:b_yes:879161309315346582>",
+            "greenTick": "<a:yes:879161309315346582>",
             "redTick": "<a:no:879146899322601495>",
             "plus": "<:plus:882749457932902401>",
             "minus": "<:minus:882749665777438740>",
@@ -449,6 +456,48 @@ class edoC(commands.AutoShardedBot):
         else:
             print(f"{self.user} Reconnected")
             await logschannel.send(f"{self.user} has been reconnected")
+
+    def bool_to_emoji(self, boo: bool):
+        if boo:
+            return self.icons['greenTick']
+        else:
+            return self.icons['redTick']
+
+    async def get_guild_permissions(self, ctx, return_dict=False):
+        all_perms = {}
+        admin = ctx.guild.me.guild_permissions.administrator
+        all_perms['Add Reactions'] = ctx.guild.me.guild_permissions.add_reactions
+        all_perms['View Audit Log'] = ctx.guild.me.guild_permissions.view_audit_log
+        all_perms['Read Messages'] = ctx.guild.me.guild_permissions.read_messages
+        all_perms['Send Messages'] = ctx.guild.me.guild_permissions.send_messages
+        all_perms['Embed Links'] = ctx.guild.me.guild_permissions.embed_links
+        all_perms['Attach Files'] = ctx.guild.me.guild_permissions.attach_files
+        all_perms['read Message History'] = ctx.guild.me.guild_permissions.read_message_history
+        all_perms['External Emojis'] = ctx.guild.me.guild_permissions.external_emojis
+        all_perms['Connect'] = ctx.guild.me.guild_permissions.connect
+        all_perms['Speak'] = ctx.guild.me.guild_permissions.speak
+
+        # stealemoji cmd only manage_emojis = ctx.guild.me.guild_permissions.manage_emojis
+        # needed for mod perms x = ctx.guild.me.guild_permissions.manage_roles
+        if return_dict:
+            return all_perms
+        if all(all_perms.values()):
+            return True
+        return False
+
+    async def send_missing_perms(self, ctx):
+        perms = await self.get_guild_permissions(ctx, return_dict=True)
+        emb = discord.Embed(color=invis, description='', title='Missing permissions!')
+        for name, perm in perms.items():
+            emb.description += f'{self.bool_to_emoji(perm)} {name}\n'
+        try:
+            return await ctx.send(embed=emb)
+        except discord.Forbidden:
+            to_send = 'Missing Permissions!\n'
+
+            for name, perm in perms.items():
+                to_send += f'{self.bool_to_emoji(perm) if perms["External Emojis"] else perm} {name}\n'
+            return await ctx.send(to_send)
 
     async def on_command(self, ctx):
         try:
@@ -614,6 +663,7 @@ def date(target, clock: bool = True, seconds: bool = False, ago: bool = False, o
         if only_ago:
             timestamp = f"<t:{unix}:R>"
         return timestamp
+
 
 def responsible(target, reason):
     """ Default responsible maker targeted to find user in AuditLogs """

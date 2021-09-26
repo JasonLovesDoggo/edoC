@@ -15,7 +15,7 @@ from datetime import timezone
 from os.path import relpath
 from pathlib import Path
 from textwrap import dedent
-from typing import Tuple, List
+from typing import Tuple
 
 import discord.ui
 from PyDictionary import PyDictionary
@@ -753,7 +753,7 @@ Comments: {comments}"""
             description=f"{self.bot.icons['typing']} ** | Typing**: {round(typing_ping, 1)} ms\n{self.bot.icons['edoc']} ** | Websocket**: {round(self.bot.latency * 1000)} ms\n{self.bot.icons['database']} ** | Database**: {round(sql_ping, 1)} ms",
             color=invis)
         await msg.delete()
-        await ctx.try_reply(embed=e)
+        await ctx.send(embed=e)
 
     @command()
     async def lines(self, ctx):
@@ -879,8 +879,7 @@ Comments: {comments}"""
         info["Python Version"] = f"{platform.python_version()}"
         info["Avg users/server"] = f"{avgmembers:,.2f}"
         info["Bot owners"] = len(self.config["owners"])
-        info["Prefix in this server"] = '~'#db.field("SELECT Prefix FROM guilds WHERE GuildID = ?",
-                                        #         ctx.guild.id)  # get_prefix(self.bot, ctx)
+        info["Prefix in this server"] = await self.bot.get_prefix(ctx.message) #self.db.fetch('SELECT prefix FROM prefixs WHERE id = ?', ctx.guild.id)
         info["Total members"] = totalmembers
         info["Ram usage"] = f"{ramUsage:.2f} MB"
         info["Developer"] = "Jake CEO of annoyance#1904"
