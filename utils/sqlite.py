@@ -54,7 +54,8 @@ class Database:
         self.conn.commit()
 
     def autosave(self, sched):
-        sched.add_job(self.commit, CronTrigger(second=0))
+        sched.add_job(self.commit, CronTrigger(second=1))
+
 
 class Column:
     def __init__(self, column_type: str, primary_key: bool = False, index: bool = False,

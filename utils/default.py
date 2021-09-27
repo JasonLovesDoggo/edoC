@@ -19,14 +19,13 @@ from glob import glob
 from importlib import import_module
 from io import BytesIO
 from os import getpid, remove
-from typing import Union, List
 
 import alexflipnote
 import apscheduler.schedulers.asyncio
 import discord
 import timeago as timesince
 from discord.ext import commands, tasks
-from discord.ext.commands import NoPrivateMessage, when_mentioned_or
+from discord.ext.commands import NoPrivateMessage
 from discord.utils import utcnow
 from psutil import Process
 
@@ -256,7 +255,7 @@ class edoC(commands.AutoShardedBot):
             reactions=True,
             presences=True,
         )
-        super().__init__(command_prefix=when_mentioned_or('~'), description=description,
+        super().__init__(command_prefix=self.get_prefix, description=description,
                          pm_help=None, help_attrs=dict(hidden=True),
                          chunk_guilds_at_startup=False, heartbeat_timeout=150.0,
                          allowed_mentions=allowed_mentions, intents=intents,
@@ -275,6 +274,7 @@ class edoC(commands.AutoShardedBot):
         self.icons = {}
         self.commands_ran = {}
         self.ready = False
+        self.loading_status = {}
         self.sra = SRA(session=self.session)
         import os
         for root, dirs, files in os.walk("utils"):
@@ -290,6 +290,7 @@ class edoC(commands.AutoShardedBot):
         self.alex_api = alexflipnote.Client(confi['alexflipnote_api'],
                                             loop=self.loop)  # just a example, the client doesn't have to be under bot and loop kwarg is optional
         self.cache = CacheManager()
+        self.prefixs = {}
 
         # self.blacklist = Config('blacklist.json')
 
@@ -336,9 +337,70 @@ class edoC(commands.AutoShardedBot):
     async def update_data(self):
         self.backup_data()
 
-    async def get_prefix(self, msg) -> Union[List[str], str]:
-       data = self.db.fetch('SELECT prefix FROM prefixs WHERE id = ?', msg.guild.id)
-       return data
+    async def load_prefixs(self):
+        await self.wait_until_ready()
+        print('loading prefixs')
+        for guild in self.guilds:
+            data = self.db.fetch('SELECT prefix FROM prefixs WHERE id = ?', (guild.id,))
+            for dic in data:
+                for prefix in dic.values():
+                    self.prefixs[guild.id] = prefix
+        self.loading_status['Prefixs'] = True
+
+    async def update_db(self):
+        print('starting to update db this might take a bit')
+        for guild in self.guilds:
+            self.db.execute("INSERT OR IGNORE INTO guilds (id) VALUES (?)",
+                            (guild.id,))
+            self.db.execute('INSERT OR IGNORE INTO prefixs (id, author, timestamp) VALUES (?, ?, ?)',
+                            (guild.id, self.user.id, time.time(),))
+        to_remove = []
+        allmembers = self.get_all_members()
+        for user in allmembers:
+            if user.bot:
+                continue
+            self.db.execute("INSERT OR IGNORE INTO users (id) VALUES (?)",
+                            (user.id,))
+        stored_members = self.db.fetch("SELECT id FROM users")
+        for member in stored_members:
+            id_ = member['id']
+            #print(id_)
+            if id_ not in allmembers:
+                print(f'id_ = {id_}, member = {member}')
+                to_remove.append(id_)
+
+        #print(to_remove)
+        # for id in to_remove:
+        #    print(f'deleting {id} from users')
+        #    self.db.execute("DELETE FROM users WHERE id = ?", (id,))
+
+        print("updated db")
+
+    async def get_prefix(self, msg):
+        guild = msg.guild
+        user_id = self.user.id
+        base = [f'<@!{user_id}> ', f'<@{user_id}> ']
+        if guild is None:
+            base.append(self.prefix)
+        else:
+            if guild.id in self.prefixs.keys():
+                base.extend(self.prefixs.get(guild.id, [self.prefix]))
+            else:
+                self.db.execute("INSERT OR IGNORE INTO prefixs (id) VALUES (?)",
+                                (guild.id,))
+                self.prefixs[guild.id] = self.db.fetch('SELECT prefix FROM prefixs WHERE id = ?', (guild.id,))
+                base.extend(self.prefixs.get(guild.id, [self.prefix]))
+        return base
+        # if guild is None:
+        #    return self.prefix
+        # elif guild.id in self.prefixs.keys():
+        #    print(self.prefixs[guild.id])
+        #    return self.prefixs[guild.id]
+        # else:
+        #    self.db.execute("INSERT OR IGNORE INTO prefixs (id) VALUES (?)",
+        #                    (guild.id,))
+        #    self.prefixs[guild.id] = when_mentioned_or(self.db.fetch('SELECT prefix FROM prefixs WHERE id = ?', (guild.id,)))
+
     async def get_url(self, url) -> dict:
         async with self.session.get(url) as ses:
             data = await ses.json()
@@ -436,7 +498,11 @@ class edoC(commands.AutoShardedBot):
     async def on_ready(self):
         """ The function that activates when boot was completed """
         logschannel = self.get_channel(self.config["edoc_non_critical_logs"])
+        await self.update_db()
+        await self.load_prefixs()
         if not self.ready:
+            for command in self.walk_commands():
+                self.commands_ran[f'{command.qualified_name}'] = 0
             self.seen_messages = int(self.get_data('MsgsSeen'))
             await emptyfolder(self.tempimgpath)
             self.update_data.start()
@@ -448,7 +514,7 @@ class edoC(commands.AutoShardedBot):
                 f"Ready: {self.user} | Total members {sum(g.member_count for g in self.guilds)} | Guild count: {len(self.guilds)} | Guilds")
             guilds = {}
             for Server in self.guilds:
-                gprefix = self.db.fetch('SELECT prefix FROM prefixs WHERE id = ?', (Server.id,))
+                gprefix = self.prefixs[Server.id]
                 print(
                     f"{Server.id} ~ {Server} ~ {Server.owner} ~ {Server.member_count} ~ Prefix {gprefix}")
             self.loading_emojis()

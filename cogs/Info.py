@@ -14,6 +14,7 @@ from datetime import datetime as dt
 from datetime import timezone
 from os.path import relpath
 from pathlib import Path
+from re import match
 from textwrap import dedent
 from typing import Tuple
 
@@ -126,6 +127,24 @@ class Info(Cog, description='Informational and useful commands'):
     async def correct(self, ctx, *, words: str):
         tb = TextBlob(text=words)
         await ctx.invis(str(tb.correct()))
+
+    @commands.command(aliases=['ss'])
+    @commands.is_nsfw()
+    @commands.max_concurrency(1, BucketType.user)
+    async def screenshot(self, ctx, *, url: str):
+        """
+        Takes a screenshot of the given website.
+        """
+
+        url = url.strip('<>')
+        if not match(URL_REGEX, url):
+            return await ctx.error('That is not a valid url. Try again with a valid one.')
+        link = f'https://image.thum.io/get/{url}'
+        # byt = BytesIO(await res.read())
+
+        em = Embed(description=f'`URL`: {link}', color=invis)
+        em.set_image(url=link)
+        await ctx.send(embed=em)
 
     @command(aliases=("spotify", "spot"),
              brief="Show what song a member listening to in Spotify", )
@@ -616,8 +635,9 @@ class Info(Cog, description='Informational and useful commands'):
         files = lines.get('file_amount')
         pyfiles = lines.get('python_file_amount')
         lang = 'ahk'
-        prefix = '~' #self.db.fetch("SELECT Prefix FROM guilds WHERE ID = ?",
-                  #        ctx.guild.id) or self.bot.prefix # get_prefix(self.bot, ctx)
+        ramUsage = self.process.memory_full_info().rss / 1024 ** 2
+        prefix = '~'  # self.db.fetch("SELECT Prefix FROM guilds WHERE ID = ?",
+        #        ctx.guild.id) or self.bot.prefix # get_prefix(self.bot, ctx)
         cmds = self.bot.total_commands_ran
         chancount = str(len(list(self.bot.get_all_channels())))
         infos = {}
@@ -626,7 +646,7 @@ class Info(Cog, description='Informational and useful commands'):
         infos[f'{emoji("dev")}Developer'] = f'ini\n{version_info["dev"]}'
         infos[f'{status(str(ctx.guild.me.status))} Uptime'] = precisedelta(discord.utils.utcnow() - self.bot.start_time,
                                                                            format='%.0f')
-        infos[f'System'] = platform.system()
+        infos['System'] = f'yaml\nPlatform: {platform.system()}\nRam Usage: {ramUsage:.2f} MB'
         infos[
             'Stats'] = f'{lang}\nMember Count: {sum(g.member_count for g in self.bot.guilds)}\nChannel Count: {chancount}\n' \
                        f'Guild Count: {len(self.bot.guilds)}\nAvg users/server: {avgmembers:,.2f}\n' \
@@ -879,7 +899,8 @@ Comments: {comments}"""
         info["Python Version"] = f"{platform.python_version()}"
         info["Avg users/server"] = f"{avgmembers:,.2f}"
         info["Bot owners"] = len(self.config["owners"])
-        info["Prefix in this server"] = await self.bot.get_prefix(ctx.message) #self.db.fetch('SELECT prefix FROM prefixs WHERE id = ?', ctx.guild.id)
+        info["Prefix in this server"] = await self.bot.get_prefix(
+            ctx.message)  # self.db.fetch('SELECT prefix FROM prefixs WHERE id = ?', ctx.guild.id)
         info["Total members"] = totalmembers
         info["Ram usage"] = f"{ramUsage:.2f} MB"
         info["Developer"] = "Jake CEO of annoyance#1904"

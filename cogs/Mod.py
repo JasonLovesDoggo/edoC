@@ -81,7 +81,7 @@ BannedUsers = {}
 
 
 async def Get_Banned_Users(bot):
-    bans = bot.db.field("SELECT UserID FROM users WHERE Banned = ?", "True")
+    bans = bot.db.field("SELECT id FROM users WHERE banned = ?", "True")
     for UserID in bans:
         BannedUsers + UserID
 
@@ -141,7 +141,6 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
     def __init__(self, bot):
         self.bot = bot
         self.config = bot.config
-        self.prefix = self.bot.prefix
 
     async def _basic_cleanup_strategy(self, ctx, search):
         count = 0
@@ -988,18 +987,17 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
             await self.do_removal(ctx, 100, lambda e: substr in e.content)
 
     @prune.command(name="bot", aliases=['bots'])
-    async def _bots(self, ctx, search=100, prefix=None):
+    async def _bots(self, ctx, prefix, search=100):
         """Removes a bot user's messages and messages with their optional prefix."""
 
-        getprefix = self.prefix if prefix else self.config["prefix"]
 
         def predicate(m):
-            return (m.webhook_id is None and m.author.bot) or m.content.startswith(tuple(getprefix))
+            return (m.webhook_id is None and m.author.bot) or m.content.startswith(tuple(prefix))
 
         await self.do_removal(ctx, search, predicate)
 
     @prune.command(name="users")
-    async def _users(self, ctx, prefix=None, search=100):
+    async def _users(self, ctx, search=100):
         """Removes only user messages. """
 
         def predicate(m):

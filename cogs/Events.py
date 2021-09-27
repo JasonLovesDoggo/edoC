@@ -60,11 +60,9 @@ class Events(commands.Cog, description='Event handling if u can see this ping th
         self.scheduler = apscheduler.schedulers.asyncio.AsyncIOScheduler()
         self.critlogschannel = self.config["edoc_logs"]
         self.allmembers = self.bot.get_all_members()
-        self.guilds = self.bot.guilds
         self.noncritlogschannel = self.config["edoc_non_critical_logs"]
         self.db = self.bot.db
         self.db.autosave(self.scheduler)
-        self.update_db()
 
     async def erroremb(self, ctx, *, description: str, footer=None, title=None):
         """@summary creates a discord embed so i can send it with x details easier"""
@@ -94,7 +92,8 @@ class Events(commands.Cog, description='Event handling if u can see this ping th
             chan for chan in sorted(guild.channels, key=lambda x: x.position)
             if chan.permissions_for(guild.me).send_messages and isinstance(chan, discord.TextChannel)
         ), None)
-        self.db.execute("INSERT OR IGNORE INTO Guilds (GuildID) VALUE (?)", guild.id, )
+        self.db.execute("INSERT OR IGNORE INTO guilds (id) VALUES (?)",
+                        (guild.id,))
         channel = self.bot.get_channel(guild.system_channel) or to_send
         await channel.send("Thank you for inviting me to the server")
         await channel.send("Please do ~help to get started")
@@ -119,25 +118,6 @@ class Events(commands.Cog, description='Event handling if u can see this ping th
     #    print("updated db")
     #    await asyncio.sleep(21600.0)
 
-    def update_db(self):
-        for guild in self.guilds:
-            self.db.execute("INSERT OR IGNORE INTO guilds (GuildID, Prefix, GuildName) VALUES (?, ?, ?)",
-                            (guild.id, self.config["default_prefix"], guild.name,))
-
-        # self.db.multiexec("INSERT OR IGNORE INTO User (UserID) VALUES (?)",
-        #             ((member.id,) for member in self.allmembers if not member.bot))
-
-        to_remove = []
-        allmembers = self.bot.get_all_members()
-        stored_members = self.db.fetch("SELECT id FROM users")
-        for id_ in stored_members:
-            if id_ not in list(allmembers):
-                to_remove.append(id_)
-        #self.db.multiexec("DELETE FROM User WHERE UserID = ?",
-        #                  ((id_,) for id_ in to_remove))
-
-        print("updated db")
-
     # async def update_db(self):
     #    members = self.bot.get_all_members()
     #    for member in members:
@@ -151,11 +131,6 @@ class Events(commands.Cog, description='Event handling if u can see this ping th
     #        self.db.execute("INSERT OR IGNORE INTO guilds (GuildID, Prefix, GuildName, GuildAdmins) VALUES (?, ?, ?, ?);", (server.id, self.config["default_prefix"], server.name, admins))
     #    self.db.commit()
     #    print("updated db")
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        for command in self.bot.walk_commands():
-            self.bot.commands_ran[f'{command.qualified_name}'] = 0
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, err):
@@ -240,7 +215,7 @@ class Events(commands.Cog, description='Event handling if u can see this ping th
             print(guild)
             return
         else:
-            self.db.execute("DELETE FROM Guilds WHERE GuildID=?", (guild.id,))
+            self.db.execute("DELETE FROM guilds WHERE id=?", (guild.id,))
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild):

@@ -8,11 +8,13 @@
 from time import time
 
 from utils import sqlite as db
+from utils.vars import default_prefix
 
 
 class users(db.Table):
     id = db.Column('INT', nullable=False, primary_key=True)
     premium = db.Column('BOOL', nullable=False, default=False)
+    banned = db.Column('BOOL', nullable=False, default=False)
 
 class guilds(db.Table):
     id = db.Column("INT", nullable=False, primary_key=True)
@@ -29,10 +31,9 @@ class guild_perms(db.Table):
 
 class prefixs(db.Table):
     id = db.Column("INT", nullable=False, primary_key=True)
-    prefix = db.Column('TEXT', nullable=False, default='~')
-    author = db.Column('INT', nullable=False)
+    prefix = db.Column('TEXT', nullable=False, default=default_prefix)
+    author = db.Column('INT', nullable=False, default=845186772698923029)
     timestamp = db.Column('timestamp', nullable=False, default=time())
-
 
 class stats(db.Table):
     cmds_ran = db.Column('INT', nullable=False, default=0)

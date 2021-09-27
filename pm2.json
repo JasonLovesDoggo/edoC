@@ -8,7 +8,7 @@
     "ignore_watch": ["log.log", "ConsoleLog.log"],
     "instances": 1,
     "min_uptime" : "600",
-    "max_restarts": 3,
-    "stop-exit-codes": [600]
+    "stop-exit-codes": [600],
+    "exp_backoff_restart_delay": 100
   }]
 }
