@@ -16,7 +16,7 @@ from os.path import relpath
 from pathlib import Path
 from re import match
 from textwrap import dedent
-from typing import Tuple
+from typing import Tuple, List
 
 import discord.ui
 from PyDictionary import PyDictionary
