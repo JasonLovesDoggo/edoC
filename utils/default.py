@@ -18,12 +18,14 @@ from distutils.log import info
 from glob import glob
 from importlib import import_module
 from io import BytesIO
-from os import getpid, remove
+from os import getpid, remove, walk
+from os.path import relpath, join
 
 import alexflipnote
 import apscheduler.schedulers.asyncio
 import discord
 import timeago as timesince
+from asyncspotify import Client, ClientCredentialsFlow
 from discord.ext import commands, tasks
 from discord.ext.commands import NoPrivateMessage
 from discord.utils import utcnow
@@ -38,7 +40,6 @@ from utils.help import PaginatedHelpCommand
 from utils.http import HTTPSession
 from utils.vars import dark_blue, invis
 
-BannedUsers = {}
 logger = logging.getLogger(__name__)
 
 
@@ -275,12 +276,12 @@ class edoC(commands.AutoShardedBot):
         self.commands_ran = {}
         self.ready = False
         self.loading_status = {}
+        self.banned_users = {}
         self.sra = SRA(session=self.session)
-        import os
-        for root, dirs, files in os.walk("utils"):
+        for root, dirs, files in walk("utils"):
             for f in files:
                 if f.endswith('.py'):
-                    import_module(str(os.path.relpath(os.path.join(root, f), "."))[:-3].replace('\\', '.'))
+                    import_module(str(relpath(join(root, f), "."))[:-3].replace('\\', '.'))
         self.db = sqlite.Database()
         if not self.create_drop_tables("create"):
             print('hi')
@@ -291,6 +292,10 @@ class edoC(commands.AutoShardedBot):
                                             loop=self.loop)  # just a example, the client doesn't have to be under bot and loop kwarg is optional
         self.cache = CacheManager()
         self.prefixs = {}
+        self.ignore_dis_auth = ClientCredentialsFlow(
+            client_id='6d93815487a84a8cb64ca18c03bc855e',
+            client_secret=self.config['spotify_client_secret'],
+        )
 
         # self.blacklist = Config('blacklist.json')
 
@@ -346,7 +351,9 @@ class edoC(commands.AutoShardedBot):
                 for prefix in dic.values():
                     self.prefixs[guild.id] = prefix
         self.loading_status['Prefixs'] = True
-
+    async def load_data(self):
+        await self.load_prefixs()
+        data = self.db.fetch('SELECT id FROM users WHERE banned = TRUE')
     async def update_db(self):
         print('starting to update db this might take a bit')
         for guild in self.guilds:
@@ -362,15 +369,17 @@ class edoC(commands.AutoShardedBot):
             self.db.execute("INSERT OR IGNORE INTO users (id) VALUES (?)",
                             (user.id,))
         stored_members = self.db.fetch("SELECT id FROM users")
+        all_members_list = []
+        for ignordislmao, user in enumerate(self.get_all_members(), start=1):
+            all_members_list.append(user.id)
         for member in stored_members:
             id_ = member['id']
-            #print(id_)
-            if id_ not in allmembers:
-                print(f'id_ = {id_}, member = {member}')
+            if id_ not in all_members_list:
+                print(f'id = {id_}')
                 to_remove.append(id_)
 
-        #print(to_remove)
-        # for id in to_remove:
+
+        #for id in to_remove:
         #    print(f'deleting {id} from users')
         #    self.db.execute("DELETE FROM users WHERE id = ?", (id,))
 
@@ -390,6 +399,7 @@ class edoC(commands.AutoShardedBot):
                                 (guild.id,))
                 self.prefixs[guild.id] = self.db.fetch('SELECT prefix FROM prefixs WHERE id = ?', (guild.id,))
                 base.extend(self.prefixs.get(guild.id, [self.prefix]))
+        print('prefix = ', base)
         return base
         # if guild is None:
         #    return self.prefix
@@ -497,10 +507,14 @@ class edoC(commands.AutoShardedBot):
 
     async def on_ready(self):
         """ The function that activates when boot was completed """
+
         logschannel = self.get_channel(self.config["edoc_non_critical_logs"])
+
         await self.update_db()
-        await self.load_prefixs()
         if not self.ready:
+            await self.load_data()
+            async with Client(self.ignore_dis_auth) as self.spotiy:
+                pass
             for command in self.walk_commands():
                 self.commands_ran[f'{command.qualified_name}'] = 0
             self.seen_messages = int(self.get_data('MsgsSeen'))

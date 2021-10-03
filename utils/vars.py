@@ -6,6 +6,7 @@
 #  file that should have been included as part of this package.                                    +
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 from random import randint, choice
+
 default_prefix = '~'
 INVALID_ERRORS = ['Invalid Difficulty']
 # EMOJIS

@@ -12,7 +12,6 @@ import pathlib
 import platform
 from datetime import datetime as dt
 from datetime import timezone
-from os.path import relpath
 from pathlib import Path
 from re import match
 from textwrap import dedent
@@ -30,7 +29,8 @@ from pyshorteners import Shortener
 from textblob import TextBlob
 
 from utils.apis.mojang.mojang import MojangAPI as MoI
-from utils.checks import guild_only, UrlSafe, stealer_check, MemberConverterr
+from utils.checks import guild_only, stealer_check
+from utils.converters import UrlSafe, MemberConverter
 from utils.curse import ProfanitiesFilter
 from utils.default import *
 from utils.http import get
@@ -150,7 +150,7 @@ class Info(Cog, description='Informational and useful commands'):
              brief="Show what song a member listening to in Spotify", )
     @cooldown(1, 5, BucketType.user)
     @guild_only()
-    async def spotifyinfo(self, ctx, user: MemberConverterr = None):
+    async def spotifyinfo(self, ctx, user: MemberConverter = None):
         user = user or ctx.author
 
         spotify: discord.Spotify = discord.utils.find(

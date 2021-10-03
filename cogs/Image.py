@@ -15,13 +15,17 @@ from discord import Embed, File  # , Option
 from discord.ext.commands import *
 
 from utils.Context import edoCContext
-from utils.checks import UrlSafe, Member
+from utils.converters import UrlSafe, Member
 from utils.http import get
 from utils.vars import *
 
 
 class Invalid_endpoint(BaseException):
     pass
+
+
+if __name__ == '__main__':
+    yp
 
 
 class Image(Cog, description='Image Related commands are here'):

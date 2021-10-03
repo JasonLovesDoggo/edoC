@@ -34,7 +34,6 @@ images = ['```\n   +---+\n   O   | \n  /|\\  | \n  / \\  | \n      ===```',
           '```\n   +---+ \n   O   | \n       | \n       | \n      ===```',
           '```\n  +---+ \n      | \n      | \n      | \n     ===```']
 
-
 async def play(bot, ctx):
     def check(m):
         return m.author == ctx.author

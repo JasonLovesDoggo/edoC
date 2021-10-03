@@ -59,7 +59,6 @@ class Events(commands.Cog, description='Event handling if u can see this ping th
         self.process = Process(getpid())
         self.scheduler = apscheduler.schedulers.asyncio.AsyncIOScheduler()
         self.critlogschannel = self.config["edoc_logs"]
-        self.allmembers = self.bot.get_all_members()
         self.noncritlogschannel = self.config["edoc_non_critical_logs"]
         self.db = self.bot.db
         self.db.autosave(self.scheduler)

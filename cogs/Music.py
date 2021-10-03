@@ -14,7 +14,7 @@ import humanfriendly
 from discord.ext import commands, tasks
 from discord.ext.commands import is_owner
 
-from utils.checks import UrlSafe
+from utils.converters import UrlSafe
 from utils.default import is_dj_or_perms, is_admin
 from utils.pagination import Paginator
 from utils.vars import *

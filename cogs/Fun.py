@@ -30,7 +30,7 @@ from pyjokes import pyjokes
 
 from cogs.Discordinfo import plural
 from utils.apis.Somerandomapi import SRA
-from utils.checks import MemberConverterr
+from utils.converters import MemberConverter
 from utils.default import config, CustomTimetext
 from utils.http import get
 from utils.pagination import UrbanSource
@@ -202,7 +202,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
         await ctx.reply(joke)
 
     @commands.command(aliases=['renamedchuckJokes', 'gudjokesherenoscam', 'CJ'])
-    async def ChuckJoke(self, ctx, person: MemberConverterr = None):
+    async def ChuckJoke(self, ctx, person: MemberConverter = None):
         """ChuckNorris is the only man to ever defeat a brick wall in a game of tennis."""
         joke = choice(chuckjoke)
         if person is not None:
@@ -599,7 +599,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
         await message.edit(embed=embed)
 
     @commands.command()
-    async def beer(self, ctx, user: MemberConverterr = None, *, reason: commands.clean_content = ""):
+    async def beer(self, ctx, user: MemberConverter = None, *, reason: commands.clean_content = ""):
         """ Give someone a beer! 🍻 """
         if not user or user.id == ctx.author.id:
             return await ctx.send(f"**{ctx.author.name}**: paaaarty!🎉🍺")
@@ -634,7 +634,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
             return await ctx.unknown('uhm unknown error with the beer command', ctx.command)
 
     @commands.command(aliases=["howhot", "hot"])
-    async def hotcalc(self, ctx, *, user: MemberConverterr):
+    async def hotcalc(self, ctx, *, user: MemberConverter):
         """ Returns a random percent for how hot is a discord user """
         seed(user.id)
         r = randint(1, 100)
@@ -675,7 +675,7 @@ class Fun(commands.Cog, description='Fun and entertaining commands can be found 
 
     @commands.command(name="fight")
     @commands.max_concurrency(1, commands.BucketType.user)
-    async def fight(self, ctx, member: MemberConverterr):
+    async def fight(self, ctx, member: MemberConverter):
         """
         Challenge an user to a duel!
         The user cannot be a bot.

@@ -7,6 +7,7 @@
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 import contextlib
 import logging
+from asyncio import get_event_loop
 from logging.handlers import RotatingFileHandler
 from os import environ, listdir
 
@@ -14,23 +15,28 @@ from utils.default import edoC, config
 
 config = config()
 # TODO add a fully not erroring get_prefix
-bot = edoC()
 environ["JISHAKU_HIDE"] = "True"
 environ["JISHAKU_NO_UNDERSCORE"] = "True"
-NO_LOAD_COG = ''
+NO_LOAD_COG = 'API'
 
 
-#@bot.slash_command(guild_ids=[
+#@bot.after_invoke
+#async def add_count(ctx):
+#    db = bot.db
+#    cc = await db.fetchrow('SELECT count FROM stats')  # current count
+#    await db.execute('UPDATE stats SET count = ? WHERE count = ?', (cc + 1, cc))
+
+
+# @bot.slash_command(guild_ids=[
 #    819282410213605406])  # if guild_ids is not given, the command will be released globally, although it will take atmost 1 hour to release due to API limitations of Discord
-#async def hello(
+# async def hello(
 #        ctx,
 #        name: Option(str, "Enter your name"),
 #        gender: Option(str, "Choose your gender", choices=["Male", "Female", "Other"]),
 #        age: Option(int, "Enter your age", required=False, default=18),
-#):
+# ):
 #    await ctx.send(f"Hello {name} {gender} {age}")
 
-# async def process_commands(self, message):
 # async def process_commands(self, message):
 #    ctx = await self.get_context(message, cls=Context)
 #
@@ -76,21 +82,25 @@ def setup_logging():
             handler.close()
             logger.removeHandler(handler)  # type: ignore
 
+async def run():
+    bot = edoC()
+    try:
+        bot.load_extension("jishaku")
+        for file in listdir("cogs"):
+            if NO_LOAD_COG:
+                if file.startswith(NO_LOAD_COG):
+                    continue
+            if file.endswith(".py"):
+                name = file[:-3]
+                bot.load_extension(f"cogs.{name}")
+    except Exception:
+        raise ChildProcessError("Problem with one of the cogs/utils")
 
-try:
-    bot.load_extension("jishaku")
-    for file in listdir("cogs"):
-        if NO_LOAD_COG:
-            if file.startswith(NO_LOAD_COG):
-                continue
-        if file.endswith(".py"):
-            name = file[:-3]
-            bot.load_extension(f"cogs.{name}")
-except Exception:
-    raise ChildProcessError("Problem with one of the cogs/utils")
+    try:
+        with setup_logging():
+            bot.run(config["token"], reconnect=True)
+    except Exception as e:
+        print(f"Error when logging in: {e}")
 
-try:
-    with setup_logging():
-        bot.run(config["token"], reconnect=True)
-except Exception as e:
-    print(f"Error when logging in: {e}")
+loop = get_event_loop()
+loop.run_until_complete(run())

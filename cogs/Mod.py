@@ -24,9 +24,9 @@ from discord.utils import find
 
 from cogs.Discordinfo import format_relative, plural
 # from lib.db import db
-from utils import checks, default
-from utils.checks import MemberConverterr
-from utils.default import mod_or_permissions
+from utils.checks import check_priv
+from utils.converters import MemberConverter
+from utils.default import mod_or_permissions, actionmessage, responsible, prettyResults
 from utils.vars import *
 
 log = logging.getLogger('mod')
@@ -249,7 +249,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
     @commands.command()
     @commands.guild_only()
     @mod_or_permissions(kick_members=True)
-    async def kick(self, ctx, member: MemberConverterr, *, reason: ActionReason = None):
+    async def kick(self, ctx, member: MemberConverter, *, reason: ActionReason = None):
         """Kicks a member from the server.
         In order for this to work, the bot must have Kick Member permissions.
         To use this command you must have Kick Members permission.
@@ -278,13 +278,13 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
     @commands.command(aliases=["nick"])
     @commands.guild_only()
     @commands.has_permissions(manage_nicknames=True)
-    async def nickname(self, ctx, member: MemberConverterr, *, name: str = None):
+    async def nickname(self, ctx, member: MemberConverter, *, name: str = None):
         """ Nicknames a user from the current server. """
-        if await checks.check_priv(ctx, member):
+        if await check_priv(ctx, member):
             return
 
         try:
-            await member.edit(nick=name, reason=default.responsible(ctx.author, "Changed by command"))
+            await member.edit(nick=name, reason=responsible(ctx.author, "Changed by command"))
             message = f"Changed **{member.name}'s** nickname to **{name}**"
             if name is None:
                 message = f"Reset **{member.name}'s** nickname"
@@ -298,14 +298,14 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
     async def massnickname(self, ctx, *, name: str = None):
         """ Nicknames all the users from the current server. """
         for member in ctx.guild.members:
-            if await checks.check_priv(ctx, member):
+            if await check_priv(ctx, member):
                 return
             else:
                 if member.id == 845186772698923029 or 511724576674414600:
                     continue
                 else:
                     try:
-                        await member.edit(nick=name, reason=default.responsible(ctx.author, "Changed by command"))
+                        await member.edit(nick=name, reason=responsible(ctx.author, "Changed by command"))
                         message = f"Changed **{member.name}'s** nickname to **{name}**"
                         if name is None:
                             message = f"Reset **{member.name}'s** nickname"
@@ -414,7 +414,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
         # can be a User even in a guild only context
         # Rather than trying to work out the kink with it
         # Just upgrade the member itself.
-        if not isinstance(ctx.author, MemberConverterr):
+        if not isinstance(ctx.author, MemberConverter):
             try:
                 author = await ctx.guild.fetch_member(ctx.author.id)
             except discord.HTTPException:
@@ -486,7 +486,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
 
         # member filters
         predicates = [
-            lambda m: isinstance(m, MemberConverterr) and can_execute_action(ctx, author, m),  # Only if applicable
+            lambda m: isinstance(m, MemberConverter) and can_execute_action(ctx, author, m),  # Only if applicable
             lambda m: not m.bot,  # No bots
             lambda m: m.discriminator != '0000',  # No deleted users
         ]
@@ -575,7 +575,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
         try:
             for member_id in members:
                 await ctx.guild.unban(discord.Object(id=str(member_id)))
-            await ctx.send(default.actionmessage("massunbans", mass=True))
+            await ctx.send(actionmessage("massunbans", mass=True))
         except Exception as e:
             await ctx.send(e)
 
@@ -587,8 +587,8 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
         """ Mass kicks multiple members from the server. """
         try:
             for member_id in members:
-                await ctx.guild.kick(discord.Object(id=str(member_id)), reason=default.responsible(ctx.author, reason))
-            await ctx.send(default.actionmessage("masskickd", mass=True))
+                await ctx.guild.kick(discord.Object(id=str(member_id)), reason=responsible(ctx.author, reason))
+            await ctx.send(actionmessage("masskickd", mass=True))
         except Exception as e:
             await ctx.send(e)
 
@@ -598,8 +598,8 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
     async def unban(self, ctx, member: MemberID, *, reason: str = None):
         """ Unbans a user from the current server. """
         try:
-            await ctx.guild.unban(discord.Object(id=str(member)), reason=default.responsible(ctx.author, reason))
-            await ctx.send(default.actionmessage("unbanned"))
+            await ctx.guild.unban(discord.Object(id=str(member)), reason=responsible(ctx.author, reason))
+            await ctx.send(actionmessage("unbanned"))
         except Exception as e:
             await ctx.send(e)
 
@@ -689,7 +689,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
 
     #@commands.group(name='mute', invoke_without_command=True)
     #@can_mute()
-    #async def _mute(self, ctx, members: commands.Greedy[MemberConverterr], *, reason: ActionReason = None):
+    #async def _mute(self, ctx, members: commands.Greedy[MemberConverter], *, reason: ActionReason = None):
     #    """Mutes members using the configured mute role.
     #    The bot must have Manage Roles permission and be
     #    above the muted role in the hierarchy.
@@ -720,7 +720,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
 #
     @commands.command(name='unmute')
     @can_mute()
-    async def _unmute(self, ctx, members: commands.Greedy[MemberConverterr], *, reason: ActionReason = None):
+    async def _unmute(self, ctx, members: commands.Greedy[MemberConverter], *, reason: ActionReason = None):
         """Unmutes members using the configured mute role.
         The bot must have Manage Roles permission and be
         above the muted role in the hierarchy.
@@ -804,14 +804,14 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
                     if g.name and (search.lower() in g.name.lower()):
                         loop.append(f"{i} | {type(g).__name__}: {g.name} ({i.id})")
 
-        await default.prettyResults(
+        await prettyResults(
             ctx, "playing", f"Found **{len(loop)}** on your search for **{search}**", loop
         )
 
     @find.command(name="username", aliases=["name"])
     async def find_name(self, ctx, *, search: str):
         loop = [f"{i} ({i.id})" for i in ctx.guild.members if search.lower() in i.name.lower() and not i.bot]
-        await default.prettyResults(
+        await prettyResults(
             ctx, "name", f"Found **{len(loop)}** on your search for **{search}**", loop
         )
 
@@ -819,14 +819,14 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
     async def find_nickname(self, ctx, *, search: str):
         loop = [f"{i.nick} | {i} ({i.id})" for i in ctx.guild.members if i.nick if
                 (search.lower() in i.nick.lower()) and not i.bot]
-        await default.prettyResults(
+        await prettyResults(
             ctx, "name", f"Found **{len(loop)}** on your search for **{search}**", loop
         )
 
     @find.command(name="id")
     async def find_id(self, ctx, *, search: int):
         loop = [f"{i} | {i} ({i.id})" for i in ctx.guild.members if (str(search) in str(i.id)) and not i.bot]
-        await default.prettyResults(
+        await prettyResults(
             ctx, "name", f"Found **{len(loop)}** on your search for **{search}**", loop
         )
 
@@ -836,7 +836,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
             return await ctx.send("You must provide exactly 4 digits")
 
         loop = [f"{i} ({i.id})" for i in ctx.guild.members if search == i.discriminator]
-        await default.prettyResults(
+        await prettyResults(
             ctx, "discriminator", f"Found **{len(loop)}** on your search for **{search}**", loop
         )
 
@@ -972,7 +972,7 @@ class Mod(commands.Cog, description='Moderator go brrrrrrrr ~ban'):
         await self.do_removal(ctx, search, lambda e: True)
 
     @prune.command()
-    async def user(self, ctx, member: MemberConverterr, search=100):
+    async def user(self, ctx, member: MemberConverter, search=100):
         """Removes all messages by the member."""
         await self.do_removal(ctx, search, lambda e: e.author == member)
 

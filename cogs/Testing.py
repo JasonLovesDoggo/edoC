@@ -15,7 +15,7 @@ from discord.ext import commands
 
 #from discord_slash import cog_ext, SlashContext
 #@interactions.application_command(...)
-#async def second_borrowing(ctx, member: MemberConverterr):
+#async def second_borrowing(ctx, member: MemberConverter):
 #    await ctx.send(f"Member ID: {member.id}")
 
 
@@ -117,6 +117,11 @@ class Test(commands.Cog, description='Testing cog for... testing'):
             bit = GETC()
             await ctx.send(f'eth {eth}\nlite {lite}\nbitcoin cash {bitca}\nbitcoin {bit}')
 
-
+    #@commands.command()
+    #async def spottest(self, ctx):
+    #    wait_until_ready
+    #    playlist = await self.spotify.get_playlist('1MG01HhbCvVhH9NmXhd9GC')
+    #    async for track in playlist:
+    #        await ctx.send(track.name)
 def setup(bot):
     bot.add_cog(Test(bot))

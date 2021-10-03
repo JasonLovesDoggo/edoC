@@ -1,3 +1,4 @@
+
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #  Copyright (c) 2021. Jason Cameron                                                               +
 #  All rights reserved.                                                                            +
@@ -5,9 +6,6 @@
 #  and is released under the "MIT License Agreement". Please see the LICENSE                       +
 #  file that should have been included as part of this package.                                    +
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-from urllib.parse import quote
-
-from discord import Member
 from discord.ext import commands
 from discord.ext.commands import CommandError
 
@@ -17,40 +15,14 @@ config = config()
 owners = config["owners"]
 
 
-# TODO: Move this somewhere in `exts/utils/` folder
-async def authorOrReferenced(ctx):
-    if ref := ctx.replied_reference:
-        # Get referenced message author
-        # if user reply to a message while doing this command
-        return (
-            ref.cached_message.author
-            if ref.cached_message
-            else (await ctx.fetch_message(ref.message_id)).author
-        )
-    return ctx.author
-
-class MemberConverterr(commands.Converter, Member):
-    async def convert(self, ctx, argument):
-        ctx = await ctx.bot.get_context(message=ctx.message)
-        try:
-            return await authorOrReferenced(ctx) or await Member(argument)
-        except Exception as e:
-            print(e)
-            return ctx.author
-
-
-class UrlSafe(commands.Converter):
-    async def convert(self, ctx, argument: str):
-        try:
-            urlsafe = quote(argument)
-        except ValueError:
-            raise commands.BadArgument("One ore more chars are invalid")
-        return urlsafe
-
 
 class GuildNotFound(CommandError):
     pass
 
+async def dick_check(ctx, id):
+    banned_u = ctx.bot.banned_users
+    if id in banned_u:
+        return await ctx.error('You\'re currently banned from using edoC\nPlease join the support server to appeal')
 
 async def stealer_check(ctx, id, bot):
     msg = await ctx.invis('Checking if you steal code...')
