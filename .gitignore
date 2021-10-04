@@ -101,7 +101,7 @@ ENV/
 
 #logs
 ConsoleLog.log
-log.log
+edoC.log
 
 #config
 config.json

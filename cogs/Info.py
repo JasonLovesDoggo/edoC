@@ -35,9 +35,9 @@ from utils.curse import ProfanitiesFilter
 from utils.default import *
 from utils.http import get
 from utils.info import fetch_info
-from utils.pagination import IndexedListSource, CatchAllMenu
 from utils.text_formatting import hyperlink
 from utils.vars import *
+from utils.views import IndexedListSource, CatchAllMenu
 
 
 class Menu(ListPageSource):
@@ -547,7 +547,7 @@ class Info(Cog, description='Informational and useful commands'):
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~
     @command()
-    # @cooldown(rate=1, per=300, type=BucketType.guild)
+    @cooldown(rate=3, per=50, type=BucketType.guild)
     async def CmdStats(self, ctx):
         try:
             cmdsran = self.bot.commands_ran
@@ -560,16 +560,16 @@ class Info(Cog, description='Informational and useful commands'):
                                  description=f'{self.bot.total_commands_ran} Commands ran this boot\n',
                                  color=random_color())
             emby.add_field(name='Top 10 commands ran',
-                           value=f'🥇:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                 f'🥈:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                 f'🥉:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                 f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                 f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                 f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                 f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                 f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                 f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n'
-                                 f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} uses)\n')
+                           value=f'🥇:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n'
+                                 f'🥈:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n'
+                                 f'🥉:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n'
+                                 f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n'
+                                 f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n'
+                                 f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n'
+                                 f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n'
+                                 f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n'
+                                 f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n'
+                                 f'🏅:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n')
 
             emby.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
 

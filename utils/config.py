@@ -7,9 +7,31 @@
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 from time import time
 
-from utils import sqlite as db
+from utils import db
 from utils.vars import default_prefix
 
+
+class Plonks(db.Table):
+    id = db.PrimaryKeyColumn()
+    guild_id = db.Column(db.Integer(big=True), index=True)
+    # this can either be a channel_id or an author_id
+    entity_id = db.Column(db.Integer(big=True), index=True, unique=True)
+
+class CommandConfig(db.Table, table_name='command_config'):
+    id = db.PrimaryKeyColumn()
+
+    guild_id = db.Column(db.Integer(big=True), index=True)
+    channel_id = db.Column(db.Integer(big=True))
+
+    name = db.Column(db.String)
+    whitelist = db.Column(db.Boolean)
+
+    @classmethod
+    def create_table(cls, *, exists_ok=True):
+        statement = super().create_table(exists_ok=exists_ok)
+        # create the unique index
+        sql = "CREATE UNIQUE INDEX IF NOT EXISTS command_config_uniq_idx ON command_config (channel_id, name, whitelist);"
+        return statement + '\n' + sql
 
 class users(db.Table):
     id = db.Column('INT', nullable=False, primary_key=True)

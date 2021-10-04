@@ -7,14 +7,120 @@
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 import asyncio
+import contextlib
 import re
+import time
+from functools import partial
 from typing import Optional, Dict, Any, List
 
 import discord
-from discord import Embed
+from discord import Embed, ui
 from discord.ext import menus
+from discord.ext.commands import *
 from discord.ext.commands import Paginator as CommandPaginator
 
+from utils.Context import edoCContext
+from utils.vars import error
+
+
+class BaseView(ui.View):
+    def reset_timeout(self):
+        self.set_timeout(time.monotonic() + self.timeout)
+
+    def set_timeout(self, new_time):
+        self._View__timeout_expiry = new_time
+
+
+class CallbackView(BaseView):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for b in self.children:
+            self.wrap(b)
+
+    def wrap(self, b):
+        callback = b.callback
+        b.callback = partial(self.handle_callback, callback, b)
+
+    async def handle_callback(self, callback, item, interaction):
+        pass
+
+    def add_item(self, item: ui.Item) -> None:
+        self.wrap(item)
+        super().add_item(item)
+
+class ViewAuthor(BaseView):
+    def __init__(self, ctx: edoCContext, *args: Any, **kwargs: Any):
+        super().__init__(*args, **kwargs)
+        self.context = ctx
+        self.is_command = ctx.command is not None
+        self.cooldown = CooldownMapping.from_cooldown(1, 10, BucketType.user)
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        """Only allowing the context author to interact with the view"""
+        ctx = self.context
+        author = ctx.author
+        if interaction.user == ctx.bot.stella:
+            return True
+        if interaction.user != author:
+            bucket = self.cooldown.get_bucket(ctx.message)
+            if not bucket.update_rate_limit():
+                if self.is_command:
+                    command = ctx.bot.get_command_signature(ctx, ctx.command)
+                    content = f"Only `{author}` can use this. If you want to use it, use `{command}`"
+                else:
+                    content = f"Only `{author}` can use this."
+                embed = Embed(color=error, description=content)
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+            return False
+        return True
+
+class ConfirmView(ViewAuthor, CallbackView):
+    """ConfirmView literally handles confirmation where it asks the user at start() and returns a Tribool"""
+    def __init__(self, ctx: edoCContext, *, delete_after: Optional[bool] = False, message_error=None):
+        super().__init__(ctx)
+        self.result = None
+        self.message = None
+        self.delete_after = delete_after
+        self.message_error = message_error or "I'm waiting for your confirm response."
+
+    async def handle_callback(self, callback, item, interaction):
+        self.result = await callback(interaction)
+        if not interaction.response.is_done():
+            await interaction.response.defer()
+        self.stop()
+
+    async def send(self, content: str, **kwargs: Any) -> Optional[bool]:
+        return await self.start(content=content, **kwargs)
+
+    async def start(self, message: Optional[discord.Message] = None, **kwargs: Any) -> Optional[bool]:
+        self.message = message or await self.context.reply(view=self, **kwargs)
+
+        if not self.delete_after:
+            for x in self.children:
+                x.disabled = True
+            coro = self.message.edit(view=self)
+        else:
+            coro = self.message.delete()
+
+        with contextlib.suppress(discord.HTTPException):
+            await coro
+        return self.result
+
+    async def confirmed(self, button: ui.Button, interaction: discord.Interaction):
+        pass
+
+    async def denied(self, button: ui.Button, interaction: discord.Interaction):
+        pass
+
+    @ui.button(emoji="<a:yes:879161309315346582> ", label="Confirm", style=discord.ButtonStyle.green)
+    async def confirmed_action(self, button: ui.Button, interaction: discord.Interaction):
+        await self.confirmed(button, interaction)
+        return True
+
+    @ui.button(emoji="<a:no:879146899322601495>", label="Cancel", style=discord.ButtonStyle.danger)
+    async def denied_action(self, button: ui.Button, interaction: discord.Interaction):
+        await self.denied(button, interaction)
+        return False
 
 class edoCPages(discord.ui.View):
     def __init__(

@@ -14,8 +14,8 @@ import discord
 from discord.ext import commands, menus
 from discord.utils import format_dt
 
-from utils.pagination import edoCPages
 from utils.vars import *
+from utils.views import edoCPages
 
 # from lib.db import db
 

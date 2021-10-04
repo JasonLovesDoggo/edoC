@@ -6,11 +6,11 @@
 #  file that should have been included as part of this package.                                    +
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-import asyncio
+from asyncio import get_event_loop
 
 import aiohttp
 
-from utils import cache
+from utils.cache import async_cache
 
 
 # Removes the aiohttp ClientSession instance warning.
@@ -18,7 +18,7 @@ class HTTPSession(aiohttp.ClientSession):
     """ Abstract class for aiohttp. """
 
     def __init__(self, loop=None):
-        super().__init__(loop=loop or asyncio.get_event_loop())
+        super().__init__(loop=loop or get_event_loop())
 
     def __del__(self):
         """
@@ -29,15 +29,15 @@ class HTTPSession(aiohttp.ClientSession):
 
         This would be perfect if discord.py had this as well. :thinking:
         """
-        #if not self.closed:
-        #    self.close()
+        if not self.closed:
+            self.close()
         pass
 
 
 session = HTTPSession()
 
 
-@cache.async_cache()
+@async_cache()
 async def query(url, method="get", res_method="text", *args, **kwargs):
     async with getattr(session, method.lower())(url, *args, **kwargs) as res:
         return await getattr(res, res_method)()

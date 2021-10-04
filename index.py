@@ -7,7 +7,6 @@
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 import contextlib
 import logging
-from asyncio import get_event_loop
 from logging.handlers import RotatingFileHandler
 from os import environ, listdir
 
@@ -20,8 +19,8 @@ environ["JISHAKU_NO_UNDERSCORE"] = "True"
 NO_LOAD_COG = 'API'
 
 
-#@bot.after_invoke
-#async def add_count(ctx):
+# @bot.after_invoke
+# async def add_count(ctx):
 #    db = bot.db
 #    cc = await db.fetchrow('SELECT count FROM stats')  # current count
 #    await db.execute('UPDATE stats SET count = ? WHERE count = ?', (cc + 1, cc))
@@ -50,39 +49,44 @@ NO_LOAD_COG = 'API'
 #        else:
 #            await self.invoke(ctx)
 #
+class RemoveNoise(logging.Filter):
+    def __init__(self):
+        super().__init__(name='discord.state')
+
+    def filter(self, record):
+        if record.levelname == 'WARNING' and 'referencing an unknown' in record.msg:
+            return False
+        return True
+
+
 @contextlib.contextmanager
 def setup_logging():
     try:
-        FORMAT = "[%(asctime)s] [%(levelname)s]: %(message)s"
-        DATE_FORMAT = "%d/%m/%Y (%H:%M:%S)"
+        # __enter__
+        max_bytes = 32 * 1024 * 1024  # 32 MiB
+        logging.getLogger('discord').setLevel(logging.INFO)
+        logging.getLogger('discord.http').setLevel(logging.WARNING)
+        logging.getLogger('discord.state').addFilter(RemoveNoise())
 
-        logger = logging.getLogger("discord")
-        logger.setLevel(logging.INFO)
-
-        file_handler = RotatingFileHandler(
-            filename="discord.log",
-            mode="a",
-            encoding="utf-8",
-            maxBytes=33554432,
-            backupCount=5,
-        )  # maxBytes = 33554432 -> 32 mb
-        file_handler.setFormatter(logging.Formatter(fmt=FORMAT, datefmt=DATE_FORMAT))
-        file_handler.setLevel(logging.INFO)
-        logger.addHandler(file_handler)
-
-        console_handler = logging.StreamHandler()
-        console_handler.setFormatter(logging.Formatter(fmt=FORMAT, datefmt=DATE_FORMAT))
-        console_handler.setLevel(logging.WARNING)
-        logger.addHandler(console_handler)
+        log = logging.getLogger()
+        log.setLevel(logging.INFO)
+        handler = RotatingFileHandler(filename='edoC.log', encoding='utf-8', mode='w', maxBytes=max_bytes,
+                                      backupCount=5)
+        dt_fmt = '%Y-%m-%d %H:%M:%S'
+        fmt = logging.Formatter('[{asctime}] [{levelname:<7}] {name}: {message}', dt_fmt, style='{')
+        handler.setFormatter(fmt)
+        log.addHandler(handler)
 
         yield
     finally:
-        handlers = logger.handlers[:]  # type: ignore
-        for handler in handlers:
-            handler.close()
-            logger.removeHandler(handler)  # type: ignore
+        # __exit__
+        handlers = log.handlers[:]
+        for hdlr in handlers:
+            hdlr.close()
+            log.removeHandler(hdlr)
 
-async def run():
+
+def run():
     bot = edoC()
     try:
         bot.load_extension("jishaku")
@@ -98,9 +102,10 @@ async def run():
 
     try:
         with setup_logging():
-            bot.run(config["token"], reconnect=True)
+            bot.starter(config["token"], reconnect=True)
     except Exception as e:
         print(f"Error when logging in: {e}")
 
-loop = get_event_loop()
-loop.run_until_complete(run())
+
+if __name__ == '__main__':
+    run()

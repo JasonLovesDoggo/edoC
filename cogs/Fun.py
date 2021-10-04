@@ -33,8 +33,8 @@ from utils.apis.Somerandomapi import SRA
 from utils.converters import MemberConverter
 from utils.default import config, CustomTimetext
 from utils.http import get
-from utils.pagination import UrbanSource
 from utils.vars import *
+from utils.views import UrbanSource
 
 
 class Fun(commands.Cog, description='Fun and entertaining commands can be found below'):

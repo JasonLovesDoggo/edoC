@@ -11,7 +11,7 @@ import logging
 import math
 import time
 import traceback
-from asyncio import sleep
+from asyncio import sleep, AbstractEventLoop, get_event_loop
 from calendar import calendar
 from datetime import datetime
 from distutils.log import info
@@ -20,9 +20,11 @@ from importlib import import_module
 from io import BytesIO
 from os import getpid, remove, walk
 from os.path import relpath, join
+from typing import Coroutine, Any, Optional, Callable
 
 import alexflipnote
 import apscheduler.schedulers.asyncio
+import asyncpg
 import discord
 import timeago as timesince
 from asyncspotify import Client, ClientCredentialsFlow
@@ -32,10 +34,8 @@ from discord.utils import utcnow
 from psutil import Process
 
 # from lib.db import db
-from utils import sqlite
 from utils.Context import edoCContext
 from utils.apis.Somerandomapi import SRA
-from utils.cache import CacheManager
 from utils.help import PaginatedHelpCommand
 from utils.http import HTTPSession
 from utils.vars import dark_blue, invis
@@ -241,8 +241,6 @@ class BaseEmbed(discord.Embed):
 
 class edoC(commands.AutoShardedBot):
     def __init__(self):
-        if not hasattr(self, 'uptime'):
-            self.uptime = datetime.now()
         self.config = config()
         self.start_time = discord.utils.utcnow()
         allowed_mentions = discord.AllowedMentions(roles=True, everyone=False, users=True)
@@ -282,15 +280,12 @@ class edoC(commands.AutoShardedBot):
             for f in files:
                 if f.endswith('.py'):
                     import_module(str(relpath(join(root, f), "."))[:-3].replace('\\', '.'))
-        self.db = sqlite.Database()
-        if not self.create_drop_tables("create"):
-            print('hi')
+        self.db = None  # todo db lmao
         self.seen_messages = 0
         self.scheduler = apscheduler.schedulers.asyncio.AsyncIOScheduler()
         self.total_commands_ran = 0
         self.alex_api = alexflipnote.Client(confi['alexflipnote_api'],
                                             loop=self.loop)  # just a example, the client doesn't have to be under bot and loop kwarg is optional
-        self.cache = CacheManager()
         self.prefixs = {}
         self.ignore_dis_auth = ClientCredentialsFlow(
             client_id='6d93815487a84a8cb64ca18c03bc855e',
@@ -302,17 +297,6 @@ class edoC(commands.AutoShardedBot):
     # async def on_guild_join(self, guild):
     #    if guild.id in self.blacklist:
     #        await guild.leave()
-
-    def create_drop_tables(self, method: str):
-        all_tables = [g for g in sqlite.Table.all_tables()]
-        for table in all_tables:
-            try:
-                getattr(table, method)()
-            except Exception as e:
-                print(f'Could not {method} {table.__tablename__}.\n\nError: {e}')
-            else:
-                print(f'[{table.__module__}] {method}ed {table.__tablename__}.')
-        return all_tables
 
     def backup_data(self):
         self.save_data('MsgsSeen', str(self.seen_messages))
@@ -346,14 +330,16 @@ class edoC(commands.AutoShardedBot):
         await self.wait_until_ready()
         print('loading prefixs')
         for guild in self.guilds:
-            data = self.db.fetch('SELECT prefix FROM prefixs WHERE id = ?', (guild.id,))
+            data = self.db.fetch('SELECT prefix FROM guilds WHERE id = $1', guild.id)
             for dic in data:
                 for prefix in dic.values():
                     self.prefixs[guild.id] = prefix
         self.loading_status['Prefixs'] = True
+
     async def load_data(self):
         await self.load_prefixs()
         data = self.db.fetch('SELECT id FROM users WHERE banned = TRUE')
+
     async def update_db(self):
         print('starting to update db this might take a bit')
         for guild in self.guilds:
@@ -378,8 +364,7 @@ class edoC(commands.AutoShardedBot):
                 print(f'id = {id_}')
                 to_remove.append(id_)
 
-
-        #for id in to_remove:
+        # for id in to_remove:
         #    print(f'deleting {id} from users')
         #    self.db.execute("DELETE FROM users WHERE id = ?", (id,))
 
@@ -395,11 +380,9 @@ class edoC(commands.AutoShardedBot):
             if guild.id in self.prefixs.keys():
                 base.extend(self.prefixs.get(guild.id, [self.prefix]))
             else:
-                self.db.execute("INSERT OR IGNORE INTO prefixs (id) VALUES (?)",
-                                (guild.id,))
-                self.prefixs[guild.id] = self.db.fetch('SELECT prefix FROM prefixs WHERE id = ?', (guild.id,))
+                await self.add_prefix(guild.id, '~')
+                self.prefixs[guild.id] = self.pool.fetch('SELECT prefixs FROM guilds WHERE "id" = $1', guild.id)
                 base.extend(self.prefixs.get(guild.id, [self.prefix]))
-        print('prefix = ', base)
         return base
         # if guild is None:
         #    return self.prefix
@@ -411,22 +394,38 @@ class edoC(commands.AutoShardedBot):
         #                    (guild.id,))
         #    self.prefixs[guild.id] = when_mentioned_or(self.db.fetch('SELECT prefix FROM prefixs WHERE id = ?', (guild.id,)))
 
+    async def add_prefix(self, g_id, prefix) -> None:
+        self.pool.execute("INSERT OR IGNORE INTO guilds WHERE id = $1 VALUES($1, $2)",
+                          (g_id,))
     async def get_url(self, url) -> dict:
         async with self.session.get(url) as ses:
             data = await ses.json()
         return data
 
+    #async def add_blacklist(self, author_id: int, reason: str):
+    #    query_msg = "UPDATE USERS WHERE id = () SET banned = ($1)"
+    #    query = "UPDATE USERS SET Banned=True WHERE id=$1"
+    #    await self.pool_pg.execute(query, author_id)
+
+    async def add_blacklist(self, snowflake_id, reason):
+        timed = datetime.utcnow()
+        values = (snowflake_id, reason, timed)
+        await self.pool.execute("INSERT INTO blacklist VALUES($1, $2, $3)", *values)
+        self.blacklist.add(snowflake_id)
+
+    async def remove_blacklist(self, snowflake_id):
+        await self.pool_pg.execute("DELETE FROM blacklist WHERE snowflake_id=$1", snowflake_id)
+        self.blacklist.remove(snowflake_id)
+
     async def on_message(self, msg):
         if not self.is_ready() or msg.author.bot or not can_handle(msg, "send_messages"):
             return
         self.seen_messages += 1
-        if bool(msg.raw_mentions):
-            if msg.raw_mentions[0] == 845186772698923029 and len(msg.content) == 22:
-                context = await self.get_context(msg, cls=edoCContext)
-                await context.send_help()
         ctx = await self.get_context(msg)
-        is_command = ctx.valid
-        if is_command:
+        if bool(msg.raw_mentions):
+            if str(msg.content) in ['<@!845186772698923029> ', '<@845186772698923029> ', '~']:
+                return await ctx.send_help()
+        if ctx.valid:
             check = await self.get_guild_permissions(ctx)
             if not check:
                 return await self.send_missing_perms(ctx)
@@ -436,6 +435,24 @@ class edoC(commands.AutoShardedBot):
         await sleep(3)
         exit(code)
 
+    async def starter(self, token, **kwargs) -> None:
+        """Starts the bot properly"""
+        try:
+            print("Connecting to database...")
+            start = time.time()
+            dbconfig = self.config['database']
+            pool_pg = self.loop.run_until_complete(asyncpg.create_pool(
+                database=dbconfig['name'],
+                user=dbconfig['user'],
+                password=dbconfig['password'])
+            )
+        except Exception as e:
+            traceback.print_exception("Could not connect to database:", e)
+        else:
+            self.uptime = datetime.now()
+            self.pool = pool_pg
+            print(f"Connected to the database ({time.time() - start})s")
+            self.run(token, **kwargs)
     async def close(self) -> None:
         self.update_data.stop()
         self.backup_data()
@@ -794,6 +811,14 @@ def naturalsize(size_in_bytes: int):
     return f"{size_in_bytes / (1024 ** power):.2f} {units[power]}"
 
 
+def char_if_multi(num: int, char: str = 's', ifover: int = 1, return_char_if_0: bool = True):
+    if num > ifover:
+        return char
+    if num == 0 and return_char_if_0:
+        return char
+    return ''
+
+
 def renderBar(
         value: int,
         *,
@@ -816,3 +841,19 @@ def renderBar(
     return gapFill.join(
         [fill] * (fillLength - len(point)) + [point] + [empty] * emptyLength
     )
+
+
+def asyncify(loop: Optional[AbstractEventLoop] = None) -> Callable[..., Coroutine[Any, Any, Any]]:
+    """Makes a sync blocking function unblocking"""
+    loop = loop or get_event_loop()
+
+    def inner_function(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def function(*args: Any, **kwargs: Any) -> Coroutine:
+            partial = functools.partial(func, *args, **kwargs)
+            return loop.run_in_executor(None, partial)
+
+        return function
+
+    return inner_function
+
