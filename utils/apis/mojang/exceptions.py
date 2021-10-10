@@ -14,8 +14,8 @@ The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
 
 """
-#THIS IS A MODIFIED VERSION OF summer's wrapper
-#This one is async
+# THIS IS A MODIFIED VERSION OF summer's wrapper
+# This one is async
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #  Copyright (c) 2021. Jason Cameron                                                               +
@@ -32,7 +32,7 @@ class MojangError(Exception):
     """Base error class for all library-related exceptions in this file
     Essentially, this could be caught to handle any exceptions thrown from this library.
     """
+
     def __init__(self, message: Optional[str] = None):
         self.message = message if message else self.__class__.__doc__
         super().__init__(self.message)
-

@@ -21,8 +21,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
-#THIS IS A MODIFIED VERSION OF summer's wrapper
-#This one is async
+# THIS IS A MODIFIED VERSION OF summer's wrapper
+# This one is async
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #  Copyright (c) 2021. Jason Cameron                                                               +
@@ -32,16 +32,14 @@ DEALINGS IN THE SOFTWARE.
 #  file that should have been included as part of this package.                                    +
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+
 class MojangObject:
     def to_dict(self) -> dict:
         """Returns a dictionary of all instance attributes"""
         return self.__dict__.copy()
 
     def __repr__(self):
-        return "%s(%s)" % (
-            self.__class__.__name__,
-            self.__dict__
-        )
+        return "%s(%s)" % (self.__class__.__name__, self.__dict__)
 
 
 class UserProfile(MojangObject):

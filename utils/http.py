@@ -15,7 +15,7 @@ from utils.cache import async_cache
 
 # Removes the aiohttp ClientSession instance warning.
 class HTTPSession(aiohttp.ClientSession):
-    """ Abstract class for aiohttp. """
+    """Abstract class for aiohttp."""
 
     def __init__(self, loop=None):
         super().__init__(loop=loop or get_event_loop())
@@ -30,7 +30,8 @@ class HTTPSession(aiohttp.ClientSession):
         This would be perfect if discord.py had this as well. :thinking:
         """
         if not self.closed:
-            self.close()
+            loop = get_event_loop()
+            loop.run_until_complete(self.close())
         pass
 
 

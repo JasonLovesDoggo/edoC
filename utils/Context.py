@@ -18,6 +18,24 @@ from discord.utils import cached_property
 from utils.vars import *
 
 
+class _ContextDBAcquire:
+    __slots__ = ("ctx", "timeout")
+
+    def __init__(self, ctx, timeout):
+        self.ctx = ctx
+        self.timeout = timeout
+
+    def __await__(self):
+        return self.ctx._acquire(self.timeout).__await__()
+
+    async def __aenter__(self):
+        await self.ctx._acquire(self.timeout)
+        return self.ctx.db
+
+    async def __aexit__(self, *args):
+        await self.ctx.release()
+
+
 class edoCContext(Context):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -32,8 +50,29 @@ class edoCContext(Context):
         return {
             True: self.bot.get_emoji(879161311353778247),
             False: self.bot.get_emoji(879146899322601495),
-            None: self.bot.get_emoji(879146777842962454)
+            None: self.bot.get_emoji(879146777842962454),
         }.get(val)
+
+    @property
+    def db(self):
+        return self.bot.pool
+
+    async def _acquire(self, timeout):
+        self._db = await self.db.acquire(timeout=timeout)
+        return self._db
+
+    def acquire(self, *, timeout=300.0):
+        """Acquires a database connection from the pool. e.g. ::
+            async with ctx.acquire():
+                await ctx.db.execute(...)
+        or: ::
+            await ctx.acquire()
+            try:
+                await ctx.db.execute(...)
+            finally:
+                await ctx.release()
+        """
+        return _ContextDBAcquire(self, timeout)
 
     async def try_reply(self, content=None, *, mention_author=False, **kwargs):
         """Try reply, if failed do send instead"""
@@ -47,7 +86,9 @@ class edoCContext(Context):
             action = self.safe_send
             return await self.safe_send(content, **kwargs)
 
-    async def safe_send(self, content, *, escape_mentions=True, channel=False, **kwargs):
+    async def safe_send(
+        self, content, *, escape_mentions=True, channel=False, **kwargs
+    ):
         """Same as send except with some safe guards.
         1) If the message is too long then it sends a file with the results instead.
         2) If ``escape_mentions`` is ``True`` then it escapes mentions.
@@ -62,8 +103,10 @@ class edoCContext(Context):
 
         if len(content) > 2000:
             fp = BytesIO(content.encode())
-            kwargs.pop('file', None)
-            return await channel.send(file=discord.File(fp, filename='message_too_long.txt'), **kwargs)
+            kwargs.pop("file", None)
+            return await channel.send(
+                file=discord.File(fp, filename="message_too_long.txt"), **kwargs
+            )
         else:
             return await channel.send(content)
 
@@ -73,7 +116,7 @@ class edoCContext(Context):
         )
 
     async def safe_send_reply(
-            self, content, *, escape_mentions=True, type="send", **kwargs
+        self, content, *, escape_mentions=True, type="send", **kwargs
     ):
         action = getattr(self, type)
 
@@ -91,20 +134,22 @@ class edoCContext(Context):
                 kwargs["content"] = content
             return await action(**kwargs)
 
-    async def cembed(self, color: Union[int, Colour, _EmptyEmbed], success_message: str, **kwargs):
+    async def cembed(
+        self, color: Union[int, Colour, _EmptyEmbed], success_message: str, **kwargs
+    ):
         e = Embed(color=color, **kwargs)
         e.description = str(success_message)
         return await self.try_reply(embed=e)
 
     async def error(self, error_message, real=False, **kwargs):
-        e = Embed(color=colors['error'])
+        e = Embed(color=colors["error"])
         e.description = str(error_message)
         await self.try_reply(embed=e, **kwargs)
         if real:
             for error in INVALID_ERRORS:
                 if str(error_message).startswith(error):
                     return
-            dbug = self.bot.get_channel(self.bot.config['debug'])
+            dbug = self.bot.get_channel(self.bot.config["debug"])
             await dbug.send(embed=e)
             logging.debug(error_message)
 
@@ -129,15 +174,15 @@ class edoCContext(Context):
         e = Embed(color=error, title=command.name)
         e.description = str(unknownerror)
         channel = self.bot.get_channel(867828022752444416)
-        await self.try_reply(f'An unknown error happend with {command.name}')
+        await self.try_reply(f"An unknown error happend with {command.name}")
         return await channel.send(embed=e)
 
     async def report(self, ctx, msg):
         channel = self.bot.get_channel(877724111420391515)
         if len(msg) > 300:
-            return self.error('Too Long please keep under 300 characters')
+            return self.error("Too Long please keep under 300 characters")
         elif len(msg) < 20:
-            return self.warn('Too short please keep over 20 characters')
+            return self.warn("Too short please keep over 20 characters")
         e = Embed(color=green)
         e.description = str(msg)
         e.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar)
@@ -145,32 +190,40 @@ class edoCContext(Context):
 
     @cached_property
     def replied_reference(self):
-        ref = self.message.reference
-        if ref and isinstance(ref.resolved, discord.Message):
-            return ref.resolved.to_reference()
-        return self.message
+        try:
+            ref = self.message.reference
+            if ref and isinstance(ref.resolved, discord.Message):
+                return ref.resolved.to_reference()
+            return self.message
+        except:
+            pass
 
     @cached_property
     async def reference(self):
-        if ref := self.message.reference:
-            # Get referenced message
-            # if user reply to a message while doing this command
-            return (
-                ref.cached_message
-                if ref.cached_message
-                else (await self.fetch_message(ref.message_id))
-            )
-        return self
+        try:
+            if ref := self.message.reference:
+                # Get referenced message
+                # if user reply to a message while doing this command
+                return (
+                    ref.cached_message
+                    if ref.cached_message
+                    else (await self.fetch_message(ref.message_id))
+                )
+            return self
+        except:
+            pass
 
     @cached_property
     async def replied_author(self):
-        if ref := self.message.reference:
-            # Get referenced message
-            # if user reply to a message while doing this command
-            return (
-                ref.cached_message.author
-                if ref.cached_message
-                else (await self.fetch_message(ref.message_id)).author
-            )
-        return self.author
-
+        try:
+            if ref := self.message.reference:
+                # Get referenced message
+                # if user reply to a message while doing this command
+                return (
+                    ref.cached_message.author
+                    if ref.cached_message
+                    else (await self.fetch_message(ref.message_id)).author
+                )
+            return self.author
+        except:
+            pass

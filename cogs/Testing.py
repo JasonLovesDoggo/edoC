@@ -13,9 +13,9 @@ import discord
 from discord.ext import commands
 
 
-#from discord_slash import cog_ext, SlashContext
-#@interactions.application_command(...)
-#async def second_borrowing(ctx, member: MemberConverter):
+# from discord_slash import cog_ext, SlashContext
+# @interactions.application_command(...)
+# async def second_borrowing(ctx, member: MemberConverter):
 #    await ctx.send(f"Member ID: {member.id}")
 
 
@@ -25,7 +25,7 @@ class Counter(discord.ui.View):
     # When pressed, this increments the number displayed until it hits 5.
     # When it hits 5, the counter button is disabled and it turns green.
     # note: The name of the function does not matter to the library
-    @discord.ui.button(label='0', style=discord.ButtonStyle.red)
+    @discord.ui.button(label="0", style=discord.ButtonStyle.red)
     async def count(self, button: discord.ui.Button, interaction: discord.Interaction):
         number = int(button.label) if button.label else 0
         if number + 1 >= 5:
@@ -42,86 +42,103 @@ class Google(discord.ui.View):
         super().__init__()
         # we need to quote the query string to make a valid url. Discord will raise an error if it isn't valid.
         query = quote_plus(query)
-        url = f'https://www.google.com/search?q={query}'
+        url = f"https://www.google.com/search?q={query}"
 
         # Link buttons cannot be made with the decorator
         # Therefore we have to manually create one.
         # We add the quoted url to the button, and add the button to the view.
-        self.add_item(discord.ui.Button(label='Click Here', url=url))
+        self.add_item(discord.ui.Button(label="Click Here", url=url))
 
 
-class Test(commands.Cog, description='Testing cog for... testing'):
+class Test(commands.Cog, description="Testing cog for... testing"):
     def __init__(self, bot):
         self.bot = bot
-        self.bot.remove_command('google')
+        self.bot.remove_command("google")
 
-        #@bot.slash_command()
-        #async def testing(
+        # @bot.slash_command()
+        # async def testing(
         #        ctx,
         #        name: Option(str, "Enter your name"),
         #        gender: Option(str, "Choose your gender", choices=["Male", "Female", "Other"]),
         #        age: Option(int, "Enter your age", required=False, default=18),
-        #):
+        # ):
         #    await ctx.send(f"Hello {name} Who is a {gender} and is {age} years old")
 
         @bot.command()
         async def google(ctx, *, query: str):
             """Returns a google link for a query"""
-            await ctx.send(f'Google Result for: `{query}`', view=Google(query))
+            await ctx.send(f"Google Result for: `{query}`", view=Google(query))
 
         @bot.command()
         async def counter(ctx):
             """Starts a counter for pressing."""
-            await ctx.send('Press!', view=Counter())
+            await ctx.send("Press!", view=Counter())
 
         @bot.command()
         async def top(ctx):
             await ctx.reply("please wait ...")
             from bs4 import BeautifulSoup
             import requests
+
             def GETC():
-                url = f'https://www.google.com/search?q=bitcoin+price'
+                url = f"https://www.google.com/search?q=bitcoin+price"
                 HTML = requests.get(url)
-                soup = BeautifulSoup(HTML.text, 'html.parser')
-                text = soup.find('div', attrs={'class': 'BNeawe iBp4i AP7Wnd'}).find('div', attrs={
-                    'class': 'BNeawe iBp4i AP7Wnd'}).text
+                soup = BeautifulSoup(HTML.text, "html.parser")
+                text = (
+                    soup.find("div", attrs={"class": "BNeawe iBp4i AP7Wnd"})
+                    .find("div", attrs={"class": "BNeawe iBp4i AP7Wnd"})
+                    .text
+                )
                 return text
 
             def bitC():
-                url = f'https://www.google.com/search?q=bitcoin cash+price'
+                url = f"https://www.google.com/search?q=bitcoin cash+price"
                 HTML = requests.get(url)
-                soup = BeautifulSoup(HTML.text, 'html.parser')
-                text = soup.find('div', attrs={'class': 'BNeawe iBp4i AP7Wnd'}).find('div', attrs={
-                    'class': 'BNeawe iBp4i AP7Wnd'}).text
+                soup = BeautifulSoup(HTML.text, "html.parser")
+                text = (
+                    soup.find("div", attrs={"class": "BNeawe iBp4i AP7Wnd"})
+                    .find("div", attrs={"class": "BNeawe iBp4i AP7Wnd"})
+                    .text
+                )
                 return text
 
             def LITE():
-                url = f'https://www.google.com/search?q=litecoin+price'
+                url = f"https://www.google.com/search?q=litecoin+price"
                 HTML = requests.get(url)
-                soup = BeautifulSoup(HTML.text, 'html.parser')
-                text = soup.find('div', attrs={'class': 'BNeawe iBp4i AP7Wnd'}).find('div', attrs={
-                    'class': 'BNeawe iBp4i AP7Wnd'}).text
+                soup = BeautifulSoup(HTML.text, "html.parser")
+                text = (
+                    soup.find("div", attrs={"class": "BNeawe iBp4i AP7Wnd"})
+                    .find("div", attrs={"class": "BNeawe iBp4i AP7Wnd"})
+                    .text
+                )
                 return text
 
             def ETH():
-                url = f'https://www.google.com/search?q=ethereum+price'
+                url = f"https://www.google.com/search?q=ethereum+price"
                 HTML = requests.get(url)
-                soup = BeautifulSoup(HTML.text, 'html.parser')
-                text = soup.find('div', attrs={'class': 'BNeawe iBp4i AP7Wnd'}).find('div', attrs={
-                    'class': 'BNeawe iBp4i AP7Wnd'}).text
+                soup = BeautifulSoup(HTML.text, "html.parser")
+                text = (
+                    soup.find("div", attrs={"class": "BNeawe iBp4i AP7Wnd"})
+                    .find("div", attrs={"class": "BNeawe iBp4i AP7Wnd"})
+                    .text
+                )
                 return text
 
             eth = ETH()
             lite = LITE()
             bitca = bitC()
             bit = GETC()
-            await ctx.send(f'eth {eth}\nlite {lite}\nbitcoin cash {bitca}\nbitcoin {bit}')
+            await ctx.send(
+                f"eth {eth}\nlite {lite}\nbitcoin cash {bitca}\nbitcoin {bit}"
+            )
 
-    #@commands.command()
-    #async def spottest(self, ctx):
+    # @commands.command()
+    # async def spottest(self, ctx):
     #    wait_until_ready
     #    playlist = await self.spotify.get_playlist('1MG01HhbCvVhH9NmXhd9GC')
     #    async for track in playlist:
     #        await ctx.send(track.name)
+
+
 def setup(bot):
     bot.add_cog(Test(bot))

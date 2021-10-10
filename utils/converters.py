@@ -22,6 +22,7 @@ async def authorOrReferenced(ctx):
         )
     return ctx.author
 
+
 class MemberConverter(Converter, Member):
     async def convert(self, ctx, argument):
         ctx = await ctx.bot.get_context(message=ctx.message)
@@ -31,6 +32,7 @@ class MemberConverter(Converter, Member):
             print(e)
             return ctx.author
 
+
 class UrlSafe(Converter):
     async def convert(self, ctx, argument: str):
         try:
@@ -39,17 +41,18 @@ class UrlSafe(Converter):
             raise BadArgument("One ore more chars are invalid")
         return urlsafe
 
+
 class BotUser(Converter):
     async def convert(self, ctx, argument):
         if not argument.isdigit():
-            raise BadArgument('Not a valid bot user ID.')
+            raise BadArgument("Not a valid bot user ID.")
         try:
             user = await ctx.bot.fetch_user(int(argument))
         except NotFound:
-            raise BadArgument('Bot user not found (404).')
+            raise BadArgument("Bot user not found (404).")
         except HTTPException as e:
-            raise BadArgument(f'Error fetching bot user: {e}')
+            raise BadArgument(f"Error fetching bot user: {e}")
         else:
             if not user.bot:
-                raise BadArgument('This is not a bot.')
+                raise BadArgument("This is not a bot.")
             return user

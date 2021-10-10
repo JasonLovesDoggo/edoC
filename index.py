@@ -5,18 +5,20 @@
 #  and is released under the "MIT License Agreement". Please see the LICENSE                       +
 #  file that should have been included as part of this package.                                    +
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+import asyncio
 import contextlib
 import logging
 from logging.handlers import RotatingFileHandler
 from os import environ, listdir
 
+from utils.db import Table
 from utils.default import edoC, config
 
 config = config()
 # TODO add a fully not erroring get_prefix
 environ["JISHAKU_HIDE"] = "True"
 environ["JISHAKU_NO_UNDERSCORE"] = "True"
-NO_LOAD_COG = 'API'
+NO_LOAD_COGS = ["Config"]
 
 
 # @bot.after_invoke
@@ -51,10 +53,10 @@ NO_LOAD_COG = 'API'
 #
 class RemoveNoise(logging.Filter):
     def __init__(self):
-        super().__init__(name='discord.state')
+        super().__init__(name="discord.state")
 
     def filter(self, record):
-        if record.levelname == 'WARNING' and 'referencing an unknown' in record.msg:
+        if record.levelname == "WARNING" and "referencing an unknown" in record.msg:
             return False
         return True
 
@@ -64,16 +66,23 @@ def setup_logging():
     try:
         # __enter__
         max_bytes = 32 * 1024 * 1024  # 32 MiB
-        logging.getLogger('discord').setLevel(logging.INFO)
-        logging.getLogger('discord.http').setLevel(logging.WARNING)
-        logging.getLogger('discord.state').addFilter(RemoveNoise())
+        logging.getLogger("discord").setLevel(logging.INFO)
+        logging.getLogger("discord.http").setLevel(logging.WARNING)
+        logging.getLogger("discord.state").addFilter(RemoveNoise())
 
         log = logging.getLogger()
         log.setLevel(logging.INFO)
-        handler = RotatingFileHandler(filename='edoC.log', encoding='utf-8', mode='w', maxBytes=max_bytes,
-                                      backupCount=5)
-        dt_fmt = '%Y-%m-%d %H:%M:%S'
-        fmt = logging.Formatter('[{asctime}] [{levelname:<7}] {name}: {message}', dt_fmt, style='{')
+        handler = RotatingFileHandler(
+            filename="edoC.log",
+            encoding="utf-8",
+            mode="w",
+            maxBytes=max_bytes,
+            backupCount=5,
+        )
+        dt_fmt = "%Y-%m-%d %H:%M:%S"
+        fmt = logging.Formatter(
+            "[{asctime}] [{levelname:<7}] {name}: {message}", dt_fmt, style="{"
+        )
         handler.setFormatter(fmt)
         log.addHandler(handler)
 
@@ -86,26 +95,45 @@ def setup_logging():
             log.removeHandler(hdlr)
 
 
-def run():
+async def run_bot(bot):
+    log = logging.getLogger()
+    kwargs = {
+        "command_timeout": 60,
+        "max_size": 20,
+        "min_size": 20,
+    }
+    try:
+        pool = await Table.create_pool(config["database"]["uri"], **kwargs)
+    except Exception as e:
+        print("Could not set up PostgreSQL. Exiting.", e)
+        log.exception("Could not set up PostgreSQL. Exiting.")
+        return
+
+    bot.pool = pool
+    bot.run(config["token"], reconnect=True)
+
+
+async def run():
     bot = edoC()
     try:
         bot.load_extension("jishaku")
         for file in listdir("cogs"):
-            if NO_LOAD_COG:
-                if file.startswith(NO_LOAD_COG):
+            name = file[:-3]
+            if len(NO_LOAD_COGS) > 1:
+                if name in NO_LOAD_COGS:
                     continue
             if file.endswith(".py"):
-                name = file[:-3]
                 bot.load_extension(f"cogs.{name}")
     except Exception:
         raise ChildProcessError("Problem with one of the cogs/utils")
 
     try:
         with setup_logging():
-            bot.starter(config["token"], reconnect=True)
+            await run_bot(bot)
     except Exception as e:
         print(f"Error when logging in: {e}")
 
 
-if __name__ == '__main__':
-    run()
+if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
+    loop.create_task(run())

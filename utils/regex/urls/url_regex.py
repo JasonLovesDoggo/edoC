@@ -21,7 +21,9 @@ class Url:
         self.protocol = protocol
 
     def __repr__(self):
-        return '<Url full={0.full} full_domain={0.full_domain} domain={0.domain} protocol={0.protocol}'.format(self)
+        return "<Url full={0.full} full_domain={0.full_domain} domain={0.domain} protocol={0.protocol}".format(
+            self
+        )
 
 
 class UrlRegex:
@@ -40,16 +42,16 @@ class UrlRegex:
         auth = "(?:\\S+(?::\\S*)?@)?"
         host = "(?:(?:[a-z\\u00a1-\\uffff0-9][-_]*)*[a-z\\u00a1-\\uffff0-9]+)"
         domain = "(?:\\.(?:[a-z\\u00a1-\\uffff0-9]-*)*[a-z\\u00a1-\\uffff0-9]+)*"
-        tld = "(?:\\.{})\\.?".format('(?:[a-z\\u00a1-\\uffff]{2,})')
+        tld = "(?:\\.{})\\.?".format("(?:[a-z\\u00a1-\\uffff]{2,})")
         port = "(?::\\d{2,5})?"
-        path = '(?:[/?#][^\\s,.\"]*)?'
+        path = '(?:[/?#][^\\s,."]*)?'
 
         regex = f"(?:({protocol}|www\\.)){auth}(?:(localhost|{host}{domain}{tld}))({port}{path})"
         return regex
 
     @property
     def detect(self):
-        """ Checks if string includes one or more links """
+        """Checks if string includes one or more links"""
         if self.real_tld:
             found_anything = False
             for entry in re.findall(self.regex, self.text.lower()):
@@ -62,7 +64,7 @@ class UrlRegex:
 
     @property
     def links(self):
-        """ Displays links in a pretty format """
+        """Displays links in a pretty format"""
         regex = re.findall(self.regex, self.text.lower())
 
         for i, g in enumerate(regex):
@@ -71,7 +73,7 @@ class UrlRegex:
                 f"{g[0]}{g[1]}{g[2]}",  # Full domain
                 g[1],  # Full domain
                 f"{get_last[-2]}.{get_last[-1]}",  # Domain
-                g[0] if g[0] else None  # Protocol
+                g[0] if g[0] else None,  # Protocol
             )
 
         return list(self.links_found.values())

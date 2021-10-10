@@ -21,8 +21,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
-#THIS IS A MODIFIED VERSION OF summer's wrapper
-#This one is async
+# THIS IS A MODIFIED VERSION OF summer's wrapper
+# This one is async
+
+# THIS IS A MODIFIED VERSION OF summer's wrapper
+# This one is async
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #  Copyright (c) 2021. Jason Cameron                                                               +
@@ -32,16 +35,6 @@ DEALINGS IN THE SOFTWARE.
 #  file that should have been included as part of this package.                                    +
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-from ast import literal_eval
-from base64 import b64decode
-from logging import getLogger
-from time import time
-from typing import Union, Optional
-from .models import UserProfile
-from .exceptions import MojangError
-from utils.http import session
-# THIS IS A MODIFIED VERSION OF summer's wrapper
-# This one is async
 from ast import literal_eval
 from base64 import b64decode
 from logging import getLogger
@@ -61,7 +54,9 @@ class MojangAPI:
     _NAME_HOLD_DURATION = 3196800000
 
     @classmethod
-    async def get_uuid(cls, username: str, timestamp: Optional[int] = None) -> Union[str, None]:
+    async def get_uuid(
+        cls, username: str, timestamp: Optional[int] = None
+    ) -> Union[str, None]:
         """Convert a Minecraft name to a UUID.
 
         Args:
@@ -78,7 +73,9 @@ class MojangAPI:
             timestamp_now = int(time() * 1000.0)
             timestamp = int((timestamp_now - cls._NAME_HOLD_DURATION) / 1000)
 
-        resp = await session.get(f"https://api.mojang.com/users/profiles/minecraft/{username}?at={timestamp}")
+        resp = await session.get(
+            f"https://api.mojang.com/users/profiles/minecraft/{username}?at={timestamp}"
+        )
         if resp.ok:
             try:
                 json = await resp.json()
@@ -101,7 +98,9 @@ class MojangAPI:
         """
         if len(names) > 10:
             names = names[:10]
-        async with session.post("https://api.mojang.com/profiles/minecraft", data=names) as ses:
+        async with session.post(
+            "https://api.mojang.com/profiles/minecraft", data=names
+        ) as ses:
             data = await ses.json()
 
         if not isinstance(data, list):
@@ -126,7 +125,9 @@ class MojangAPI:
         Returns:
             str: UUID if username exists. None otherwise.
         """
-        resp = await session.get(f"https://sessionserver.mojang.com/session/minecraft/profile/{uuid}")
+        resp = await session.get(
+            f"https://sessionserver.mojang.com/session/minecraft/profile/{uuid}"
+        )
         if resp.ok:
             json = await resp.json()
             return json["name"]
@@ -151,7 +152,9 @@ class MojangAPI:
             if name_info["name"].lower() == username.lower():
                 try:
                     name_changed_timestamp = name_changes[i - 1]["changedToAt"]
-                    drop_timestamp = (name_changed_timestamp + cls._NAME_HOLD_DURATION) / 1000
+                    drop_timestamp = (
+                        name_changed_timestamp + cls._NAME_HOLD_DURATION
+                    ) / 1000
                     return int(drop_timestamp)
                 except KeyError:
                     return None
@@ -169,7 +172,9 @@ class MojangAPI:
             is_legacy_profile (bool): Check if the profile is legacy
             timestamp (int): Timestamp of when the profile was retrieved
         """
-        resp = await session.get(f"https://sessionserver.mojang.com/session/minecraft/profile/{uuid}")
+        resp = await session.get(
+            f"https://sessionserver.mojang.com/session/minecraft/profile/{uuid}"
+        )
         try:
             js = await resp.json()
             value = js["properties"][0]["value"]
@@ -177,6 +182,7 @@ class MojangAPI:
             return None
         user_profile = literal_eval(b64decode(value).decode())
         return UserProfile(user_profile)
+
     @staticmethod
     async def get_name_history(uuid: str) -> list:
         """Get a user's name history
@@ -224,16 +230,19 @@ class MojangAPI:
         """Returns a list of SHA1 hashes of current blacklisted servers that do not follow EULA.
         These servers have to abide by the EULA or be shut down forever. The hashes are not cracked.
         """
-        return await session.get("https://sessionserver.mojang.com/blockedservers").text.splitlines()
+        return await session.get(
+            "https://sessionserver.mojang.com/blockedservers"
+        ).text.splitlines()
 
     @staticmethod
-    async def get_sale_statistics(item_sold_minecraft: bool = True,
-                            prepaid_card_redeemed_minecraft: bool = True,
-                            item_sold_cobalt: bool = False,
-                            item_sold_scrolls: bool = False,
-                            prepaid_card_redeemed_cobalt: bool = False,
-                            item_sold_dungeons: bool = False
-                            ):
+    async def get_sale_statistics(
+        item_sold_minecraft: bool = True,
+        prepaid_card_redeemed_minecraft: bool = True,
+        item_sold_cobalt: bool = False,
+        item_sold_scrolls: bool = False,
+        prepaid_card_redeemed_cobalt: bool = False,
+        item_sold_dungeons: bool = False,
+    ):
         """Get statistics on the sales of Minecraft.
         You will receive a single object corresponding to the sum of sales of the requested type(s)
         At least one type of sale must be set to True.
@@ -244,9 +253,13 @@ class MojangAPI:
         options = [k for k, v in locals().items() if v]
 
         if not options:
-            raise MojangError("Invalid parameters supplied. Include at least one metric key.")
+            raise MojangError(
+                "Invalid parameters supplied. Include at least one metric key."
+            )
 
-        sepo = await session.post("https://api.mojang.com/orders/statistics", data={"metricKeys": options})
+        sepo = await session.post(
+            "https://api.mojang.com/orders/statistics", data={"metricKeys": options}
+        )
         data = await sepo.json()
         metrics = dict()
         metrics["total"] = data["total"]

@@ -16,6 +16,7 @@ from utils.vars import *
 
 # todo add a fuckton of elif's for the search commands so it just changes strings that the embed sends based off the cmd
 
+
 def urlamazon(ctx):
     if ctx.invoked_with == "amazonCA":
         urlloco = ".ca"
@@ -59,27 +60,28 @@ def urlamazon(ctx):
 
 
 async def embed_maker(ctx, url: str, icon: str, color: str, title: str):
-    embed = discord.Embed(title=f"{title} search by edoC",
-                          color=int(color),
-                          timestamp=ctx.message.created_at)
+    embed = discord.Embed(
+        title=f"{title} search by edoC",
+        color=int(color),
+        timestamp=ctx.message.created_at,
+    )
     embed.set_author(name="edoC", icon_url=icon)
     embed.add_field(name="Link", value=url, inline=True)
     embed.set_footer(text=f"Requested by {ctx.author.name}")
     await ctx.send(embed=embed)
 
 
-
-
-class Searches(commands.Cog, description='Search commands probably going to be rooted out sooner or later'):
+class Searches(
+    commands.Cog,
+    description="Search commands probably going to be rooted out sooner or later",
+):
     def __init__(self, bot):
         self.bot = bot
         self.config = bot.config
 
-
-
     @commands.command(aliases=["yt"])
     async def youtube(self, ctx, *, search: str):
-        """ ALL OF THESE SEARCH THE RESPECTIVE SITE """
+        """ALL OF THESE SEARCH THE RESPECTIVE SITE"""
         urlsafe = search.replace(" ", "+")
         url = f"https://www.youtube.com/results?search_query={urlsafe}"
         icon = "https://i.imgur.com/9ue6lja.jpeg"
@@ -115,16 +117,40 @@ class Searches(commands.Cog, description='Search commands probably going to be r
     #        await embed_maker(ctx, url, icon, color, title)
 
     @commands.command(
-        aliases=["amazonBR", "amazonCA", "amazonMX", "amazonCOM", "amazonCN", "amazonIN", "amazonJP", "amazonSG",
-                 "amazonTR", "amazonAE", "amazonSA", "amazonFR", "amazonDE", "amazonIT", "amazonNL", "amazonPL",
-                 "amazonES", "amazonSE", "amazonUK", "amazonAU", ])
+        aliases=[
+            "amazonBR",
+            "amazonCA",
+            "amazonMX",
+            "amazonCOM",
+            "amazonCN",
+            "amazonIN",
+            "amazonJP",
+            "amazonSG",
+            "amazonTR",
+            "amazonAE",
+            "amazonSA",
+            "amazonFR",
+            "amazonDE",
+            "amazonIT",
+            "amazonNL",
+            "amazonPL",
+            "amazonES",
+            "amazonSE",
+            "amazonUK",
+            "amazonAU",
+        ]
+    )
     async def amazon(self, ctx, *, search: str):
         urlsafe = search.replace(" ", "%20")
         try:
             urlloco = urlamazon(ctx)
         except UnboundLocalError:
-            await ctx.reply(embed=discord.Embed(colour=red,
-                                                description=f"You forgot to specify the type of amazon link you wanted\nplease refer to {ctx.prefix}help amazon for the types of links you can specify"))
+            await ctx.reply(
+                embed=discord.Embed(
+                    colour=red,
+                    description=f"You forgot to specify the type of amazon link you wanted\nplease refer to {ctx.prefix}help amazon for the types of links you can specify",
+                )
+            )
             return
         url = f"https://www.amazon{urlloco}/s?k={urlsafe}"
         icon = "https://i.imgur.com/nrqpruo.jpeg"
@@ -239,10 +265,12 @@ class Searches(commands.Cog, description='Search commands probably going to be r
             link = wikipedia.page(thequery)
             await ctx.reply(link.url)
         except WikipediaException:
-            embed = discord.Embed(title="**Error!**",
-                                  color=red,
-                                  timestamp=ctx.message.created_at,
-                                  description="Search is currently too busy. Please try again later")
+            embed = discord.Embed(
+                title="**Error!**",
+                color=red,
+                timestamp=ctx.message.created_at,
+                description="Search is currently too busy. Please try again later",
+            )
             await ctx.reply(embed=embed)
 
 
@@ -251,6 +279,7 @@ class Searches(commands.Cog, description='Search commands probably going to be r
 #       craigslist.org
 
 # pinterest https://www.pinterest.ca/search/pins/?q=
+
 
 def setup(bot):
     bot.add_cog(Searches(bot))

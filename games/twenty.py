@@ -35,9 +35,12 @@ async def play(ctx, bot):
 
     def check(reaction, user):
         return (
-                (user.id == ctx.author.id)
-                and (str(reaction.emoji) in ["\u2B06", "\u2B07", "\u2B05", "\u27A1", "\u274C"])
-                and (reaction.message.id == message.id)
+            (user.id == ctx.author.id)
+            and (
+                str(reaction.emoji)
+                in ["\u2B06", "\u2B07", "\u2B05", "\u27A1", "\u274C"]
+            )
+            and (reaction.message.id == message.id)
         )
 
     while True:
@@ -91,7 +94,9 @@ def execute_move(move, pboard):
     if move.lower() == "left":
         nb, total = check_left(board)
         for x in range(len(nb)):
-            while nb[x][0] == "_" and (nb[x][1] != "_" or nb[x][2] != "_" or nb[x][3] != "_"):
+            while nb[x][0] == "_" and (
+                nb[x][1] != "_" or nb[x][2] != "_" or nb[x][3] != "_"
+            ):
                 nb[x][0] = nb[x][1]
                 nb[x][1] = nb[x][2]
                 nb[x][2] = nb[x][3]
@@ -106,7 +111,9 @@ def execute_move(move, pboard):
     if move.lower() == "right":
         nb, total = check_right(board)
         for x in range(len(nb)):
-            while nb[x][3] == "_" and (nb[x][2] != "_" or nb[x][1] != "_" or nb[x][0] != "_"):
+            while nb[x][3] == "_" and (
+                nb[x][2] != "_" or nb[x][1] != "_" or nb[x][0] != "_"
+            ):
                 nb[x][3] = nb[x][2]
                 nb[x][2] = nb[x][1]
                 nb[x][1] = nb[x][0]
@@ -122,7 +129,9 @@ def execute_move(move, pboard):
         nb = columize(board)
         nb, total = check_down(nb)
         for x in range(len(nb)):
-            while nb[x][0] == "_" and (nb[x][1] != "_" or nb[x][2] != "_" or nb[x][3] != "_"):
+            while nb[x][0] == "_" and (
+                nb[x][1] != "_" or nb[x][2] != "_" or nb[x][3] != "_"
+            ):
                 nb[x][0] = nb[x][1]
                 nb[x][1] = nb[x][2]
                 nb[x][2] = nb[x][3]
@@ -139,7 +148,9 @@ def execute_move(move, pboard):
         nb = columize(board)
         nb, total = check_up(nb)
         for x in range(len(nb)):
-            while nb[x][3] == "_" and (nb[x][2] != "_" or nb[x][1] != "_" or nb[x][0] != "_"):
+            while nb[x][3] == "_" and (
+                nb[x][2] != "_" or nb[x][1] != "_" or nb[x][0] != "_"
+            ):
                 nb[x][3] = nb[x][2]
                 nb[x][2] = nb[x][1]
                 nb[x][1] = nb[x][0]
@@ -153,7 +164,7 @@ def execute_move(move, pboard):
                 nb[x][0] = "_"
         nb = rowize(nb)
     if (
-            nb != pboard
+        nb != pboard
     ):  # So the user doesn't make a move that doesn't change anything, and just add a number
         some_message, nb = add_number(nb)
     else:

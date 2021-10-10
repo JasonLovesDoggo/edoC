@@ -15,7 +15,7 @@ from discord.ext import commands
 from utils.apis.openweathermap import *
 
 
-class Weather(commands.Cog, description='Weather cmd'):
+class Weather(commands.Cog, description="Weather cmd"):
     def __init__(self, bot):
         self.bot = bot
         self.config = bot.config
@@ -42,15 +42,18 @@ class Weather(commands.Cog, description='Weather cmd'):
         except CityNotFound as err:
             return await ctx.error(str(err))
 
-        e = discord.Embed(title=f"{weatherData.city}, {weatherData.country}",
-                          description=f"Feels like {weatherData.tempFeels.celcius}\N{DEGREE SIGN}C, {weatherData.weatherDetail}",
-                          colour=discord.Colour(0xEA6D4A),
-                          )
+        e = discord.Embed(
+            title=f"{weatherData.city}, {weatherData.country}",
+            description=f"Feels like {weatherData.tempFeels.celcius}\N{DEGREE SIGN}C, {weatherData.weatherDetail}",
+            colour=discord.Colour(0xEA6D4A),
+        )
         e.set_author(
             name="OpenWeather",
             icon_url="https://openweathermap.org/themes/openweathermap/assets/vendor/owm/img/icons/logo_60x60.png",
         )
-        e.add_field(name="Temperature", value=f"{weatherData.temp.celcius}\N{DEGREE SIGN}C")
+        e.add_field(
+            name="Temperature", value=f"{weatherData.temp.celcius}\N{DEGREE SIGN}C"
+        )
         e.add_field(name="Humidity", value=weatherData.humidity)
         e.add_field(name="Wind", value=str(weatherData.wind))
         e.set_thumbnail(url=weatherData.iconUrl)

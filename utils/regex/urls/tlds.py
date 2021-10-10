@@ -1547,5 +1547,5 @@ tlds_list = [
     "zm",
     "zone",
     "zuerich",
-    "zw"
+    "zw",
 ]

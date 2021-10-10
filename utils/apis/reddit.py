@@ -69,7 +69,7 @@ class Reddit:
         if not limit:
             limit = self.defaultLimit
         async with self.session.get(
-                self.baseUrl.format(subreddit=subreddit, listingType=_type, limit=limit)
+            self.baseUrl.format(subreddit=subreddit, listingType=_type, limit=limit)
         ) as res:
             return Subreddit(await res.json())
 

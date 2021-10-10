@@ -122,7 +122,7 @@ class OpenWeatherAPI:
     async def get(self, _type, query):
         """Get weather report."""
         async with self.session.get(
-                self.baseUrl.format(type=_type, query=query, key=self.apiKey)
+            self.baseUrl.format(type=_type, query=query, key=self.apiKey)
         ) as res:
             weatherData = await res.json()
             if weatherData["cod"] == "404":
@@ -136,6 +136,8 @@ class OpenWeatherAPI:
     async def get_from_zip(self, zipCode):
         """Get weather report from a zip code."""
         return await self.get("zip", zipCode)
+
+
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #  Copyright (c) 2021. Jason Cameron                                                               +
 #  All rights reserved.                                                                            +

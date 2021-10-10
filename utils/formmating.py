@@ -28,22 +28,6 @@ def bold(text: str, escape_formatting: bool = True) -> str:
     return "**{}**".format(text)
 
 
-def box(text: str, lang: str = "") -> str:
-    """Get the given text in a code block.
-    Parameters
-    ----------
-    text : str
-        The text to be marked up.
-    lang : `str`, optional
-        The syntax highlighting language for the codeblock.
-    Returns
-    -------
-    str
-        The marked up text.
-    """
-    return "```{}\n{}\n```".format(lang, text)
-
-
 def escape(text: str, *, mass_mentions: bool = False, formatting: bool = False) -> str:
     """Get text with all mass mentions or markdown escaped.
     Parameters
@@ -66,13 +50,17 @@ def escape(text: str, *, mass_mentions: bool = False, formatting: bool = False) 
         text = discord.utils.escape_markdown(text)
     return text
 
+
 def format_relative(dt):
-    return format_dt(dt, 'R')
+    return format_dt(dt, "R")
+
 
 def format_date(dt):
     if dt is None:
-        return 'N/A'
+        return "N/A"
     return f'{format_dt(dt, "F")} ({format_relative(dt)})'
+
+
 def hyperlink(text: str, link: str):
     """Turns text into a hyperlink.
     Parameters
@@ -88,6 +76,8 @@ def hyperlink(text: str, link: str):
     """
     ret = "[{}]({})".format(text, link)
     return ret
+
+
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #  Copyright (c) 2021. Jason Cameron                                                               +
 #  All rights reserved.                                                                            +
@@ -95,3 +85,82 @@ def hyperlink(text: str, link: str):
 #  and is released under the "MIT License Agreement". Please see the LICENSE                       +
 #  file that should have been included as part of this package.                                    +
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+class plural:
+    def __init__(self, value):
+        self.value = value
+
+    def __format__(self, format_spec):
+        v = self.value
+        singular, sep, plural = format_spec.partition("|")
+        plural = plural or f"{singular}s"
+        if abs(v) != 1:
+            return f"{v} {plural}"
+        return f"{v} {singular}"
+
+
+def human_join(seq, delim=", ", final="or"):
+    size = len(seq)
+    if size == 0:
+        return ""
+
+    if size == 1:
+        return seq[0]
+
+    if size == 2:
+        return f"{seq[0]} {final} {seq[1]}"
+
+    return delim.join(seq[:-1]) + f" {final} {seq[-1]}"
+
+
+class TabularData:
+    def __init__(self):
+        self._widths = []
+        self._columns = []
+        self._rows = []
+
+    def set_columns(self, columns):
+        self._columns = columns
+        self._widths = [len(c) + 2 for c in columns]
+
+    def add_row(self, row):
+        rows = [str(r) for r in row]
+        self._rows.append(rows)
+        for index, element in enumerate(rows):
+            width = len(element) + 2
+            if width > self._widths[index]:
+                self._widths[index] = width
+
+    def add_rows(self, rows):
+        for row in rows:
+            self.add_row(row)
+
+    def render(self):
+        """Renders a table in rST format.
+        Example:
+        +-------+-----+
+        | Name  | Age |
+        +-------+-----+
+        | Alice | 24  |
+        |  Bob  | 19  |
+        +-------+-----+
+        """
+
+        sep = "+".join("-" * w for w in self._widths)
+        sep = f"+{sep}+"
+
+        to_draw = [sep]
+
+        def get_entry(d):
+            elem = "|".join(f"{e:^{self._widths[i]}}" for i, e in enumerate(d))
+            return f"|{elem}|"
+
+        to_draw.append(get_entry(self._columns))
+        to_draw.append(sep)
+
+        for row in self._rows:
+            to_draw.append(get_entry(row))
+
+        to_draw.append(sep)
+        return "\n".join(to_draw)

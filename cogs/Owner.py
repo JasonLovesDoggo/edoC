@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 on = False
 
 
-class Owner(commands.Cog, description='Only i can use these so shoo'):
+class Owner(commands.Cog, description="Only i can use these so shoo"):
     def __init__(self, bot):
         self.highest_num = 0
         self.bot = bot
@@ -44,7 +44,7 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
         self._last_result = None
         self.sessions = set()
 
-    @commands.command(aliases=['ExitGuild'])
+    @commands.command(aliases=["ExitGuild"])
     @commands.is_owner()
     async def LeaveGuild(self, ctx, *, name_or_id):
         if type(name_or_id) == str:
@@ -52,33 +52,39 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
         elif type(name_or_id) == int:
             guild = self.bot.get_guild(name_or_id)
         else:
-            return await ctx.warn('I either could not get that guild or my quantum phase disruptor is out of sync')
+            return await ctx.warn(
+                "I either could not get that guild or my quantum phase disruptor is out of sync"
+            )
         if guild is None:
             return await ctx.warn("I don't recognize that guild.")
         confirmcode = randint(0, 99999)
-        confirm_msg = await ctx.send(f"Type `{confirmcode}` within 30s to confirm this choice\n")
+        confirm_msg = await ctx.send(
+            f"Type `{confirmcode}` within 30s to confirm this choice\n"
+        )
 
         def check_confirm(m):
             if m.author == ctx.author and m.channel == ctx.channel:
                 if m.content.startswith(str(confirmcode)):
                     return True
             return False
+
         try:
-            user = await self.bot.wait_for('message', timeout=30.0, check=check_confirm)
+            user = await self.bot.wait_for("message", timeout=30.0, check=check_confirm)
         except asyncio.TimeoutError:
             return await confirm_msg.edit(
-                content=f"~~{confirm_msg.clean_content}~~\n\nStopped process...")
+                content=f"~~{confirm_msg.clean_content}~~\n\nStopped process..."
+            )
         await guild.leave()
         await ctx.send(f":ok_hand: Left guild: {guild.name} ({guild.id})")
 
     def cleanup_code(self, content):
         """Automatically removes code blocks from the code."""
         # remove ```py\n```
-        if content.startswith('```') and content.endswith('```'):
-            return '\n'.join(content.split('\n')[1:-1])
+        if content.startswith("```") and content.endswith("```"):
+            return "\n".join(content.split("\n")[1:-1])
 
         # remove `foo`
-        return content.strip('` \n')
+        return content.strip("` \n")
 
     @commands.command(aliases=["pyeval"])
     @commands.is_owner()
@@ -86,13 +92,13 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
         """Evaluates a code"""
 
         env = {
-            'bot': self.bot,
-            'ctx': ctx,
-            'channel': ctx.channel,
-            'author': ctx.author,
-            'guild': ctx.guild,
-            'message': ctx.message,
-            '_': self._last_result
+            "bot": self.bot,
+            "ctx": ctx,
+            "channel": ctx.channel,
+            "author": ctx.author,
+            "guild": ctx.guild,
+            "message": ctx.message,
+            "_": self._last_result,
         }
 
         env.update(globals())
@@ -105,43 +111,51 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
         try:
             exec(to_compile, env)
         except Exception as e:
-            return await ctx.send(f'```py\n{e.__class__.__name__}: {e}\n```')
+            return await ctx.send(f"```py\n{e.__class__.__name__}: {e}\n```")
 
-        func = env['func']
+        func = env["func"]
         try:
             with redirect_stdout(stdout):
                 ret = await func()
         except Exception as e:
             value = stdout.getvalue()
-            await ctx.send(f'```py\n{value}{traceback.format_exc()}\n```')
+            await ctx.send(f"```py\n{value}{traceback.format_exc()}\n```")
         else:
             value = stdout.getvalue()
             try:
-                await ctx.message.add_reaction('\u2705')
+                await ctx.message.add_reaction("\u2705")
             except:
                 pass
 
             if ret is None:
                 if value:
-                    await ctx.send(f'```py\n{value}\n```')
+                    await ctx.send(f"```py\n{value}\n```")
             else:
                 self._last_result = ret
-                await ctx.send(f'```py\n{value}{ret}\n```')
+                await ctx.send(f"```py\n{value}{ret}\n```")
 
     @commands.command()
     @commands.is_owner()
     async def rules(self, ctx):
-        emb = discord.Embed(title="edoC Support Server Rules\nPlease Read Carefully",
-                            color=white
-                            )
-        emb.set_author(name="Jason", url="https://bio.link/edoC", icon_url="https://i.imgur.com/LOJhKuN.png")
+        emb = discord.Embed(
+            title="edoC Support Server Rules\nPlease Read Carefully", color=white
+        )
+        emb.set_author(
+            name="Jason",
+            url="https://bio.link/edoC",
+            icon_url="https://i.imgur.com/LOJhKuN.png",
+        )
         emb.description = rules
         emb.set_footer(
-            text="Saying that you’re joking isn’t an excuse for breaking rules.\nThese rules are subject to change at anytime without prior notice.")
+            text="Saying that you’re joking isn’t an excuse for breaking rules.\nThese rules are subject to change at anytime without prior notice."
+        )
         emb.set_thumbnail(url="https://i.imgur.com/yww1r5E.jpeg")
         await ctx.send(
-            allowed_mentions=discord.AllowedMentions(roles=True, users=True, everyone=True, replied_user=True),
-            embed=emb)
+            allowed_mentions=discord.AllowedMentions(
+                roles=True, users=True, everyone=True, replied_user=True
+            ),
+            embed=emb,
+        )
 
     @commands.command()
     @commands.is_owner()
@@ -151,12 +165,8 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
         git = f"{sh} git pull"
         update = f"{sh} make update"
 
-        git_command_ctx = await copy_context_with(
-            ctx, content=ctx.prefix + git
-        )
-        update_command_ctx = await copy_context_with(
-            ctx, content=ctx.prefix + update
-        )
+        git_command_ctx = await copy_context_with(ctx, content=ctx.prefix + git)
+        update_command_ctx = await copy_context_with(ctx, content=ctx.prefix + update)
 
         await git_command_ctx.command.invoke(git_command_ctx)
         await update_command_ctx.command.invoke(update_command_ctx)
@@ -177,11 +187,15 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
             #  the command more compatible with chaining, e.g. `~in .. ~su ..`
             target = ctx.guild.get_member(target.id) or target
 
-        alt_ctx = await copy_context_with(ctx, author=target, content=ctx.prefix + command_string)
+        alt_ctx = await copy_context_with(
+            ctx, author=target, content=ctx.prefix + command_string
+        )
 
         if alt_ctx.command is None:
             if alt_ctx.invoked_with is None:
-                return await ctx.send('This bot has been hard-configured to ignore this user.')
+                return await ctx.send(
+                    "This bot has been hard-configured to ignore this user."
+                )
             return await ctx.send(f'Command "{alt_ctx.invoked_with}" is not found')
 
         return await alt_ctx.command.invoke(alt_ctx)
@@ -189,9 +203,11 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
     @sudo.command(name="in")
     @commands.is_owner()
     async def edoC_in(self, ctx, channel: discord.TextChannel, *, command_string: str):
-        """ Run a command as if it were run in a different channel. """
+        """Run a command as if it were run in a different channel."""
 
-        alt_ctx = await copy_context_with(ctx, channel=channel, content=ctx.prefix + command_string)
+        alt_ctx = await copy_context_with(
+            ctx, channel=channel, content=ctx.prefix + command_string
+        )
 
         if alt_ctx.command is None:
             return await ctx.send(f'Command "{alt_ctx.invoked_with}" is not found')
@@ -212,12 +228,14 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
         try:
             source_lines, _ = inspect.getsourcelines(command.callback)
         except (TypeError, OSError):
-            return await ctx.send(f"Was unable to retrieve the source for `{command}` for some reason.")
+            return await ctx.send(
+                f"Was unable to retrieve the source for `{command}` for some reason."
+            )
 
         # getsourcelines for some reason returns WITH line endings
-        source_lines = ''.join(source_lines).split('\n')
+        source_lines = "".join(source_lines).split("\n")
 
-        paginator = WrappedPaginator(prefix='```py', suffix='```', max_size=1985)
+        paginator = WrappedPaginator(prefix="```py", suffix="```", max_size=1985)
         for line in source_lines:
             paginator.add_line(line)
 
@@ -227,7 +245,7 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
     @commands.command()
     @commands.is_owner()
     async def change_config_value(self, value: str, changeto: str):
-        """ Change a value from the configs """
+        """Change a value from the configs"""
         config_name = "config.json"
         with open(config_name, "r") as jsonFile:
             data = json.load(jsonFile)
@@ -238,16 +256,20 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
 
     @commands.command()
     async def amiadmin(self, ctx):
-        """ Are you an admin? """
+        """Are you an admin?"""
         """ Are you an admin? """
         # Please do not remove this part.
         # I would love to be credited as the original creator of the source code.
         #   -- Jason
         auth = ctx.author
         if auth.id == 511724576674414600:
-            return await ctx.send(f"Well kinda **{auth.name}**.. you own the source code")
+            return await ctx.send(
+                f"Well kinda **{auth.name}**.. you own the source code"
+            )
         elif auth.id == 86477779717066752:
-            return await ctx.send(f"Well kinda **{auth.name}**.. you own the core source code")
+            return await ctx.send(
+                f"Well kinda **{auth.name}**.. you own the core source code"
+            )
         if auth.id in self.config["owners"]:
             return await ctx.send(f"Yes **{auth.name}** you are an admin! ✅")
 
@@ -256,32 +278,35 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
     @commands.command(aliases=["botusers", "botmembers", "thepeoplemybothaspowerover"])
     @commands.is_owner()
     async def users(self, ctx):
-        """ Gets all users """
+        """Gets all users"""
         allusers = ""
         for num, user in enumerate(self.bot.get_all_members(), start=1):
             allusers += f" \n[{str(num).zfill(2)}] {user} ~ {user.id}"
         data = BytesIO(allusers.encode("utf-8"))
-        await ctx.send(content=f"Users", file=discord.File(data, filename=default.CustomTimetext('ini', 'Users')))
+        await ctx.send(
+            content=f"Users",
+            file=discord.File(data, filename=default.CustomTimetext("ini", "Users")),
+        )
 
     @users.error
     async def users_error(self, ctx, error: commands.CommandError):
         # if the conversion above fails for any reason, it will raise `commands.BadArgument`
         # so we handle this in this error handler:
         if isinstance(error, commands.BadArgument):
-            return await ctx.send("Couldn\'t find that user.")
+            return await ctx.send("Couldn't find that user.")
 
     @commands.command()  # idk i wanted this
     @commands.is_owner()
     async def print(self, what_they_said: str):
-        """ prints to console said text"""
+        """prints to console said text"""
         print(what_they_said)
 
     @commands.command()
     @commands.is_owner()
     async def say(self, ctx, *, what_to_say: str):
-        """ says text """
+        """says text"""
         await ctx.message.delete()
-        await ctx.send(f'{what_to_say}')
+        await ctx.send(f"{what_to_say}")
 
     # @commands.command()
     # @commands.has_permissions(manage_guild=True)
@@ -296,7 +321,7 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
 
     @commands.command(aliases=["rp", "saymore"])
     @commands.is_owner()
-    async def saymany(self, ctx, times: int, *, content='repeating...'):
+    async def saymany(self, ctx, times: int, *, content="repeating..."):
         """Repeats a message multiple times."""
         saidtimes = 0
         for i in range(times):
@@ -313,15 +338,15 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
     @file.command(name="send")
     @commands.is_owner()
     async def file_send(self, ctx, filename: str):
-        """ sends the filename file """
+        """sends the filename file"""
         file = discord.File(f"C:/Users/Jason/edoC/cogs/Texts/{filename}.txt")
         await ctx.send(file=file)
 
     @file.command(name="read", aliases=["sayscript", "readscript"])
     @commands.is_owner()
     async def file_read(self, ctx, filename: str):
-        """ Reads the file specified and sends it"""
-        await ctx.send(f'Why you madman why dare try to open {filename}')
+        """Reads the file specified and sends it"""
+        await ctx.send(f"Why you madman why dare try to open {filename}")
         await asyncio.sleep(1.0)
         file = open(f"C:/Users/Jason/edoC/cogs/Texts/{filename}.txt", "r")
         for word in file:
@@ -334,10 +359,9 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
     @file.command(name="write", aliases=["writescript"])
     @commands.is_owner()
     async def file_write(self, ctx, filename: str, *, everythin_else):
-        """ Writes a file from discord to the pc/server """
-        message = await ctx.send('starting...')
-        file = open(f"C:/Users/Jason/edoC/cogs/Texts/{filename}.txt",
-                    "w+")
+        """Writes a file from discord to the pc/server"""
+        message = await ctx.send("starting...")
+        file = open(f"C:/Users/Jason/edoC/cogs/Texts/{filename}.txt", "w+")
         for line in everythin_else:
             file.writelines(f"\n{str(line)}")
         file.close()
@@ -349,11 +373,14 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
         await BanUser(ctx, userid, reason)
         await ctx.send(f"banned {userid} for {reason}")
 
-    @commands.command(aliases=["l"], brief='Loads an Extension',
-                      description='The command is used to load the Extensions into the Bot.')
+    @commands.command(
+        aliases=["l"],
+        brief="Loads an Extension",
+        description="The command is used to load the Extensions into the Bot.",
+    )
     @commands.is_owner()
     async def load(self, ctx, name: str):
-        """ Loads an extension. """
+        """Loads an extension."""
         name = name.title()
         try:
             self.bot.load_extension(f"cogs.{name}")
@@ -361,10 +388,10 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
             return await ctx.send(default.traceback_maker(e))
         await ctx.send(f"Loaded extension **{name}.py**")
 
-    @commands.command(aliases=['ul'])
+    @commands.command(aliases=["ul"])
     @commands.is_owner()
     async def unload(self, ctx, name: str):
-        """ Unloads an extension. """
+        """Unloads an extension."""
         name = name.title()
         try:
             self.bot.unload_extension(f"cogs.{name}")
@@ -375,7 +402,7 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
     @commands.command(aliases=["r"])
     @commands.is_owner()
     async def reload(self, ctx, name: str):
-        """ Reloads an extension. """
+        """Reloads an extension."""
         name = name.title()
         try:
             self.bot.reload_extension(f"cogs.{name}")
@@ -386,7 +413,7 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
     @commands.command(aliases=["ra"])
     @commands.is_owner()
     async def reloadall(self, ctx):
-        """ Reloads all extensions. """
+        """Reloads all extensions."""
         error_collection = []
         for file in os.listdir("cogs"):
             if file.endswith(".py"):
@@ -399,7 +426,9 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
                     )
 
         if error_collection:
-            output = "\n".join([f"**{g[0]}** ```diff\n- {g[1]}```" for g in error_collection])
+            output = "\n".join(
+                [f"**{g[0]}** ```diff\n- {g[1]}```" for g in error_collection]
+            )
             return await ctx.send(
                 f"Attempted to reload all extensions, was able to reload, "
                 f"however the following failed...\n\n{output}"
@@ -410,7 +439,7 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
     @commands.command(aliases=["ru"])
     @commands.is_owner()
     async def reloadutils(self, ctx, name: str):
-        """ Reloads a utils module. """
+        """Reloads a utils module."""
         name_maker = f"utils/{name}.py"
         try:
             module_name = importlib.import_module(f"utils.{name}")
@@ -419,21 +448,23 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
             return await ctx.send(f"Couldn't find module named **{name_maker}**")
         except Exception as e:
             error = default.traceback_maker(e)
-            return await ctx.send(f"Module **{name_maker}** returned error and was not reloaded...\n{error}")
+            return await ctx.send(
+                f"Module **{name_maker}** returned error and was not reloaded...\n{error}"
+            )
         await ctx.send(f"Reloaded module **{name_maker}**")
 
     @commands.command()
     @commands.is_owner()
     async def shutdown(self, ctx):
-        """ shut down the bot """
+        """shut down the bot"""
         await ctx.warn("Shuting down now...", log=True)
         await self.bot.close()
 
     @command()
     @is_owner()
     async def restart(self, ctx):
-        """ restarts the bot using pm2 """
-        await ctx.warn('Restarting..', log=True)
+        """restarts the bot using pm2"""
+        await ctx.warn("Restarting..", log=True)
         await self.bot.restart()
 
     @commands.command()
@@ -441,7 +472,9 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
     async def todoadd(self, ctx, *, message: str):
         """Dumps the message into todo.txt"""
         todofile = open("todo.txt", "a")
-        todofile.write(f"\n \n **{message}** \n~ {ctx.author} ~ {ctx.message.created_at}")
+        todofile.write(
+            f"\n \n **{message}** \n~ {ctx.author} ~ {ctx.message.created_at}"
+        )
         await ctx.send(f'Dumping "**{message}** " Into {todofile.name}')
         todofile.close()
 
@@ -451,13 +484,13 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
         """clears the specified filename file"""
         file2 = open(filename, "w+")
         file2.truncate(0)
-        await ctx.send(f'{filename} purged ')
+        await ctx.send(f"{filename} purged ")
         file2.close()
 
     @commands.command(pass_context=True)
     @commands.is_owner()
     async def massrole(self, ctx, role_id: discord.Role = None):
-        """ Gives all the members of the server said role """
+        """Gives all the members of the server said role"""
         if role_id is None:
             await ctx.send("You haven't specified a role! ")
             return
@@ -472,8 +505,10 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
                 await self.bot.add_roles(members, role_id)
 
         data = BytesIO(addedusers.encode("utf-8"))
-        await ctx.send(content=f"The roles have been added to",
-                       file=discord.File(data, filename=f"{default.timetext('AddedUsers')}"))
+        await ctx.send(
+            content=f"The roles have been added to",
+            file=discord.File(data, filename=f"{default.timetext('AddedUsers')}"),
+        )
 
     @commands.command(aliases=["trole", "ToggleRole"])
     @commands.is_owner()
@@ -489,23 +524,35 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
 
         if role not in ctx.message.author.roles:
             await ctx.message.author.add_roles(role)
-            return await ctx.send("**{}** role has been added to {}.".format(role, ctx.message.author.mention))
+            return await ctx.send(
+                "**{}** role has been added to {}.".format(
+                    role, ctx.message.author.mention
+                )
+            )
 
         if role in ctx.message.author.roles:
             await self.bot.remove_roles(role)
-            return await ctx.send("**{}** role has been removed from {}."
-                                  .format(role, ctx.message.author.mention))
+            return await ctx.send(
+                "**{}** role has been removed from {}.".format(
+                    role, ctx.message.author.mention
+                )
+            )
 
-    @commands.command(aliases=['pm'])
+    @commands.command(aliases=["pm"])
     @commands.is_owner()
     async def dm(self, ctx, user: discord.User, *, message: str):
-        fmt = message + '\n\n*This is a DM sent because you had previously requested feedback or I found a bug' \
-                        ' in a command you used, I do not monitor this DM.*'
+        fmt = (
+            message
+            + "\n\n*This is a DM sent because you had previously requested feedback or I found a bug"
+            " in a command you used, I do not monitor this DM.*"
+        )
         try:
             await user.send(fmt)
             await ctx.send(f"✉️ Sent a DM to **{user}**")
         except discord.Forbidden:
-            await ctx.send("This user might be having DMs blocked or it's a bot account...")
+            await ctx.send(
+                "This user might be having DMs blocked or it's a bot account..."
+            )
 
     @commands.group()
     @commands.is_owner()
@@ -516,7 +563,7 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
     @change.command(name="playing")
     @commands.is_owner()
     async def change_playing(self, ctx, *, playing: str):
-        """ Change playing status. """
+        """Change playing status."""
         status = self.config["status_type"].lower()
         status_type = {"idle": discord.Status.idle, "dnd": discord.Status.dnd}
 
@@ -528,7 +575,7 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
                 activity=discord.Game(
                     type=activity_type.get(activity, 0), name=playing
                 ),
-                status=status_type.get(status, discord.Status.online)
+                status=status_type.get(status, discord.Status.online),
             )
             await ctx.send(f"Successfully changed playing status to **{playing}**")
         except discord.InvalidArgument as err:
@@ -539,7 +586,7 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
     @change.command(name="username")
     @commands.is_owner()
     async def change_username(self, ctx, *, name: str):
-        """ Change username. """
+        """Change username."""
         try:
             await self.bot.user.edit(username=name)
             await ctx.send(f"Successfully changed username to **{name}**")
@@ -549,7 +596,7 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
     @change.command(name="nickname")
     @commands.is_owner()
     async def change_nickname(self, ctx, *, name: str = None):
-        """ Change nickname. """
+        """Change nickname."""
         try:
             await ctx.guild.me.edit(nick=name)
             if name:
@@ -562,7 +609,7 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
     @change.command(name="avatar")
     @commands.is_owner()
     async def change_avatar(self, ctx, url: str = None):
-        """ Change avatar. """
+        """Change avatar."""
         if url is None and len(ctx.message.attachments) == 1:
             url = ctx.message.attachments[0].url
         else:
@@ -580,7 +627,9 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
         except discord.HTTPException as err:
             await ctx.send(err)
         except TypeError:
-            await ctx.send("You need to either provide an image URL or upload one with the command")
+            await ctx.send(
+                "You need to either provide an image URL or upload one with the command"
+            )
 
     # @commands.Cog.listener()
     # async def on_ready(self):
@@ -603,19 +652,24 @@ class Owner(commands.Cog, description='Only i can use these so shoo'):
         path = self.DoggoPath
         files = os.listdir(path)
         for count, file in enumerate(files):
-            os.rename(os.path.join(path, file), os.path.join(path, ''.join(f"{random()}.jpg")))
+            os.rename(
+                os.path.join(path, file), os.path.join(path, "".join(f"{random()}.jpg"))
+            )
         await ctx.send(f"done")
 
     @commands.is_owner()
     @commands.command(aliases=["FDP"])
     async def FormatDogPhotos(self, ctx):
-        """ Function to rename all the doggo files """
+        """Function to rename all the doggo files"""
         path = self.DoggoPath
         files = os.listdir(path)
         filenum = 0
         for count, file in enumerate(files):
             filenum += 1
-            os.rename(os.path.join(path, file), os.path.join(path, ''.join([str(filenum), '.jpg'])))
+            os.rename(
+                os.path.join(path, file),
+                os.path.join(path, "".join([str(filenum), ".jpg"])),
+            )
         await ctx.send(f"done\ncurrent limit is {filenum}")
 
 

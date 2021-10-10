@@ -12,8 +12,14 @@ from utils.vars import words
 
 
 class ProfanitiesFilter(object):
-    def __init__(self, filterlist=words, ignore_case=True, replacements="!@#$%!@#$%^~!@%^~@#$%!@#$%^~!",
-                 complete=True, inside_words=False):
+    def __init__(
+        self,
+        filterlist=words,
+        ignore_case=True,
+        replacements="!@#$%!@#$%^~!@%^~@#$%!@#$%^~!",
+        complete=True,
+        inside_words=False,
+    ):
         """
         Inits the profanity filter.
 
@@ -41,8 +47,7 @@ class ProfanitiesFilter(object):
         using the chars in self.replacements.
 
         """
-        return ''.join([random.choice(self.replacements) for i in
-                        range(length)])
+        return "".join([random.choice(self.replacements) for i in range(length)])
 
     def __replacer(self, match):
         value = match.group()
@@ -55,19 +60,18 @@ class ProfanitiesFilter(object):
         """Cleans a string from profanity."""
 
         regexp_insidewords = {
-            True: r'(%s)',
-            False: r'\b(%s)\b',
+            True: r"(%s)",
+            False: r"\b(%s)\b",
         }
 
-        regexp = (regexp_insidewords[self.inside_words] %
-                  '|'.join(self.badwords))
+        regexp = regexp_insidewords[self.inside_words] % "|".join(self.badwords)
 
         r = re.compile(regexp, re.IGNORECASE if self.ignore_case else 0)
 
         return r.sub(self.__replacer, text)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     f = ProfanitiesFilter(words)
     example = "I am doing bad ungood badlike things."
 

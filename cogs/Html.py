@@ -13,7 +13,7 @@ from discord.ext import commands
 from utils.default import config
 
 
-class coggers(commands.Cog, description='e'):
+class coggers(commands.Cog, description="e"):
     def __init__(self, bot):
         self.bot = bot
         self.config = config()
@@ -22,7 +22,8 @@ class coggers(commands.Cog, description='e'):
     @commands.is_owner()
     async def htm(self, ctx):
         for command in self.bot.walk_commands():
-            print(f"""<br>
+            print(
+                f"""<br>
             <button type="button" class="collapsible">{command.name}<span> - {command.description}</span></button>
             <div class="content">
                 <h4 style="color: rgb(169, 247, 247);">Category:</h4>
@@ -32,12 +33,15 @@ class coggers(commands.Cog, description='e'):
                 <h4 style="color: #cccccc;">Examples:</h4>
                 <p>Hprefix ~</p>
             </div>
-            <br>""")
+            <br>"""
+            )
 
-    @commands.command(brief='sends a formmated html of all the commands (tis for the website)')
+    @commands.command(
+        brief="sends a formmated html of all the commands (tis for the website)"
+    )
     @commands.is_owner()
     async def form(self, ctx):
-        tosend = ''
+        tosend = ""
 
         for command in self.bot.walk_commands():
 
@@ -46,30 +50,32 @@ class coggers(commands.Cog, description='e'):
                 continue
 
             cogname = command.cog
-            y = str(cogname).split('.')
-            if y == ['None']:
+            y = str(cogname).split(".")
+            if y == ["None"]:
                 continue
-            elif y[2].split()[0] == 'Owner':
+            elif y[2].split()[0] == "Owner":
                 continue
-            elif y[2].split()[0] == 'Jishaku':
+            elif y[2].split()[0] == "Jishaku":
                 continue
             # elif y[2].split()[0] == 'Mod':
             #    color = '#'
             try:
                 if command.description and command.short_doc:
-                    description = f'{command.description}\n{command.short_doc}'
+                    description = f"{command.description}\n{command.short_doc}"
                 elif command.description:
-                    description = f'{command.description}'
+                    description = f"{command.description}"
                 elif command.short_doc:
-                    description = f'{command.short_doc}'
+                    description = f"{command.short_doc}"
                 else:
-                    description = 'No Info Given...'
+                    description = "No Info Given..."
                 sig = str(command.signature)
-                finalsig = sig.replace('<', '&lt;').replace('>', '&gt;')
-                aliases = ', '.join(command.aliases)
+                finalsig = sig.replace("<", "&lt;").replace(">", "&gt;")
+                aliases = ", ".join(command.aliases)
                 parent = command.full_parent_name
-                name = command.name if not parent else f'{parent} {command.name}'
-                description = description.replace('```', '').replace('yaml', '').replace('|', '')  # .replace('', '')
+                name = command.name if not parent else f"{parent} {command.name}"
+                description = (
+                    description.replace("```", "").replace("yaml", "").replace("|", "")
+                )  # .replace('', '')
 
                 tosend += f"""
                 <br><button type="button" class="collapsible">{name}<span></span></button>
@@ -86,7 +92,7 @@ class coggers(commands.Cog, description='e'):
             except IndexError:
                 return await ctx.send(y)
         fp = BytesIO(tosend.encode())
-        return await ctx.send(file=discord.File(fp, filename='message_too_long.html'))
+        return await ctx.send(file=discord.File(fp, filename="message_too_long.html"))
 
 
 def setup(bot):

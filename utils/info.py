@@ -6,7 +6,6 @@
 #  file that should have been included as part of this package.                                    +
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-import os
 import pathlib
 
 
@@ -21,8 +20,8 @@ def fetch_info():
     file_amount = 0
     python_file_amount = 0
 
-    p = pathlib.Path('./')
-    for f in p.rglob('*.py'):
+    p = pathlib.Path("./")
+    for f in p.rglob("*.py"):
         if str(f).startswith("venv"):
             continue
         elif str(f).startswith("node_modules"):
@@ -31,25 +30,25 @@ def fetch_info():
             continue
         file_amount += 1
         python_file_amount += 1
-        with open(f, 'rb') as of:
+        with open(f, "rb") as of:
             for line in of.read().decode().splitlines():
                 line = line.strip()
-                if line.startswith('class'):
+                if line.startswith("class"):
                     python_class += 1
-                if line.startswith('def'):
+                if line.startswith("def"):
                     python_functions += 1
-                if line.startswith('async def'):
+                if line.startswith("async def"):
                     python_coroutines += 1
-                if '#' in line:
+                if "#" in line:
                     python_comments += 1
                 lines += 1
-    for f in p.rglob('*.txt'):
+    for f in p.rglob("*.txt"):
         if str(f).startswith("venv"):
             continue
         elif str(f).startswith("node_modules"):
             continue
         file_amount += 1
-    for f in p.rglob('*.json'):
+    for f in p.rglob("*.json"):
         if str(f).startswith("venv"):
             continue
         elif str(f).startswith("node_modules"):

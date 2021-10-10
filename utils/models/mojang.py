@@ -6,16 +6,14 @@
 #  file that should have been included as part of this package.                                    +
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+
 class MojangObject:
     def to_dict(self) -> dict:
         """Returns a dictionary of all instance attributes"""
         return self.__dict__.copy()
 
     def __repr__(self):
-        return "%s(%s)" % (
-            self.__class__.__name__,
-            self.__dict__
-        )
+        return "%s(%s)" % (self.__class__.__name__, self.__dict__)
 
 
 class UserProfile(MojangObject):
