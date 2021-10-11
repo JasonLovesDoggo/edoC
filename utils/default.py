@@ -35,6 +35,7 @@ from psutil import Process
 # from lib.db import db
 from utils.Context import edoCContext
 from utils.apis.Somerandomapi import SRA
+from utils.config import Config
 from utils.help import PaginatedHelpCommand
 from utils.http import HTTPSession
 from utils.vars import dark_blue, invis
@@ -87,6 +88,9 @@ class Timer:
 
     def __str__(self):
         return str(self.time)
+
+    def __round__(self, *args, **kwargs):
+        return round(self.time, *args, **kwargs)
 
     def __repr__(self):
         return f"<Timer time={self.time}>"
@@ -164,10 +168,10 @@ def is_dj_or_perms(**perms):
 
         getter = functools.partial(discord.utils.get, ctx.author.roles)
         if any(
-            getter(id=role) is not None
-            if isinstance(role, int)
-            else getter(name=role) is not None
-            for role in roles
+                getter(id=role) is not None
+                if isinstance(role, int)
+                else getter(name=role) is not None
+                for role in roles
         ):
             return True
         return await check_guild_permissions(ctx, perms, check=any)
@@ -241,13 +245,23 @@ class BaseEmbed(discord.Embed):
 
     @classmethod
     def loading(
-        cls,
-        *,
-        emoji="<a:wait:879146899670708234>",
-        title="Loading...",
-        **kwargs,
+            cls,
+            *,
+            emoji="<a:wait:879146899670708234>",
+            title="Loading...",
+            **kwargs,
     ):
         return cls(title="{} {}".format(emoji, title), **kwargs)
+
+
+def _prefix_callable(bot, msg):
+    user_id = bot.user.id
+    base = [f'<@!{user_id}> ', f'<@{user_id}> ']
+    if msg.guild is None:
+        base.append('~')
+    else:
+        base.extend(bot.prefixes.get(msg.guild.id, ['~']))
+    return base
 
 
 class edoC(commands.AutoShardedBot):
@@ -268,7 +282,7 @@ class edoC(commands.AutoShardedBot):
             presences=True,
         )
         super().__init__(
-            command_prefix=self.get_prefix,
+            command_prefix=_prefix_callable,
             description=description,
             pm_help=None,
             help_attrs=dict(hidden=True),
@@ -312,13 +326,21 @@ class edoC(commands.AutoShardedBot):
         self.alex_api = alexflipnote.Client(
             confi["alexflipnote_api"], loop=self.loop
         )  # just a example, the client doesn't have to be under bot and loop kwarg is optional
-        self.prefixs = {}
+
+        # guild_id: list
+        self.prefixes = Config('Prefixes.json')
+
+        # guild_id and user_id mapped to True
+        # these are users and guilds globally blacklisted
+        # from using the bot
+        self.blacklist = Config('Blacklist.json')
+
         self.ignore_dis_auth = ClientCredentialsFlow(
             client_id="6d93815487a84a8cb64ca18c03bc855e",
             client_secret=self.config["spotify_client_secret"],
         )
 
-        # self.blacklist = Config('blacklist.json')
+        # self.blacklist = Config('Blacklist.json')
 
     # async def on_guild_join(self, guild):
     #    if guild.id in self.blacklist:
@@ -347,7 +369,7 @@ class edoC(commands.AutoShardedBot):
         """Temp db system"""
         try:
             with open(
-                "C:\\Users\\Jason\\edoC\\tempdb.json", "r", encoding="utf8"
+                    "C:\\Users\\Jason\\edoC\\tempdb.json", "r", encoding="utf8"
             ) as data:
                 jsondata = json.load(data)
                 return jsondata[endpoint]
@@ -358,16 +380,30 @@ class edoC(commands.AutoShardedBot):
     async def update_data(self):
         self.backup_data()
 
-    async def load_prefixs(self):
-        await self.wait_until_ready()
-        print("loading prefixs")
-        for guild in self.guilds:
-            data = self.db.fetch("SELECT prefix FROM guilds WHERE id = $1", guild.id)
-            for dic in data:
-                for prefix in dic.values():
-                    self.prefixs[guild.id] = prefix
-        self.loading_status["Prefixs"] = True
+    def get_guild_prefixes(self, guild, *, local_inject=_prefix_callable):
+        proxy_msg = discord.Object(id=0)
+        proxy_msg.guild = guild
+        return local_inject(self, proxy_msg)
 
+    def get_raw_guild_prefixes(self, guild_id):
+        return self.prefixes.get(guild_id, ['~'])
+
+    async def set_guild_prefixes(self, guild, prefixes):
+        if len(prefixes) == 0:
+            await self.prefixes.put(guild.id, [])
+        elif len(prefixes) > 10:
+            raise RuntimeError('Cannot have more than 10 custom prefixes.')
+        else:
+            await self.prefixes.put(guild.id, sorted(set(prefixes), reverse=True))
+
+    async def add_to_blacklist(self, object_id):
+        await self.blacklist.put(object_id, True)
+
+    async def remove_from_blacklist(self, object_id):
+        try:
+            await self.blacklist.remove(object_id)
+        except KeyError:
+            pass
     async def load_settings(self):
         await self.wait_until_ready()
         print("loading settings")
@@ -381,11 +417,6 @@ class edoC(commands.AutoShardedBot):
         self.loading_status["Settings"] = True
         self.settings["336642139381301249"]["commanderrors"] = False
 
-    async def add_setting(self, g_id) -> None:
-        self.pool.execute(
-            "INSERT OR IGNORE INTO guilds. WHERE id = $1 VALUES($1, $2)", (g_id,)
-        )
-
     async def load_data(self):
         await self.load_prefixs()
         await self.load_settings()
@@ -394,25 +425,18 @@ class edoC(commands.AutoShardedBot):
     async def update_db(self):
         print("starting to update db this might take a bit")
         for guild in self.guilds:
-            self.db.execute("INSERT OR IGNORE INTO guilds (id) VALUES (?)", (guild.id,))
-            self.db.execute(
-                "INSERT OR IGNORE INTO prefixs (id, author, timestamp) VALUES (?, ?, ?)",
-                (
-                    guild.id,
-                    self.user.id,
-                    time.time(),
-                ),
-            )
+            await self.db.execute("INSERT OR IGNORE INTO guilds (id) VALUES ($1)", guild.id)
         to_remove = []
         allmembers = self.get_all_members()
         for user in allmembers:
             if user.bot:
                 continue
-            self.db.execute("INSERT OR IGNORE INTO users (id) VALUES (?)", (user.id,))
+            await self.db.execute("INSERT OR IGNORE INTO users (id) VALUES ($1)", user.id)
         stored_members = self.db.fetch("SELECT id FROM users")
         all_members_list = []
         for ignordislmao, user in enumerate(self.get_all_members(), start=1):
             all_members_list.append(user.id)
+        print(stored_members)
         for member in stored_members:
             id_ = member["id"]
             if id_ not in all_members_list:
@@ -425,22 +449,6 @@ class edoC(commands.AutoShardedBot):
 
         print("updated db")
 
-    async def get_prefix(self, msg):
-        guild = msg.guild
-        user_id = self.user.id
-        base = [f"<@!{user_id}> ", f"<@{user_id}> "]
-        if guild is None:
-            base.append(self.prefix)
-        else:
-            if guild.id in self.prefixs.keys():
-                base.extend(self.prefixs.get(guild.id, [self.prefix]))
-            else:
-                await self.add_prefix(guild.id, "~")
-                self.prefixs[guild.id] = self.pool.fetch(
-                    'SELECT prefixs FROM guilds WHERE "id" = $1', guild.id
-                )
-                base.extend(self.prefixs.get(guild.id, [self.prefix]))
-        return base
         # if guild is None:
         #    return self.prefix
         # elif guild.id in self.prefixs.keys():
@@ -452,8 +460,8 @@ class edoC(commands.AutoShardedBot):
         #    self.prefixs[guild.id] = when_mentioned_or(self.db.fetch('SELECT prefix FROM prefixs WHERE id = ?', (guild.id,)))
 
     async def add_prefix(self, g_id, prefix) -> None:
-        self.pool.execute(
-            "INSERT OR IGNORE INTO guilds WHERE id = $1 VALUES($1, $2)", (g_id,)
+        await self.pool.execute(
+            "INSERT OR IGNORE INTO guilds WITH id =$1 VALUES($1, $2)", (g_id,)
         )
 
     async def get_url(self, url) -> dict:
@@ -461,28 +469,11 @@ class edoC(commands.AutoShardedBot):
             data = await ses.json()
         return data
 
-    # async def add_blacklist(self, author_id: int, reason: str):
-    #    query_msg = "UPDATE USERS WHERE id = () SET banned = ($1)"
-    #    query = "UPDATE USERS SET Banned=True WHERE id=$1"
-    #    await self.pool.execute(query, author_id)
-
-    async def add_blacklist(self, snowflake_id, reason):
-        timed = datetime.utcnow()
-        values = (snowflake_id, reason, timed)
-        await self.pool.execute("INSERT INTO blacklist VALUES($1, $2, $3)", *values)
-        # self.blacklist.add(snowflake_id)
-
-    async def remove_blacklist(self, snowflake_id):
-        await self.pool.execute(
-            "DELETE FROM blacklist WHERE snowflake_id=$1", snowflake_id
-        )
-        # self.blacklist.remove(snowflake_id)
-
     async def on_message(self, msg):
         if (
-            not self.is_ready()
-            or msg.author.bot
-            or not can_handle(msg, "send_messages")
+                not self.is_ready()
+                or msg.author.bot
+                or not can_handle(msg, "send_messages")
         ):
             return
         self.seen_messages += 1
@@ -687,90 +678,6 @@ class edoC(commands.AutoShardedBot):
         except:
             pass
 
-    async def fill_cache(self):
-        """Loading up the blacklisted users."""
-        # query = 'SELECT * FROM (SELECT guild_id AS snowflake_id, blacklisted  FROM guild_config  UNION ALL SELECT user_id AS snowflake_id, blacklisted  FROM users_data) WHERE blacklisted="TRUE"'
-        # cur = await self.db.execute(query)
-        # data = await cur.fetchall()
-        # self.cache["blacklisted_users"] = {r[0] for r in data} or set()
-        #
-        # """Loading up premium users."""
-        # query = 'SELECT * FROM (SELECT guild_id AS snowflake_id, premium  FROM guild_config  UNION ALL SELECT user_id AS snowflake_id, premium  FROM users_data) WHERE premium="TRUE"'
-        # cur = await self.db.execute(query)
-        # data = await cur.fetchall()
-        # self.cache["premium_users"] = {r[0] for r in data} or set()
-        #
-        # """Loading up users that have tips enabled"""
-        # query = 'SELECT user_id FROM users_data WHERE tips = "TRUE"'
-        # cur = await self.db.execute(query)
-        # data = await cur.fetchall()
-        # self.cache["tips_are_on"] = {r[0] for r in data} or set()
-        #
-        # """Loading up users that have mentions enabled"""
-        # query = 'SELECT user_id FROM users_data WHERE mentions = "TRUE"'
-        # cur = await self.db.execute(query)
-        # data = await cur.fetchall()
-        # self.cache["mentions_are_on"] = {r[0] for r in data} or set()
-        #
-        # """Loads up all disabled_commands"""
-        # query = "SELECT command_name, snowflake_id FROM disabled_commands ORDER BY command_name"
-        # cur = await self.db.execute(query)
-        # data = await cur.fetchall()
-        # self.cache["disabled_commands"] = {
-        #    cmd: [r[1] for r in _group]
-        #    for cmd, _group in itertools.groupby(data, key=operator.itemgetter(0))
-        # }
-
-        self.cache["users"] = {}
-        self.cache["afk_users"] = {}
-        self.cache["tips_are_on"] = {}
-        self.cache["disabled_commands"] = {}
-        self.cache["premium_users"] = {}
-        self.cache["blacklisted_users"] = {}
-
-
-def UpdateBlacklist(newblacklist, filename: str = "blacklist"):
-    try:
-        with open(f"{filename}.json", encoding="utf-8", mode="r+") as file:
-            data = json.load(file)
-            data.update(newblacklist)
-            data.seek(0)
-            json.dump(data, file)
-    except FileNotFoundError:
-        raise FileNotFoundError("JSON file wasn't found")
-
-
-def MakeBlackList(
-    dict,
-    filename: str = "blacklist",
-):
-    try:
-        with open(f"{filename}.json", encoding="utf-8", mode="r+") as file:
-            data = json.load(file)
-            guilds = {}
-            users = {}
-            for gid in data["guilds"]:
-                pass
-    except FileNotFoundError:
-        raise FileNotFoundError("JSON file wasn't found")
-
-
-def bold(text: str):
-    return f"**{text}**"
-
-
-def italic(text: str):
-    return f"*{text}*"
-
-
-def bolditalic(text: str):
-    return f"***{text}***"
-
-
-def underline(text: str):
-    return f"__{text}__"
-
-
 def traceback_maker(err, advance: bool = True):
     """A way to debug your code anywhere"""
     _traceback = "".join(traceback.format_tb(err.__traceback__))
@@ -793,12 +700,12 @@ def CustomTimetext(filetype, name):
 
 
 def date(
-    target,
-    clock: bool = True,
-    seconds: bool = False,
-    ago: bool = False,
-    only_ago: bool = False,
-    raw: bool = False,
+        target,
+        clock: bool = True,
+        seconds: bool = False,
+        ago: bool = False,
+        only_ago: bool = False,
+        raw: bool = False,
 ):
     if isinstance(target, int) or isinstance(target, float):
         target = datetime.utcfromtimestamp(target)
@@ -850,7 +757,7 @@ def actionmessage(case, mass=False):
 
 
 async def prettyResults(
-    ctx, filename: str = "Results", resultmsg: str = "Here's the results:", loop=None
+        ctx, filename: str = "Results", resultmsg: str = "Here's the results:", loop=None
 ):
     """A prettier way to show loop results"""
     if not loop:
@@ -884,7 +791,7 @@ def naturalsize(size_in_bytes: int):
 
 
 def char_if_multi(
-    num: int, char: str = "s", ifover: int = 1, return_char_if_0: bool = True
+        num: int, char: str = "s", ifover: int = 1, return_char_if_0: bool = True
 ):
     if num > ifover:
         return char
@@ -894,13 +801,13 @@ def char_if_multi(
 
 
 def renderBar(
-    value: int,
-    *,
-    gap: int = 0,
-    length: int = 32,
-    point: str = "",
-    fill: str = "-",
-    empty: str = "-",
+        value: int,
+        *,
+        gap: int = 0,
+        length: int = 32,
+        point: str = "",
+        fill: str = "-",
+        empty: str = "-",
 ) -> str:
     # make the bar not wider than 32 even with gaps > 0
     length = int(length / int(gap + 1))
@@ -918,7 +825,7 @@ def renderBar(
 
 
 def asyncify(
-    loop: Optional[AbstractEventLoop] = None,
+        loop: Optional[AbstractEventLoop] = None,
 ) -> Callable[..., Coroutine[Any, Any, Any]]:
     """Makes a sync blocking function unblocking"""
     loop = loop or get_event_loop()

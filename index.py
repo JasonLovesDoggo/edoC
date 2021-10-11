@@ -19,6 +19,18 @@ config = config()
 environ["JISHAKU_HIDE"] = "True"
 environ["JISHAKU_NO_UNDERSCORE"] = "True"
 NO_LOAD_COGS = ["Config"]
+bot = edoC()
+try:
+    bot.load_extension("jishaku")
+    for file in listdir("cogs"):
+        name = file[:-3]
+        if len(NO_LOAD_COGS) > 1:
+            if name in NO_LOAD_COGS:
+                continue
+        if file.endswith(".py"):
+            bot.load_extension(f"cogs.{name}")
+except Exception:
+    raise ChildProcessError("Problem with one of the cogs/utils")
 
 
 # @bot.after_invoke
@@ -60,7 +72,6 @@ class RemoveNoise(logging.Filter):
             return False
         return True
 
-
 @contextlib.contextmanager
 def setup_logging():
     try:
@@ -94,46 +105,28 @@ def setup_logging():
             hdlr.close()
             log.removeHandler(hdlr)
 
-
-async def run_bot(bot):
+def run_bot():
+    loop = asyncio.get_event_loop()
     log = logging.getLogger()
     kwargs = {
-        "command_timeout": 60,
-        "max_size": 20,
-        "min_size": 20,
+        'command_timeout': 60,
+        'max_size': 20,
+        'min_size': 20,
     }
     try:
-        pool = await Table.create_pool(config["database"]["uri"], **kwargs)
+        pool = loop.run_until_complete(Table.create_pool(config['database']['uri'], **kwargs))
     except Exception as e:
-        print("Could not set up PostgreSQL. Exiting.", e)
-        log.exception("Could not set up PostgreSQL. Exiting.")
+        print('Could not set up PostgreSQL. Exiting.', e)
+        log.exception('Could not set up PostgreSQL. Exiting.', e)
         return
 
     bot.pool = pool
     bot.run(config["token"], reconnect=True)
 
 
-async def run():
-    bot = edoC()
-    try:
-        bot.load_extension("jishaku")
-        for file in listdir("cogs"):
-            name = file[:-3]
-            if len(NO_LOAD_COGS) > 1:
-                if name in NO_LOAD_COGS:
-                    continue
-            if file.endswith(".py"):
-                bot.load_extension(f"cogs.{name}")
-    except Exception:
-        raise ChildProcessError("Problem with one of the cogs/utils")
-
+if __name__ == "__main__":
     try:
         with setup_logging():
-            await run_bot(bot)
+            run_bot()
     except Exception as e:
-        print(f"Error when logging in: {e}")
-
-
-if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.create_task(run())
+        print(f"Error when logging in: \n{e}")

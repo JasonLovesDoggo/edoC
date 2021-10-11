@@ -11,6 +11,15 @@ from discord import NotFound, HTTPException, Member
 from discord.ext.commands import Converter, BadArgument
 
 
+class ActionReason(Converter):
+    async def convert(self, ctx, argument):
+        ret = f'{ctx.author} (ID: {ctx.author.id}): {argument}'
+
+        if len(ret) > 512:
+            reason_max = 512 - len(ret) + len(argument)
+            raise BadArgument(f'Reason is too long ({len(argument)}/{reason_max})')
+        return ret
+
 async def authorOrReferenced(ctx):
     if ref := ctx.replied_reference:
         # Get referenced message author

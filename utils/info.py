@@ -8,10 +8,13 @@
 
 import pathlib
 
+from utils import cache
 
+
+@cache.cache()
 def fetch_info():
     lines = 0
-
+    characters = 0
     python_class = 0
     python_functions = 0
     python_coroutines = 0
@@ -19,15 +22,12 @@ def fetch_info():
 
     file_amount = 0
     python_file_amount = 0
-
+    no_goes = ['venv', 'node_modules', 'ffmpeg', 'data']
     p = pathlib.Path("./")
     for f in p.rglob("*.py"):
-        if str(f).startswith("venv"):
+        if list(str(f).split("\N{REVERSE SOLIDUS}"))[0] in no_goes:
             continue
-        elif str(f).startswith("node_modules"):
-            continue
-        elif str(f).startswith("ffmpeg"):
-            continue
+        print(list(str(f).split("\N{REVERSE SOLIDUS}"))[0])
         file_amount += 1
         python_file_amount += 1
         with open(f, "rb") as of:
@@ -42,6 +42,9 @@ def fetch_info():
                 if "#" in line:
                     python_comments += 1
                 lines += 1
+                for chunk in line.replace(' ', '').split():
+                    characters += len(chunk) if not chunk == '' else 0
+
     for f in p.rglob("*.txt"):
         if str(f).startswith("venv"):
             continue
@@ -55,7 +58,8 @@ def fetch_info():
             continue
         file_amount += 1
     return {
-        "total_lines": lines - 1110,
+        "total_lines": lines,
+        "total_characters": characters,
         "total_python_class": python_class,
         "total_python_functions": python_functions,
         "total_python_coroutines": python_coroutines,

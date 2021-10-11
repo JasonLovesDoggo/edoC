@@ -315,8 +315,8 @@ def random_color():
 embedfooter = "https://www.buymeacoffee.com/edoC Creating edoC is a tough task, if you would like me to continue with it, please consider donating!"
 
 version_info = {
-    "info": "~pfp is kinda cool imo",
-    "version": 0.9,
+    "info": "Big things are coming this way",
+    "version": 0.936,
     "dev": "Jake CEO of annoyance#1904 (511724576674414600)",
 }
 

@@ -10,6 +10,17 @@ import discord
 from discord.utils import format_dt
 
 
+def italic(text: str):
+    return f"*{text}*"
+
+
+def bolditalic(text: str):
+    return f"***{text}***"
+
+
+def underline(text: str):
+    return f"__{text}__"
+
 def bold(text: str, escape_formatting: bool = True) -> str:
     """Get the given text in bold.
     Note: By default, this function will escape ``text`` prior to emboldening.

@@ -30,7 +30,6 @@ from utils.vars import *
 getLogger("events")
 owners = default.config()["owners"]
 bla = {}
-default.MakeBlackList(bla)
 
 scheduler = apscheduler.schedulers.asyncio.AsyncIOScheduler()
 
@@ -60,7 +59,6 @@ async def Info(self, ctx, msg):
 
 class Events(commands.Cog, description="Event handling if u can see this ping the dev"):
     def __init__(self, bot):
-        # self.blacklist = Blacklist
         self.bot = bot
         self.ready = False
         self.config = bot.config
@@ -143,6 +141,10 @@ class Events(commands.Cog, description="Event handling if u can see this ping th
     @commands.Cog.listener()
     async def on_command_error(self, ctx, err):
         if isinstance(err, commands.CommandNotFound):
+            return await self.erroremb(
+                ctx,
+                description=f"The command you have requested is not found. \nPlease make sure you typed it out right",
+            )
             try:
                 if self.bot.settings[ctx.guild.id]["commanderrors"]:
                     await self.erroremb(

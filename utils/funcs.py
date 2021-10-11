@@ -5,6 +5,7 @@
 #  and is released under the "MIT License Agreement". Please see the LICENSE                       +
 #  file that should have been included as part of this package.                                    +
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+import json
 
 from utils.Context import edoCContext
 
@@ -56,3 +57,10 @@ async def userflagtoicon(ctx: edoCContext):
         allflags.append(flags["premium"])
     await ctx.invis(allflags)
     return allflags
+
+
+def load_json_of_file(jsonfile: str, endpoint=None):
+    with open(jsonfile, "r") as jsonFile:
+        if endpoint:
+            return json.load(jsonFile)[endpoint]
+        return json.load(jsonFile)

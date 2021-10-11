@@ -145,7 +145,7 @@ class Image(Cog, description="Image Related commands are here"):
             gaynes = f"{int(str(abs(hash(error.argument)))[:2]):.2f}"
             emb = Embed(
                 title="gay r8 machine",
-                description=f"{error.argument} is **{gaynes} \U0001f308",
+                description=f"{error.argument} is **{gaynes}%** gay \U0001f308",
                 color=discord.Color.random(),
             )
             await ctx.send(embed=emb)

@@ -31,10 +31,11 @@ from pyjokes import pyjokes
 from cogs.Discordinfo import plural
 from utils.apis.Somerandomapi import SRA
 from utils.converters import MemberConverter
-from utils.default import config, CustomTimetext
+from utils.default import config, CustomTimetext, Timer
+from utils.funcs import load_json_of_file
 from utils.http import get
 from utils.vars import *
-from utils.views import UrbanSource
+from utils.views import UrbanSource, FreeNitroView
 
 
 class Fun(commands.Cog, description="Fun and entertaining commands can be found below"):
@@ -44,16 +45,29 @@ class Fun(commands.Cog, description="Fun and entertaining commands can be found 
         self.alex_api_token = self.config["alexflipnote_api"]
         self.trivia = TriviaClient()
         self.sra = SRA(session=self.bot.session)
+        self.typetestdict = list(load_json_of_file('data/dbdata/typeracer.json', endpoint='data'))
+
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    @commands.command(aliases=['freenitro'], help="Free Nitro!!!")
+    async def nitro(self, ctx):
+        view = FreeNitroView(ctx)
+        time_to_fool_u = discord.Embed(
+            title="You've been gifted a subscription!",
+            description=f"You've been gifted Nitro for **1 Month!**\nExpires in **24 hours**",
+            color=invis
+        ).set_thumbnail(
+            url="https://media.discordapp.net/attachments/895163964361674752/895982514093555763/images_1_-_2021-10-08T160355.540.jpeg")
+        main_msg = await ctx.send(embed=time_to_fool_u, view=view)
 
     @command()
-    async def trivia(self, ctx, difficulty: str):
+    async def trivia(self, ctx, difficulty: str = 'Ignore dis'):
         difficulty = difficulty.lower()
         try:
             question = await self.trivia.get_random_question(difficulty)
         except AiotriviaException as error:
             if error.__class__.__name__ == "InvalidDifficulty":
                 return await ctx.error(
-                    "Invalid Difficulty Please use either easy, medium or hard"
+                    "**Invalid Difficulty**: Please use either easy, medium or hard"
                 )
             return await ctx.error(f"{error.__class__.__name__}: {error}")
         answers = question.responses
@@ -451,28 +465,6 @@ class Fun(commands.Cog, description="Fun and entertaining commands can be found 
             tosend += f" ||~ {ctx.message.author.name}||\n"
         await ctx.send(tosend)
 
-    @commands.group()
-    async def math(self, ctx):
-        """math related cmds self explanatory don't ask why its in fun"""
-        if ctx.invoked_subcommand is None:
-            await ctx.send_help(str(ctx.command))
-
-    @math.command(name="add", aliases=["addition"])
-    async def math_add(self, ctx, num1: int, num2: int):
-        await ctx.send(num1 + num2)
-
-    @math.command(name="sub", aliases=["subtraction"])
-    async def math_sub(self, ctx, num1: int, num2: int):
-        await ctx.send(num1 - num2)
-
-    @math.command(name="multi", aliases=["multiplication"])
-    async def math_multi(self, ctx, num1: int, num2: int):
-        await ctx.send(num1 * num2)
-
-    @math.command(name="division", aliases=["divide"])
-    async def math_divide(self, ctx, num1: int, num2: int):
-        await ctx.send(num1 / num2)
-
     # @commands.command(aliases=["JumboEmoji"])
     # async def LargenEmoji(self, ctx, emoji):
     #    """Display your favorite emotes in large. currently only works on local emojis"""
@@ -484,6 +476,59 @@ class Fun(commands.Cog, description="Fun and entertaining commands can be found 
     #    else:
     #        await ctx.send(content='\N{HEAVY EXCLAMATION MARK SYMBOL} Only Local Emotes...')
     # Currently works but only local ones
+
+    @commands.command(aliases=['MonkeType', 'Monkeytyper', 'typingtest', 'tt', 'typerace'])
+    async def typetest(self, ctx):
+        """Sends you a typing test"""
+        """This typing attempt took 6.589s.
+        Your overall WPM for this round was 92.16 WPM.
+        Chars per minute (CPM)
+        291.4
+        Raw WPM (RWPM)
+        100.17
+        Accuracy
+        92.0%
+        Correct/wrong words ratio
+        Correct words: 7
+        Wrong words: 4
+        Average word length
+        4.73
+        Missed words
+        safety, in, our, speed.
+        Typing prompt
+        In skating over thin ice our safety is in our speed.
+        WPM stands for Words Per Minute.•12/09/2020"""
+        test = choice(self.typetestdict)
+        words = test['sentence']
+        em = Embed(colour=invis, description='Type the following:').set_image(url=test['image'])
+        ogmsg = await ctx.send(embed=em)
+        await ctx.warn(words)
+        def check(m):
+            return m.author == ctx.author and m.channel == ctx.channel
+
+        with Timer() as timer:
+            try:
+                msg = await self.bot.wait_for("message", timeout=40, check=check)
+            except asyncio.TimeoutError:
+                return await ctx.error(f"{ctx.author.mention} Too slow.")
+        wpm = self.wpm(int(timer), words)
+        if wpm > 250:
+            return await ctx.error("Stop cheating >:(")
+        if msg.content == words:
+            await ctx.success(f"You Typed: {msg.content} in {round(timer, 3)}s\nWPM {wpm}")
+        else:
+            await ctx.send(
+                f"**You couldn't type the exact thing**\nWhat you had to type: {words}\nWhat you typed: {msg.content}")
+
+    def wpm(self, time, words):
+        words = words.split()
+        word_length = len(words)
+        prop_time = 1
+        if time < 60:
+            prop_time = 60 / time
+            print(prop_time)
+        words_per_m = word_length / time
+        return int(words_per_m * prop_time)
 
     @commands.command()
     async def f(self, ctx, *, text: commands.clean_content = None):

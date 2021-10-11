@@ -1,0 +1,2885 @@
+{
+    "data":
+    [
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6620.png",
+            "sentence": "The quick brown fox jumps over the lazy dog."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9925.png",
+            "sentence": "My Mum tries to be cool by saying that she likes all the same things that I do."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3455.png",
+            "sentence": "A purple pig and a green donkey flew a kite in the middle of the night and ended up sunburnt."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1425.png",
+            "sentence": "Last Friday I saw a spotted striped blue worm shake hands with a legless lizard."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7684.png",
+            "sentence": "A song can make or ruin a person’s day if they let it get to them."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9702.png",
+            "sentence": "Sometimes it is better to just walk away from things and go back to them later when you’re in a better frame of mind."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5583.png",
+            "sentence": "Writing a list of random sentences is harder than I initially thought it would be."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4372.png",
+            "sentence": "Lets all be unique together until we realise we are all the same."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5928.png",
+            "sentence": "If I don’t like something, I’ll stay away from it."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2793.png",
+            "sentence": "I love eating toasted cheese and tuna sandwiches."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6107.png",
+            "sentence": "If you like tuna and tomato sauce- try combining the two. It’s really not as bad as it sounds."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9024.png",
+            "sentence": "Someone I know recently combined Maple Syrup & buttered Popcorn thinking it would taste like caramel popcorn. It didn’t and they don’t recommend anyone else do it either."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4310.png",
+            "sentence": "Sometimes, all you need to do is completely make an ass of yourself and laugh it off to realise that life isn’t so bad after all."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1807.png",
+            "sentence": "When I was little I had a car door slammed shut on my hand and I still remember it quite vividly."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9345.png",
+            "sentence": "The clock within this blog and the clock on my laptop are 1 hour different from each other."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3958.png",
+            "sentence": "I want to buy a onesie… but know it won’t suit me."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3347.png",
+            "sentence": "I was very proud of my nickname throughout high school but today- I couldn’t be any different to what my nickname was."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7035.png",
+            "sentence": "I currently have 4 windows open up… and I don’t know why."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2857.png",
+            "sentence": "I often see the time 11:11 or 12:34 on clocks."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3643.png",
+            "sentence": "This is the last random sentence I will be writing and I am going to stop mid-sent"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8311.png",
+            "sentence": "We need to rent a room for our party."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8134.png",
+            "sentence": "Yeah, I think it's a good environment for learning English."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8372.png",
+            "sentence": "The lake is a long way from here."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8752.png",
+            "sentence": "This is a Japanese doll."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5506.png",
+            "sentence": "I hear that Nancy is very pretty."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2050.png",
+            "sentence": "She was too short to see over the fence."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7360.png",
+            "sentence": "He told us a very exciting adventure story."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6511.png",
+            "sentence": "She always speaks to him in a loud voice."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1962.png",
+            "sentence": "I want more detailed information."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4029.png",
+            "sentence": "I checked to make sure that he was still alive."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2568.png",
+            "sentence": "I'd rather be a bird than a fish."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5290.png",
+            "sentence": "Mary plays the piano."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6433.png",
+            "sentence": "She did her best to help him."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7801.png",
+            "sentence": "She borrowed the book from him many years ago and hasn't yet returned it."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6144.png",
+            "sentence": "She wrote him a long letter, but he didn't read it."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4928.png",
+            "sentence": "Please wait outside of the house."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2648.png",
+            "sentence": "Two seats were vacant."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6755.png",
+            "sentence": "Tom got a small piece of pie."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6042.png",
+            "sentence": "She folded her handkerchief neatly."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6327.png",
+            "sentence": "We have a lot of rain in June."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2489.png",
+            "sentence": "I am never at home on Sundays."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4487.png",
+            "sentence": "Don't step on the broken glass."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7707.png",
+            "sentence": "She advised him to come back at once."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4211.png",
+            "sentence": "Let me help you with your baggage."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3554.png",
+            "sentence": "The book is in front of the table."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5139.png",
+            "sentence": "The mysterious diary records the voice."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8232.png",
+            "sentence": "The stranger officiates the meal."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8951.png",
+            "sentence": "The shooter says goodbye to his love."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6638.png",
+            "sentence": "A glittering gem is not enough."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7595.png",
+            "sentence": "The memory we used to share is no longer coherent."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8016.png",
+            "sentence": "The old apple revels in its authority."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2004.png",
+            "sentence": "Rock music approaches at high velocity."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6973.png",
+            "sentence": "Sixty-Four comes asking for bread."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2748.png",
+            "sentence": "Abstraction is often one floor above you."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2367.png",
+            "sentence": "The river stole the gods."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7870.png",
+            "sentence": "Joe made the sugar cookies; Susan decorated them."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7974.png",
+            "sentence": "The sky is clear; the stars are twinkling."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8829.png",
+            "sentence": "The waves were crashing on the shore; it was a lovely sight."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4710.png",
+            "sentence": "There were white out conditions in the town; subsequently, the roads were impassable."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3394.png",
+            "sentence": "Check back tomorrow; I will see if the book has arrived."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4031.png",
+            "sentence": "He said he was not there yesterday; however, many people saw him there."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1975.png",
+            "sentence": "I am happy to take your donation; any amount will be greatly appreciated."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3560.png",
+            "sentence": "She only paints with bold colors; she does not like pastels."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1979.png",
+            "sentence": "She works two jobs to make ends meet; at least, that was her reason for not having time to join us."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4667.png",
+            "sentence": "Malls are great places to shop; I can find everything I need under one roof."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5399.png",
+            "sentence": "Italy is my favorite country; in fact, I plan to spend two weeks there next year."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1049.png",
+            "sentence": "He turned in the research paper on Friday; otherwise, he would have not passed the class."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6564.png",
+            "sentence": "She did not cheat on the test, for it was not the right thing to do."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2606.png",
+            "sentence": "I think I will buy the red car, or I will lease the blue one."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7194.png",
+            "sentence": "I really want to go to work, but I am too sick to drive."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8528.png",
+            "sentence": "I am counting my calories, yet I really want dessert."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2727.png",
+            "sentence": "He ran out of money, so he had to stop playing poker."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7395.png",
+            "sentence": "They got there early, and they got really good seats."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4076.png",
+            "sentence": "There was no ice cream in the freezer, nor did they have money to go to the store."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4996.png",
+            "sentence": "Everyone was busy, so I went to the movie alone."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7707.png",
+            "sentence": "I would have gotten the promotion, but my attendance wasn’t good enough."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7064.png",
+            "sentence": "It was getting dark, and we weren’t there yet."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6247.png",
+            "sentence": "Cats are good pets, for they are clean and are not noisy."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3961.png",
+            "sentence": "We have never been to Asia, nor have we visited Africa."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1380.png",
+            "sentence": "He didn’t want to go to the dentist, yet he went anyway."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7349.png",
+            "sentence": "Sometimes I stare at a door or a wall and I wonder what is this reality, why am I alive, and what is this all about?"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9278.png",
+            "sentence": "All you need to do is pick up the pen and begin."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1703.png",
+            "sentence": "Had he known what was going to happen, he would have never stepped into the shower."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6905.png",
+            "sentence": "She hadn't had her cup of coffee, and that made things all the worse."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5502.png",
+            "sentence": "All she wanted was the answer, but she had no idea how much she would hate it."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5747.png",
+            "sentence": "It must be five o'clock somewhere."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8193.png",
+            "sentence": "He went back to the video to see what had been recorded and was shocked at what he saw."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2141.png",
+            "sentence": "Behind the window was a reflection that only instilled fear."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8253.png",
+            "sentence": "That was how he came to win $1 million."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5017.png",
+            "sentence": "She could hear him in the shower singing with a joy she hoped he'd retain after she delivered the news."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3653.png",
+            "sentence": "As he looked out the window, he saw a clown walk by."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1794.png",
+            "sentence": "There should have been a time and a place, but this wasn't it."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3353.png",
+            "sentence": "It was the best sandcastle he had ever seen."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3906.png",
+            "sentence": "There's an art to getting your way, and spitting olive pits across the table isn't it."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6525.png",
+            "sentence": "They say that dogs are man's best friend, but this cat was setting out to sabotage that theory."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7553.png",
+            "sentence": "Of course, she loves her pink bunny slippers."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8790.png",
+            "sentence": "Don't put peanut butter on the dog's nose."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4752.png",
+            "sentence": "She can live her life however she wants as long as she listens to what I have to say."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6096.png",
+            "sentence": "There are few things better in life than a slice of pie."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1150.png",
+            "sentence": "Not all people who wander are lost."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4069.png",
+            "sentence": "The knives were out and she was sharpening hers."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9234.png",
+            "sentence": "She felt that chill that makes the hairs on the back of your neck when he walked into the room."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8409.png",
+            "sentence": "Don't piss in my garden and tell me you're trying to help my plants grow."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2170.png",
+            "sentence": "He found the end of the rainbow and was surprised at what he found there."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1400.png",
+            "sentence": "Two more days and all his problems would be solved."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6901.png",
+            "sentence": "Love is not like pizza."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3026.png",
+            "sentence": "There's a reason that roses have thorns."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2140.png",
+            "sentence": "He looked behind the door and didn't like what he saw."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2014.png",
+            "sentence": "He fumbled in the darkness looking for the light switch, but when he finally found it there was someone already there."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9436.png",
+            "sentence": "He barked orders at his daughters but they just stared back with amusement."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5922.png",
+            "sentence": "He had a hidden stash underneath the floorboards in the back room of the house."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9285.png",
+            "sentence": "Nobody loves a pig wearing lipstick."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8552.png",
+            "sentence": "They called out her name time and again, but were met with nothing but silence."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3971.png",
+            "sentence": "He had accidentally hacked into his company's server."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8701.png",
+            "sentence": "You can't compare apples and oranges, but what about bananas and plantains?"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6346.png",
+            "sentence": "It doesn't sound like that will ever be on my travel list."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7854.png",
+            "sentence": "He swore he just saw his sushi move."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1460.png",
+            "sentence": "He had reached the point where he was paranoid about being paranoid."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7892.png",
+            "sentence": "The sun had set and so had his dreams."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5675.png",
+            "sentence": "He learned the important lesson that a picnic at the beach on a windy day is a bad idea."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3380.png",
+            "sentence": "Be careful with that butter knife."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4313.png",
+            "sentence": "He didn't heed the warning and it had turned out surprisingly well."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1727.png",
+            "sentence": "It was a slippery slope and he was willing to slide all the way to the deepest depths."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1414.png",
+            "sentence": "He would only survive if he kept the fire going and he could hear thunder in the distance."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5809.png",
+            "sentence": "His confidence would have bee admirable if it wasn't for his stupidity."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1613.png",
+            "sentence": "She let the balloon float up into the air with her hopes and dreams."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8568.png",
+            "sentence": "his seven-layer cake only had six layers."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7888.png",
+            "sentence": "There was coal in his stocking and he was thrilled."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9411.png",
+            "sentence": "The rusty nail stood erect, angled at a 45-degree angle, just waiting for the perfect barefoot to come along."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2858.png",
+            "sentence": "So long and thanks for the fish."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3662.png",
+            "sentence": "The random sentence generator generated a random sentence about a random sentence."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1679.png",
+            "sentence": "She says she has the ability to hear the soundtrack of your life."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1764.png",
+            "sentence": "It turns out you don't need all that stuff you insisted you did."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5983.png",
+            "sentence": "The irony of the situation wasn't lost on anyone in the room."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4786.png",
+            "sentence": "The truth is that you pay for your lifestyle in hours."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2753.png",
+            "sentence": "The light in his life was actually a fire burning all around him."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7103.png",
+            "sentence": "Three generations with six decades of life experience."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7753.png",
+            "sentence": "Nothing seemed out of place except the washing machine in the bar."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4255.png",
+            "sentence": "He decided to live his life by the big beats manifesto."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3978.png",
+            "sentence": "The secret ingredient to his wonderful life was crime."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3703.png",
+            "sentence": "He was sitting in a trash can with high street class."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8042.png",
+            "sentence": "The fact that there's a stairway to heaven and a highway to hell explains life well."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1903.png",
+            "sentence": "I met an interesting turtle while the song on the radio blasted away."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5972.png",
+            "sentence": "At that moment he wasn't listening to music, he was living an experience."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8122.png",
+            "sentence": "This made him feel like an old-style rootbeer float smells."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6382.png",
+            "sentence": "In the end, he realized he could see sound and hear words."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2305.png",
+            "sentence": "The fish listened intently to what the frogs had to say."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6264.png",
+            "sentence": "He stepped gingerly onto the bridge knowing that enchantment awaited on the other side."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1904.png",
+            "sentence": "He learned the hardest lesson of his life and had the scars, both physical and mental, to prove it."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6601.png",
+            "sentence": "At that moment she realized she had a sixth sense."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2835.png",
+            "sentence": "He wondered why at 18 he was old enough to go to war, but not old enough to buy cigarettes."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7753.png",
+            "sentence": "She saw no irony asking me to change but wanting me to accept her for who she is."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4575.png",
+            "sentence": "The fox in the tophat whispered into the ear of the rabbit."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7498.png",
+            "sentence": "There can never be too many cherries on an ice cream sundae."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9505.png",
+            "sentence": "The minute she landed she understood the reason this was a fly-over state."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4167.png",
+            "sentence": "I just wanted to tell you I could see the love you have for your child by the way you look at her."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8634.png",
+            "sentence": "Everyone says they love nature until they realize how dangerous she can be."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9164.png",
+            "sentence": "He was willing to find the depths of the rabbit hole in order to be with her."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9074.png",
+            "sentence": "She wore green lipstick like a fashion icon."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6007.png",
+            "sentence": "Never underestimate the willingness of the greedy to throw you under the bus."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4196.png",
+            "sentence": "She finally understood that grief was her love with no place for it to go."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5696.png",
+            "sentence": "Each person who knows you has a different perception of who you are."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4593.png",
+            "sentence": "The beauty of the African sunset disguised the danger lurking nearby."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9242.png",
+            "sentence": "They ran around the corner to find that they had traveled back in time."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8597.png",
+            "sentence": "25 years later, she still regretted that specific moment."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7144.png",
+            "sentence": "In that instant, everything changed."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6714.png",
+            "sentence": "He hated that he loved what she hated about hate."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5048.png",
+            "sentence": "Random words in front of other random words create a random sentence."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1128.png",
+            "sentence": "The body piercing didn't go exactly as he expected."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6849.png",
+            "sentence": "The pigs were insulted that they were named hamburgers."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6740.png",
+            "sentence": "It caught him off guard that space smelled of seared steak."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9089.png",
+            "sentence": "As he waited for the shower to warm, he noticed that he could hear water change temperature."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7617.png",
+            "sentence": "He took one look at what was under the table and noped the hell out of there."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7337.png",
+            "sentence": "She found his complete dullness interesting."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2601.png",
+            "sentence": "The efficiency we have at removing trash has made creating trash more acceptable."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1630.png",
+            "sentence": "The opportunity of a lifetime passed before him as he tried to decide between a cone or a cup."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2332.png",
+            "sentence": "One small action would change her life, but whether it would be for better or for worse was yet to be determined."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2201.png",
+            "sentence": "It was the scarcity that fueled his creativity."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2424.png",
+            "sentence": "Flesh-colored yoga pants were far worse than even he feared."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3525.png",
+            "sentence": "He was 100% into fasting with her until he understood that meant he couldn't eat."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2759.png",
+            "sentence": "Tuesdays are free if you bring a gnome costume."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6045.png",
+            "sentence": "If any cop asks you where you were, just say you were visiting Kansas."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7936.png",
+            "sentence": "The crowd yells and screams for more memes."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6042.png",
+            "sentence": "They throw cabbage that turns your brain into emotional baggage."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2179.png",
+            "sentence": "Potato wedges probably are not best for relationships."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2211.png",
+            "sentence": "It would have been a better night if the guys next to us weren't in the splash zone."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9184.png",
+            "sentence": "I caught my squirrel rustling through my gym bag."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2543.png",
+            "sentence": "You've been eyeing me all day and waiting for your move like a lion stalking a gazelle in a savannah."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2887.png",
+            "sentence": "It's not often you find a soggy banana on the street."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6604.png",
+            "sentence": "As you consider all the possible ways to improve yourself and the world, you notice John Travolta seems fairly unhappy."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3063.png",
+            "sentence": "I purchased a baby clown from the Russian terrorist black market."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1205.png",
+            "sentence": "You realize you're not alone as you sit in your bedroom massaging your calves after a long day of playing tug-of-war with Grandpa Joe in the hospital."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7112.png",
+            "sentence": "You're unsure whether or not to trust him, but very thankful that you wore a turtle neck."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4905.png",
+            "sentence": "Your girlfriend bought your favorite cookie crisp cereal but forgot to get milk."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8195.png",
+            "sentence": "He is good at eating pickles and telling women about his emotional problems."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5481.png",
+            "sentence": "If my calculator had a history, it would be more embarrassing than my browser history."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4800.png",
+            "sentence": "I ate a sock because people on the Internet told me to."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2312.png",
+            "sentence": "Stop waiting for exceptional things to just happen."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6108.png",
+            "sentence": "Choosing to do nothing is still a choice, after all."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1530.png",
+            "sentence": "He was so preoccupied with whether or not he could that he failed to stop to consider if he should."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6054.png",
+            "sentence": "Red is greener than purple, for sure."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9094.png",
+            "sentence": "On a scale from one to ten, what's your favorite flavor of random grammar?"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3920.png",
+            "sentence": "He's in a boy band which doesn't make much sense for a snake."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6824.png",
+            "sentence": "He waited for the stop sign to turn to a go sign."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8929.png",
+            "sentence": "It's much more difficult to play tennis with a bowling ball than it is to bowl with a tennis ball."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3783.png",
+            "sentence": "She had some amazing news to share but nobody to share it with."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4223.png",
+            "sentence": "The green tea and avocado smoothie turned out exactly as would be expected."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4161.png",
+            "sentence": "When nobody is around, the trees gossip about the people who have walked under them."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5777.png",
+            "sentence": "She wanted a pet platypus but ended up getting a duck and a ferret instead."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9747.png",
+            "sentence": "It was at that moment that he learned there are certain parts of the body that you should never Nair."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8230.png",
+            "sentence": "He realized there had been several deaths on this road, but his concern rose when he saw the exact number."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7310.png",
+            "sentence": "The thunderous roar of the jet overhead confirmed her worst fears."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9453.png",
+            "sentence": "The best key lime pie is still up for debate."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8860.png",
+            "sentence": "Various sea birds are elegant, but nothing is as elegant as a gliding pelican."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1537.png",
+            "sentence": "Peanut butter and jelly caused the elderly lady to think about her past."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4813.png",
+            "sentence": "He set out for a short walk, but now all he could see were mangroves and water were for miles."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6591.png",
+            "sentence": "Everyone was curious about the large white blimp that appeared overnight."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5411.png",
+            "sentence": "The Tsunami wave crashed against the raised houses and broke the pilings as if they were toothpicks."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8632.png",
+            "sentence": "They wandered into a strange Tiki bar on the edge of the small beach town."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5329.png",
+            "sentence": "The tour bus was packed with teenage girls heading toward their next adventure."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6768.png",
+            "sentence": "Her hair was windswept as she rode in the black convertible."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3356.png",
+            "sentence": "Lightning Paradise was the local hangout joint where the group usually ended up spending the night."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5461.png",
+            "sentence": "The thick foliage and intertwined vines made the hike nearly impossible."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8907.png",
+            "sentence": "As the rental car rolled to a stop on the dark road, her fear increased by the moment."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8468.png",
+            "sentence": "The newly planted trees were held up by wooden frames in hopes they could survive the next storm."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3499.png",
+            "sentence": "The gruff old man sat in the back of the bait shop grumbling to himself as he scooped out a handful of worms."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5749.png",
+            "sentence": "All they could see was the blue water surrounding their sailboat."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7041.png",
+            "sentence": "The urgent care center was flooded with patients after the news of a new deadly virus was made public."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2159.png",
+            "sentence": "The sign said there was road work ahead so he decided to speed up."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6786.png",
+            "sentence": "The shark-infested South Pine channel was the only way in or out."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7222.png",
+            "sentence": "He decided water-skiing on a frozen lake wasn’t a good idea."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1555.png",
+            "sentence": "It was always dangerous to drive with him since he insisted the safety cones were a slalom course."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9777.png",
+            "sentence": "She was the type of girl who wanted to live in a pink house."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4812.png",
+            "sentence": "Her life in the confines of the house became her new normal."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8787.png",
+            "sentence": "The near-death experience brought new ideas to light."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5634.png",
+            "sentence": "They were excited to see their first sloth."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5300.png",
+            "sentence": "The wake behind the boat told of the past while the open sea for told life in the unknown future."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9311.png",
+            "sentence": "Even though he thought the world was flat he didn’t see the irony of wanting to travel around the world."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4789.png",
+            "sentence": "He wondered if it could be called a beach if there was no sand."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8040.png",
+            "sentence": "Thigh-high in the water, the fisherman’s hope for dinner soon turned to despair."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1238.png",
+            "sentence": "Combines are no longer just for farms."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3925.png",
+            "sentence": "The small white buoys marked the location of hundreds of crab pots."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8421.png",
+            "sentence": "The snow-covered path was no help in finding his way out of the back-country."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4283.png",
+            "sentence": "The waitress was not amused when he ordered green eggs and ham."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1713.png",
+            "sentence": "Buried deep in the snow, he hoped his batteries were fresh in his avalanche beacon."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2667.png",
+            "sentence": "Courage and stupidity were all he had."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3295.png",
+            "sentence": "I don’t respect anybody who can’t tell the difference between Pepsi and Coke."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2083.png",
+            "sentence": "As the years pass by, we all know owners look more and more like their dogs."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1944.png",
+            "sentence": "In hopes of finding out the truth, he entered the one-room library."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3162.png",
+            "sentence": "As he entered the church he could hear the soft voice of someone whispering into a cell phone."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4096.png",
+            "sentence": "He quietly entered the museum as the super bowl started."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5779.png",
+            "sentence": "He had concluded that pigs must be able to fly in Hog Heaven."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3505.png",
+            "sentence": "The rain pelted the windshield as the darkness engulfed us."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8882.png",
+            "sentence": "Beach-combing replaced wine tasting as his new obsession."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2175.png",
+            "sentence": "The blinking lights of the antenna tower came into focus just as I heard a loud snap."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9791.png",
+            "sentence": "People generally approve of dogs eating cat food but not cats eating dog food."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1603.png",
+            "sentence": "Car safety systems have come a long way, but he was out to prove they could be outsmarted."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8125.png",
+            "sentence": "They looked up at the sky and saw a million stars."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5207.png",
+            "sentence": "She opened up her third bottle of wine of the night."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9742.png",
+            "sentence": "With a single flip of the coin, his life changed forever."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9414.png",
+            "sentence": "The tart lemonade quenched her thirst, but not her longing."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7924.png",
+            "sentence": "He was the type of guy who liked Christmas lights on his house in the middle of July."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6053.png",
+            "sentence": "Toddlers feeding raccoons surprised even the seasoned park ranger."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6653.png",
+            "sentence": "She was disgusted he couldn’t tell the difference between lemonade and limeade."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5058.png",
+            "sentence": "Whenever he saw a red flag warning at the beach he grabbed his surfboard."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5763.png",
+            "sentence": "Twin 4-month-olds slept in the shade of the palm tree while the mother tanned in the sun."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5833.png",
+            "sentence": "He always wore his sunglasses at night."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1092.png",
+            "sentence": "The three-year-old girl ran down the beach as the kite flew behind her."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3370.png",
+            "sentence": "While on the first date he accidentally hit his head on the beam."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7979.png",
+            "sentence": "Her scream silenced the rowdy teenagers."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1254.png",
+            "sentence": "After exploring the abandoned building, he started to believe in ghosts."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6041.png",
+            "sentence": "The view from the lighthouse excited even the most seasoned traveler."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9294.png",
+            "sentence": "He wondered if she would appreciate his toenail collection."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7876.png",
+            "sentence": "Some bathing suits just shouldn’t be worn by some people."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3146.png",
+            "sentence": "His son quipped that power bars were nothing more than adult candy bars."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3532.png",
+            "sentence": "Pantyhose and heels are an interesting choice of attire for the beach."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1940.png",
+            "sentence": "She did a happy dance because all of the socks from the dryer matched."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6248.png",
+            "sentence": "She wasn't sure whether to be impressed or concerned that he folded underwear in neat little packages."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9341.png",
+            "sentence": "When she didn’t like a guy who was trying to pick her up, she started using sign language."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8166.png",
+            "sentence": "The delicious aroma from the kitchen was ruined by cigarette smoke."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6226.png",
+            "sentence": "Swim at your own risk was taken as a challenge for the group of Kansas City college students."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6322.png",
+            "sentence": "She wondered what his eyes were saying beneath his mirrored sunglasses."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6319.png",
+            "sentence": "The ants enjoyed the barbecue more than the family."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8356.png",
+            "sentence": "They did nothing as the raccoon attacked the lady’s bag of food."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9923.png",
+            "sentence": "When he had to picnic on the beach, he purposely put sand in other people’s food."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8222.png",
+            "sentence": "The trick to getting kids to eat anything is to put catchup on it."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5115.png",
+            "sentence": "The beauty of the sunset was obscured by the industrial cranes."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1389.png",
+            "sentence": "He stomped on his fruit loops and thus became a cereal killer."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3674.png",
+            "sentence": "He walked into the basement with the horror movie from the night before playing in his head."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8207.png",
+            "sentence": "She saw the brake lights, but not in time."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1967.png",
+            "sentence": "No matter how beautiful the sunset, it saddened her knowing she was one day older."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9464.png",
+            "sentence": "She lived on Monkey Jungle Road and that seemed to explain all of her strangeness."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1711.png",
+            "sentence": "When motorists sped in and out of traffic, all she could think of was those in need of a transplant."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3056.png",
+            "sentence": "The tortoise jumped into the lake with dreams of becoming a sea turtle."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9382.png",
+            "sentence": "For the 216th time, he said he would quit drinking soda after this last Coke."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7771.png",
+            "sentence": "Lucifer was surprised at the amount of life at Death Valley."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2861.png",
+            "sentence": "It had been sixteen days since the zombies first attacked."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6419.png",
+            "sentence": "Charles ate the french fries knowing they would be his last meal."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9856.png",
+            "sentence": "She had the gift of being able to paint songs."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2604.png",
+            "sentence": "Carol drank the blood as if she were a vampire."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7684.png",
+            "sentence": "He drank life before spitting it out."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2182.png",
+            "sentence": "He dreamed of eating green apples with worms."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1267.png",
+            "sentence": "Dolores wouldn't have eaten the meal if she had known what it actually was."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4686.png",
+            "sentence": "Greetings from the real universe."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6739.png",
+            "sentence": "There's a message for you if you look up."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3431.png",
+            "sentence": "He found the chocolate covered roaches quite tasty."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4055.png",
+            "sentence": "It dawned on her that others could make her happier, but only she could make herself happy."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8010.png",
+            "sentence": "She tilted her head back and let whip cream stream into her mouth while taking a bath."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3851.png",
+            "sentence": "Jeanne wished she has chosen the red button."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6342.png",
+            "sentence": "It was her first experience training a rainbow unicorn."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2038.png",
+            "sentence": "He uses onomatopoeia as a weapon of mental destruction."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5356.png",
+            "sentence": "Weather is not trivial - it's especially important when you're standing in it."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4323.png",
+            "sentence": "I may struggle with geography, but I'm sure I'm somewhere around here."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8414.png",
+            "sentence": "It's a skateboarding penguin with a sunhat!"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1969.png",
+            "sentence": "If you don't like toenails, you probably shouldn't look at your feet."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9799.png",
+            "sentence": "We will not allow you to bring your pet armadillo along."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3505.png",
+            "sentence": "When he encountered maize for the first time, he thought it incredibly corny."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1725.png",
+            "sentence": "He used to get confused between soldiers and shoulders, but as a military man, he now soldiers responsibility."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2994.png",
+            "sentence": "Just go ahead and press that button."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1415.png",
+            "sentence": "Going from child, to childish, to childlike is only a matter of time."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9077.png",
+            "sentence": "My dentist tells me that chewing bricks is very bad for your teeth."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8640.png",
+            "sentence": "He was disappointed when he found the beach to be so sandy and the sun so sunny."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8510.png",
+            "sentence": "She is never happy until she finds something to be unhappy about; then, she is overjoyed."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3984.png",
+            "sentence": "I would be delighted if the sea were full of cucumber juice."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3198.png",
+            "sentence": "The busker hoped that the people passing by would throw money, but they threw tomatoes instead, so he exchanged his hat for a juicer."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9825.png",
+            "sentence": "I love bacon, beer, birds, and baboons."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2799.png",
+            "sentence": "I come from a tribe of head-hunters, so I will never need a shrink."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7342.png",
+            "sentence": "You're good at English when you know the difference between a man eating chicken and a man-eating chicken."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3468.png",
+            "sentence": "I'm confused: when people ask me what's up, and I point, they groan."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6388.png",
+            "sentence": "The pet shop stocks everything you need to keep your anaconda happy."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7614.png",
+            "sentence": "This book is sure to liquefy your brain."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3197.png",
+            "sentence": "People who insist on picking their teeth with their elbows are so annoying!"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8591.png",
+            "sentence": "He enjoys practicing his ballet in the bathroom."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4284.png",
+            "sentence": "Separation anxiety is what happens when you can't find your phone."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4167.png",
+            "sentence": "Improve your goldfish's physical fitness by getting him a bicycle."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1047.png",
+            "sentence": "Nudist colonies shun fig-leaf couture."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5643.png",
+            "sentence": "A kangaroo is really just a rabbit on steroids."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4219.png",
+            "sentence": "When transplanting seedlings, candied teapots will make the task easier."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8866.png",
+            "sentence": "Before he moved to the inner city, he had always believed that security complexes were psychological."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8191.png",
+            "sentence": "Pair your designer cowboy hat with scuba gear for a memorable occasion."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2818.png",
+            "sentence": "For oil spots on the floor, nothing beats parking a motorbike in the lounge."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7900.png",
+            "sentence": "Standing on one's head at job interviews forms a lasting impression."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3934.png",
+            "sentence": "Every manager should be able to recite at least ten nursery rhymes backward."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8406.png",
+            "sentence": "Truth in advertising and dinosaurs with skateboards have much in common."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9832.png",
+            "sentence": "Nothing is as cautiously cuddly as a pet porcupine."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8502.png",
+            "sentence": "Nobody has encountered an explosive daisy and lived to tell the tale."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1116.png",
+            "sentence": "Iron pyrite is the most foolish of all minerals."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5001.png",
+            "sentence": "A suit of armor provides excellent sun protection on hot days."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2963.png",
+            "sentence": "I am my aunt's sister's daughter."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5736.png",
+            "sentence": "Wisdom is easily acquired when hiding under the bed with a saucepan on your head."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3837.png",
+            "sentence": "Everybody should read Chaucer to improve their everyday vocabulary."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6787.png",
+            "sentence": "He is no James Bond; his name is Roger Moore."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6684.png",
+            "sentence": "I like to leave work after my eight-hour tea-break."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6600.png",
+            "sentence": "Getting up at dawn is for the birds."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7189.png",
+            "sentence": "If eating three-egg omelets causes weight-gain, budgie eggs are a good substitute."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9710.png",
+            "sentence": "Shakespeare was a famous 17th-century diesel mechanic."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8768.png",
+            "sentence": "Hit me with your pet shark!"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2738.png",
+            "sentence": "The Japanese yen for commerce is still well-known."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3466.png",
+            "sentence": "The Guinea fowl flies through the air with all the grace of a turtle."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5018.png",
+            "sentence": "Fluffy pink unicorns are a popular status symbol among macho men."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6648.png",
+            "sentence": "She cried diamonds."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6891.png",
+            "sentence": "Dan took the deep dive down the rabbit hole."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5539.png",
+            "sentence": "Erin accidentally created a new universe."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4307.png",
+            "sentence": "The door slammed on the watermelon."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4993.png",
+            "sentence": "Eating eggs on Thursday for choir practice was recommended."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9139.png",
+            "sentence": "Pink horses galloped across the sea."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6203.png",
+            "sentence": "Flying fish few by the space station."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8183.png",
+            "sentence": "He colored deep space a soft yellow."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7156.png",
+            "sentence": "Dan ate the clouds like cotton candy."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3610.png",
+            "sentence": "He found a leprechaun in his walnut shell."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4420.png",
+            "sentence": "Bill ran from the giraffe toward the dolphin."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5050.png",
+            "sentence": "It didn't make sense unless you had the power to eat colors."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6378.png",
+            "sentence": "Patricia loves the sound of nails strongly pressed against the chalkboard."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4624.png",
+            "sentence": "He didn't understand why the bird wanted to ride the bicycle."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4547.png",
+            "sentence": "Garlic ice-cream was her favorite."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1256.png",
+            "sentence": "Smoky the Bear secretly started the fires."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9414.png",
+            "sentence": "Pat ordered a ghost pepper pie."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9868.png",
+            "sentence": "You have every right to be angry, but that doesn't give you the right to be mean."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2136.png",
+            "sentence": "Andy loved to sleep on a bed of nails."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1664.png",
+            "sentence": "Her daily goal was to improve on yesterday."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6337.png",
+            "sentence": "She had a habit of taking showers in lemonade."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8628.png",
+            "sentence": "The elephant didn't want to talk about the person in the room."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9234.png",
+            "sentence": "The skeleton had skeletons of his own in the closet."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5520.png",
+            "sentence": "Even with the snow falling outside, she felt it appropriate to wear her bikini."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2587.png",
+            "sentence": "He was sure the Devil created red sparkly glitter."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6311.png",
+            "sentence": "He wore the surgical mask in public not to keep from catching a virus, but to keep people away from him."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8669.png",
+            "sentence": "Doris enjoyed tapping her nails on the table to annoy everyone."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8198.png",
+            "sentence": "Nobody questions who built the pyramids in Mexico."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5282.png",
+            "sentence": "He figured a few sticks of dynamite were easier than a fishing pole to catch fish."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3714.png",
+            "sentence": "When money was tight, he'd get his lunch money from the local wishing well."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6389.png",
+            "sentence": "The father died during childbirth."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7170.png",
+            "sentence": "Plans for this weekend include turning wine into water."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5195.png",
+            "sentence": "Iguanas were falling out of the trees."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2326.png",
+            "sentence": "I covered my friend in baby oil."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5468.png",
+            "sentence": "Art doesn't have to be intentional."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5439.png",
+            "sentence": "Now I need to ponder my existence and ask myself if I'm truly real"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1116.png",
+            "sentence": "We should play with legos at camp."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1350.png",
+            "sentence": "I’m a living furnace."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6161.png",
+            "sentence": "Please tell me you don't work in a morgue."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4876.png",
+            "sentence": "We have young kids who often walk into our room at night for various reasons including clowns in the closet."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6295.png",
+            "sentence": "8% of 25 is the same as 25% of 8 and one of them is much easier to do in your head."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8797.png",
+            "sentence": "You bite up because of your lower jaw."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3265.png",
+            "sentence": "Most shark attacks occur about 10 feet from the beach since that's where the people are."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3896.png",
+            "sentence": "I’m working on a sweet potato farm."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9112.png",
+            "sentence": "David subscribes to the \"stuff your tent into the bag\" strategy over nicely folding it."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7550.png",
+            "sentence": "He invested some skill points in Charisma and Strength."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2311.png",
+            "sentence": "I'm a great listener, really good with empathy vs sympathy and all that, but I hate people."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8995.png",
+            "sentence": "He excelled at firing people nicely."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7909.png",
+            "sentence": "When I cook spaghetti, I like to boil it a few minutes past al dente so the noodles are super slippery."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1956.png",
+            "sentence": "Joyce enjoyed eating pancakes with ketchup."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6869.png",
+            "sentence": "She was sad to hear that fireflies are facing extinction due to artificial light, habitat loss, and pesticides."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5108.png",
+            "sentence": "He decided that the time had come to be stronger than any of the excuses he'd used until then."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6691.png",
+            "sentence": "The door swung open to reveal pink giraffes and red elephants."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5300.png",
+            "sentence": "She traveled because it cost the same as therapy and was a lot more enjoyable."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8013.png",
+            "sentence": "The paintbrush was angry at the color the artist chose to use."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1518.png",
+            "sentence": "The bees decided to have a mutiny against their queen."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3814.png",
+            "sentence": "His ultimate dream fantasy consisted of being content and sleeping eight hours in a row."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1804.png",
+            "sentence": "She looked into the mirror and saw another person."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1442.png",
+            "sentence": "There aren't enough towels in the world to stop the sewage flowing from his mouth."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1690.png",
+            "sentence": "He had a vague sense that trees gave birth to dinosaurs."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3884.png",
+            "sentence": "The doll spun around in circles in hopes of coming alive."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2961.png",
+            "sentence": "Grape jelly was leaking out the hole in the roof."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6208.png",
+            "sentence": "Chocolate covered crickets were his favorite snack."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9339.png",
+            "sentence": "The secret code they created made no sense, even to them."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9165.png",
+            "sentence": "Three years later, the coffin was still full of Jello."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3998.png",
+            "sentence": "His mind was blown that there was nothing in space except space itself."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9682.png",
+            "sentence": "They're playing the piano while flying in the plane."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3858.png",
+            "sentence": "The hand sanitizer was actually clear glue."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8656.png",
+            "sentence": "The lyrics of the song sounded like fingernails on a chalkboard."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7898.png",
+            "sentence": "It took him a month to finish the meal."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9639.png",
+            "sentence": "Seek success, but always be prepared for random cats."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7283.png",
+            "sentence": "Having no hair made him look even hairier."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5889.png",
+            "sentence": "He poured rocks in the dungeon of his mind."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5861.png",
+            "sentence": "The blue parrot drove by the hitchhiking mongoose."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1063.png",
+            "sentence": "Happiness can be found in the depths of chocolate pudding."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3323.png",
+            "sentence": "There are no heroes in a punk rock band."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7386.png",
+            "sentence": "He shaved the peach to prove a point."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4345.png",
+            "sentence": "Peanuts don't grow on trees, but cashews do."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7401.png",
+            "sentence": "It's difficult to understand the lengths he'd go to remain short."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9470.png",
+            "sentence": "He created a pig burger out of beef."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7172.png",
+            "sentence": "His thought process was on so many levels that he gave himself a phobia of heights."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8742.png",
+            "sentence": "He liked to play with words in the bathtub."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4185.png",
+            "sentence": "There were three sphered rocks congregating in a cubed room."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4282.png",
+            "sentence": "There was no telling what thoughts would come from the machine."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8179.png",
+            "sentence": "He put heat on the wound to see what would grow."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5850.png",
+            "sentence": "She used her own hair in the soup to give it more flavor."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4760.png",
+            "sentence": "Sometimes you have to just give up and win by cheating."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9569.png",
+            "sentence": "The toy brought back fond memories of being lost in the rain forest."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7165.png",
+            "sentence": "She couldn't decide of the glass was half empty or half full so she drank it."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4127.png",
+            "sentence": "He wasn't bitter that she had moved on but from the radish."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9764.png",
+            "sentence": "He had decided to accept his fate of accepting his fate."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4029.png",
+            "sentence": "The clouds formed beautiful animals in the sky that eventually created a tornado to wreak havoc."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5442.png",
+            "sentence": "The swirled lollipop had issues with the pop rock candy."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5947.png",
+            "sentence": "He picked up trash in his spare time to dump in his neighbor's yard."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7275.png",
+            "sentence": "The fish dreamed of escaping the fishbowl and into the toilet where he saw his friend go."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3899.png",
+            "sentence": "It was a really good Monday for being a Saturday."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7201.png",
+            "sentence": "Greetings from the galaxy MACS0647-JD, or what we call home."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5939.png",
+            "sentence": "He was surprised that his immense laziness was inspirational to others."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3992.png",
+            "sentence": "He had unknowingly taken up sleepwalking as a nighttime hobby."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8831.png",
+            "sentence": "He spiked his hair green to support his iguana."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5771.png",
+            "sentence": "The fifty mannequin heads floating in the pool kind of freaked them out."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1215.png",
+            "sentence": "Although it wasn't a pot of gold, Nancy was still enthralled at what she found at the end of the rainbow."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2849.png",
+            "sentence": "After fighting off the alligator, Brian still had to face the anaconda."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7749.png",
+            "sentence": "It didn't take long for Gary to detect the robbers were amateurs."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7642.png",
+            "sentence": "He embraced his new life as an eggplant."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4167.png",
+            "sentence": "Karen realized the only way she was getting into heaven was to cheat."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3655.png",
+            "sentence": "He loved eating his bananas in hot dog buns."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1776.png",
+            "sentence": "Thirty years later, she still thought it was okay to put the toilet paper roll under rather than over."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2138.png",
+            "sentence": "Facing his greatest fear, he ate his first marshmallow."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8747.png",
+            "sentence": "He found his art never progressed when he literally used his sweat and tears."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3017.png",
+            "sentence": "Nancy was proud that she ran a tight shipwreck."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2446.png",
+            "sentence": "It took him a while to realize that everything he decided not to change, he was actually choosing."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5669.png",
+            "sentence": "It was difficult for Mary to admit that most of her workout consisted of exercising poor judgment."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5218.png",
+            "sentence": "Jason lived his life by the motto, \"Anything worth doing is worth doing poorly."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7550.png",
+            "sentence": "David proudly graduated from high school top of his class at age 97."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7162.png",
+            "sentence": "The murder hornet was disappointed by the preconceived ideas people had of him."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5352.png",
+            "sentence": "The two walked down the slot canyon oblivious to the sound of thunder in the distance."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1976.png",
+            "sentence": "She was amazed by the large chunks of ice washing up on the beach."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7521.png",
+            "sentence": "Gary didn't understand why Doug went upstairs to get one dollar bills when he invited him to go cow tipping."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5889.png",
+            "sentence": "The beach was crowded with snow leopards."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2987.png",
+            "sentence": "As the asteroid hurtled toward earth, Becky was upset her dentist appointment had been canceled."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2837.png",
+            "sentence": "She looked at the masterpiece hanging in the museum but all she could think is that her five-year-old could do better."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7772.png",
+            "sentence": "The white water rafting trip was suddenly halted by the unexpected brick wall."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1839.png",
+            "sentence": "She always had an interesting perspective on why the world must be flat."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3882.png",
+            "sentence": "The sudden rainstorm washed crocodiles into the ocean."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6804.png",
+            "sentence": "Harrold felt confident that nobody would ever suspect his spy pigeon."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6513.png",
+            "sentence": "He knew it was going to be a bad day when he saw mountain lions roaming the streets."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7918.png",
+            "sentence": "He decided to fake his disappearance to avoid jail."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7631.png",
+            "sentence": "He ended up burning his fingers poking someone else's fire."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5746.png",
+            "sentence": "She had a difficult time owning up to her own crazy self."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2502.png",
+            "sentence": "She was too busy always talking about what she wanted to do to actually do any of it."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9006.png",
+            "sentence": "She had that tint of craziness in her soul that made her believe she could actually make a difference."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7421.png",
+            "sentence": "He kept telling himself that one day it would all somehow make sense."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3002.png",
+            "sentence": "She moved forward only because she trusted that the ending she now was going through must be followed by a new beginning."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2265.png",
+            "sentence": "While all her friends were positive that Mary had a sixth sense, she knew she actually had a seventh sense."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2902.png",
+            "sentence": "He had a wall full of masks so she could wear a different face every day."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3225.png",
+            "sentence": "The group quickly understood that toxic waste was the most effective barrier to use against the zombies."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6712.png",
+            "sentence": "There have been days when I wished to be separated from my body, but today wasn’t one of those days."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9544.png",
+            "sentence": "To the surprise of everyone, the Rapture happened yesterday but it didn't quite go as expected."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9431.png",
+            "sentence": "The bullet pierced the window shattering it before missing Danny's head by mere millimeters."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5531.png",
+            "sentence": "The complicated school homework left the parents trying to help their kids quite confused."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1802.png",
+            "sentence": "Too many prisons have become early coffins."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2947.png",
+            "sentence": "The external scars tell only part of the story."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6162.png",
+            "sentence": "Excitement replaced fear until the final moment."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5294.png",
+            "sentence": "The tattered work gloves speak of the many hours of hard labor he endured throughout his life."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8569.png",
+            "sentence": "The hummingbird's wings blurred while it eagerly sipped the sugar water from the feeder."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5642.png",
+            "sentence": "Poison ivy grew through the fence they said was impenetrable."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5016.png",
+            "sentence": "Watching the geriatric men’s softball team brought back memories of 3 yr olds playing t-ball."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2023.png",
+            "sentence": "The teens wondered what was kept in the red shed on the far edge of the school grounds."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5083.png",
+            "sentence": "He strives to keep the best lawn in the neighborhood."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8175.png",
+            "sentence": "The spa attendant applied the deep cleaning mask to the gentleman’s back."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4240.png",
+            "sentence": "Shingle color was not something the couple had ever talked about."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9904.png",
+            "sentence": "The sunblock was handed to the girl before practice, but the burned skin was proof she did not apply it."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8649.png",
+            "sentence": "The virus had powers none of us knew existed."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4422.png",
+            "sentence": "A quiet house is nice until you are ordered to stay in it for months."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1782.png",
+            "sentence": "As time wore on, simple dog commands turned into full paragraphs explaining why the dog couldn’t do something."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9004.png",
+            "sentence": "Mothers spend months of their lives waiting on their children."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4353.png",
+            "sentence": "The team members were hard to tell apart since they all wore their hair in a ponytail."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2698.png",
+            "sentence": "She learned that water bottles are no longer just to hold liquid, but they're also status symbols."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3169.png",
+            "sentence": "Their argument could be heard across the parking lot."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4093.png",
+            "sentence": "Giving directions that the mountains are to the west only works when you can see them."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2844.png",
+            "sentence": "Traveling became almost extinct during the pandemic."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9472.png",
+            "sentence": "It was obvious she was hot, sweaty, and tired."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8767.png",
+            "sentence": "The Great Dane looked more like a horse than a dog."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3616.png",
+            "sentence": "He played the game as if his life depended on it and the truth was that it did."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3986.png",
+            "sentence": "It's not possible to convince a monkey to give you a banana by promising it infinite bananas when they die."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4959.png",
+            "sentence": "He went on a whiskey diet and immediately lost three days."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5771.png",
+            "sentence": "He watched the dancing piglets with panda bear tummies in the swimming pool."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7426.png",
+            "sentence": "Martha came to the conclusion that shake weights are a great gift for any occasion."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7950.png",
+            "sentence": "She had convinced her kids that any mushroom found on the ground would kill them if they touched it."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1244.png",
+            "sentence": "As she walked along the street and looked in the gutter, she realized facemasks had become the new cigarette butts."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1359.png",
+            "sentence": "Mary realized if her calculator had a history, it would be more embarrassing than her computer browser history."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9728.png",
+            "sentence": "The tree fell unexpectedly short."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3167.png",
+            "sentence": "Tomorrow will bring something new, so leave today as a memory."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8933.png",
+            "sentence": "Today I dressed my unicorn in preparation for the race."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1088.png",
+            "sentence": "Today is the day I'll finally know what brick tastes like."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7495.png",
+            "sentence": "Today we gathered moss for my uncle's wedding."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2849.png",
+            "sentence": "Today I heard something new and unmemorable."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8148.png",
+            "sentence": "Today arrived with a crash of my car through the garage door."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5175.png",
+            "sentence": "He found rain fascinating yet unpleasant."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7414.png",
+            "sentence": "He appeared to be confusingly perplexed."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8672.png",
+            "sentence": "She thought there'd be sufficient time if she hid her watch."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2843.png",
+            "sentence": "You'll see the rainbow bridge after it rains cats and dogs."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9792.png",
+            "sentence": "A dead duck doesn't fly backward."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1705.png",
+            "sentence": "I thought red would have felt warmer in summer but I didn't think about the equator."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1383.png",
+            "sentence": "Green should have smelled more tranquil, but somehow it just tasted rotten."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9441.png",
+            "sentence": "Blue sounded too cold at the time and yet it seemed to work for gin."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4672.png",
+            "sentence": "Warm beer on a cold day isn't my idea of fun."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7998.png",
+            "sentence": "Honestly, I didn't care much for the first season, so I didn't bother with the second."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3551.png",
+            "sentence": "The light that burns twice as bright burns half as long."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4305.png",
+            "sentence": "I liked their first two albums but changed my mind after that charity gig."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7815.png",
+            "sentence": "They improved dramatically once the lead singer left."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6408.png",
+            "sentence": "They desperately needed another drummer since the current one only knew how to play bongos."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2153.png",
+            "sentence": "People keep telling me \"orange\" but I still prefer \"pink\"."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6140.png",
+            "sentence": "Hang on, my kittens are scratching at the bathtub and they'll upset by the lack of biscuits."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3219.png",
+            "sentence": "The tears of a clown make my lipstick run, but my shower cap is still intact."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6456.png",
+            "sentence": "The gloves protect my feet from excess work."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4438.png",
+            "sentence": "The fog was so dense even a laser decided it wasn't worth the effort."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3059.png",
+            "sentence": "He was an introvert that extroverts seemed to love."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8722.png",
+            "sentence": "The golden retriever loved the fireworks each Fourth of July."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6412.png",
+            "sentence": "I want a giraffe, but I'm a turtle eating waffles."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5757.png",
+            "sentence": "Henry couldn't decide if he was an auto mechanic or a priest."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4606.png",
+            "sentence": "100 years old is such a young age if you happen to be a bristlecone pine."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6821.png",
+            "sentence": "When he asked her favorite number, she answered without hesitation that it was diamonds."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1867.png",
+            "sentence": "My biggest joy is roasting almonds while stalking prey."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9842.png",
+            "sentence": "Edith could decide if she should paint her teeth or brush her nails."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5836.png",
+            "sentence": "It was the first time he had ever seen someone cook dinner on an elephant."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7306.png",
+            "sentence": "Purple is the best city in the forest."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1722.png",
+            "sentence": "There is no better feeling than staring at a wall with closed eyes."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8342.png",
+            "sentence": "She couldn't understand why nobody else could see that the sky is full of cotton candy."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7151.png",
+            "sentence": "He decided to count all the sand on the beach as a hobby."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2075.png",
+            "sentence": "My uncle's favorite pastime was building cars out of noodles."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2754.png",
+            "sentence": "The best part of marriage is animal crackers with peanut butter."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2931.png",
+            "sentence": "There are over 500 starfish in the bathroom drawer."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5952.png",
+            "sentence": "She insisted that cleaning out your closet was the key to good driving."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7410.png",
+            "sentence": "Baby wipes are made of chocolate stardust."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5638.png",
+            "sentence": "Best friends are like old tomatoes and shoelaces."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8582.png",
+            "sentence": "Situps are a terrible way to end your day."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1735.png",
+            "sentence": "Cursive writing is the best way to build a race track."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8697.png",
+            "sentence": "Waffles are always better without fire ants and fleas."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8634.png",
+            "sentence": "The bird had a belief that it was really a groundhog."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4024.png",
+            "sentence": "Jenny made the announcement that her baby was an alien."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3893.png",
+            "sentence": "He felt that dining on the bridge brought romance to his relationship with his cat."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6581.png",
+            "sentence": "She wanted to be rescued, but only if it was Tuesday and raining."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1032.png",
+            "sentence": "She was the type of girl that always burnt sugar to show she cared."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3913.png",
+            "sentence": "I was offended by the suggestion that my baby brother was a jewel thief."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4266.png",
+            "sentence": "Just because the water is red doesn't mean you can't drink it."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6005.png",
+            "sentence": "Today I bought a raincoat and wore it on a sunny day."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5227.png",
+            "sentence": "Everyone pretends to like wheat until you mention barley."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1806.png",
+            "sentence": "Please put on these earmuffs because I can't you hear."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7787.png",
+            "sentence": "That is an appealing treasure map that I can't read."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4303.png",
+            "sentence": "Jerry liked to look at paintings while eating garlic ice cream."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9933.png",
+            "sentence": "I've always wanted to go to Tajikistan, but my cat would miss me."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4343.png",
+            "sentence": "If you spin around three times, you'll start to feel melancholy."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7423.png",
+            "sentence": "I used to live in my neighbor's fishpond, but the aesthetic wasn't to my taste."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1315.png",
+            "sentence": "Imagine his surprise when he discovered that the safe was full of pudding."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8149.png",
+            "sentence": "I only enjoy window shopping when the windows are transparent."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4576.png",
+            "sentence": "He was the only member of the club who didn't like plum pudding."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2998.png",
+            "sentence": "You should never take advice from someone who thinks red paint dries quicker than blue paint."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4256.png",
+            "sentence": "I was fishing for compliments and accidentally caught a trout."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8597.png",
+            "sentence": "It isn't true that my mattress is made of cotton candy."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1171.png",
+            "sentence": "I received a heavy fine but it failed to crush my spirit."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9633.png",
+            "sentence": "Mr. Montoya knows the way to the bakery even though he's never been there."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9029.png",
+            "sentence": "I never knew what hardship looked like until it started raining bowling balls."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7554.png",
+            "sentence": "It isn't difficult to do a handstand if you just stand on your hands."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8174.png",
+            "sentence": "Strawberries must be the one food that doesn't go well with this brand of paint."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9313.png",
+            "sentence": "I'd always thought lightning was something only I could see."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1250.png",
+            "sentence": "We're careful about orange ping pong balls because people might think they're fruit."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2637.png",
+            "sentence": "The worst thing about being at the top of the career ladder is that there's a long way to fall."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4196.png",
+            "sentence": "Always bring cinnamon buns on a deep-sea diving expedition."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5061.png",
+            "sentence": "There's no reason a hula hoop can't also be a circus ring."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9313.png",
+            "sentence": "It took me too long to realize that the ceiling hadn't been painted to look like the sky."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9536.png",
+            "sentence": "Sarah ran from the serial killer holding a jug of milk."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6310.png",
+            "sentence": "Gwen had her best sleep ever on her new bed of nails."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7648.png",
+            "sentence": "He never understood why what, when, and where left out who."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4627.png",
+            "sentence": "Douglas figured the best way to succeed was to do the opposite of what he'd been doing all his life."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1325.png",
+            "sentence": "Patricia found the meaning of life in a bowl of Cheerios."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7946.png",
+            "sentence": "My mom bought me a picture book."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8277.png",
+            "sentence": "Well then, let's go there on Friday."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1941.png",
+            "sentence": "This machine seems to be broken."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1024.png",
+            "sentence": "My mom raised two children by herself."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6770.png",
+            "sentence": "Which one is more important between speaking and writing?"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3739.png",
+            "sentence": "Do you live in this neighborhood?"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1463.png",
+            "sentence": "I love Kimchi more than anything else."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3641.png",
+            "sentence": "I pretended to take out some money from my purse."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1176.png",
+            "sentence": "The building is at the end of this street."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1130.png",
+            "sentence": "School vacation ends tomorrow."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7642.png",
+            "sentence": "We have to finish all the work today."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9407.png",
+            "sentence": "I guess an accident has happened up ahead."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3568.png",
+            "sentence": "He is sitting under the tree."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7414.png",
+            "sentence": "My ex-girlfriend appeared in my dream last night."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2512.png",
+            "sentence": "Her eyes expressed her true feelings."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2155.png",
+            "sentence": "Tomorrow is a special day."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2060.png",
+            "sentence": "The higher a bird flies, the farther it can see."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1997.png",
+            "sentence": "How is the weather?"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2485.png",
+            "sentence": "What's the date today?"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2813.png",
+            "sentence": "Generally speaking, a woman will live longer than a man."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3294.png",
+            "sentence": "She is looking for a family man."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7753.png",
+            "sentence": "There were few male students in the class."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8913.png",
+            "sentence": "Julie wants a perfect husband."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9242.png",
+            "sentence": "Bats sleep during the day."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1994.png",
+            "sentence": "My wife gave birth to a son last night."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7221.png",
+            "sentence": "It is more difficult to come down the mountain."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9029.png",
+            "sentence": "Go down the stairs carefully."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9646.png",
+            "sentence": "I'm going to get married next year."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3218.png",
+            "sentence": "I need a refrigerator for kimchi."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7873.png",
+            "sentence": "The dress is too small for me."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5366.png",
+            "sentence": "She wants to live in a large house."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7295.png",
+            "sentence": "Don’t put your hand in your pocket."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7336.png",
+            "sentence": "Did you go to school yesterday?"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9545.png",
+            "sentence": "How about wearing another necktie?"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3046.png",
+            "sentence": "I go abroad twice a year."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6496.png",
+            "sentence": "This yellow hat suits you well."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2760.png",
+            "sentence": "We sang and danced all night long."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5849.png",
+            "sentence": "I made an effort to smile in front of others."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8066.png",
+            "sentence": "You can take notes in this lecture."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9832.png",
+            "sentence": "Let's play at the playground."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1156.png",
+            "sentence": "I was surprised by her sudden death."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3650.png",
+            "sentence": "What traditional Korean games are there?"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5764.png",
+            "sentence": "This building is really high!"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7892.png",
+            "sentence": "Where do I put this box?"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7747.png",
+            "sentence": "My older sister looks like my mom."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7480.png",
+            "sentence": "As the snow melted, the roads became very slippery."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3493.png",
+            "sentence": "His eyes met mine on the street."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3501.png",
+            "sentence": "He was lying on the bed reading a book."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5729.png",
+            "sentence": "I suddenly felt a sharp pain in my chest."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3583.png",
+            "sentence": "I won't wear this sweater again."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2310.png",
+            "sentence": "Only one with special abilities can do this work."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9253.png",
+            "sentence": "The party was almost finished when we all arrived."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7607.png",
+            "sentence": "Is it possible to go to Japan and get back in a day?"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1841.png",
+            "sentence": "Although they are twins, their personalities are totally different."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9994.png",
+            "sentence": "Who is the girl sitting with her legs crossed over there?"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6677.png",
+            "sentence": "Let's cross the bridge."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3612.png",
+            "sentence": "I'll never do that again."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4976.png",
+            "sentence": "They offer various services."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8485.png",
+            "sentence": "When is the next flight?"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2649.png",
+            "sentence": "How did you get hurt?"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3980.png",
+            "sentence": "The player wiped the sweat off his face with a towel."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4434.png",
+            "sentence": "When can we see a full moon this month?"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9635.png",
+            "sentence": "This cake tastes sweet."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9575.png",
+            "sentence": "The world has changed a lot during the last ten years."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5749.png",
+            "sentence": "Mark your mother's birthday on the calendar."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8793.png",
+            "sentence": "Which came first, the chicken or the egg?"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9768.png",
+            "sentence": "Please look up a recipe for chicken soup on the internet."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4599.png",
+            "sentence": "How many cigarettes do you smoke a day?"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9929.png",
+            "sentence": "Americans use forks instead of chopsticks."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6015.png",
+            "sentence": "Who was your favorite past president?"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2900.png",
+            "sentence": "Which university do you want to go to?"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7638.png",
+            "sentence": "After a long talk, they decided to break up."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7149.png",
+            "sentence": "This is my teacher's house."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7719.png",
+            "sentence": "He threw the ball as far as he could."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2913.png",
+            "sentence": "You should return those books to the library."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6487.png",
+            "sentence": "I don't like driving in the city."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3086.png",
+            "sentence": "The train will be arriving shortly."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4932.png",
+            "sentence": "Children are playing by spinning a top."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7987.png",
+            "sentence": "Because we were lost, we had to go back the way we came."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3975.png",
+            "sentence": "When is Dad coming back?"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9316.png",
+            "sentence": "A stranger was wandering through our village."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8657.png",
+            "sentence": "He accidentally found an unknown animal."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8533.png",
+            "sentence": "Take care while I'm gone."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2813.png",
+            "sentence": "The window of our house faces east."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8749.png",
+            "sentence": "Wine goes best with beef or pork."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/4121.png",
+            "sentence": "My parents wanted me to become a doctor."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/3966.png",
+            "sentence": "From the back I couldn't tell who he was."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5994.png",
+            "sentence": "Do you give pocket money to your parents?"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1620.png",
+            "sentence": "It took me a lot of time to finish the work."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/8390.png",
+            "sentence": "Strange as it may sound, what I said was true."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/2559.png",
+            "sentence": "Raise your hand!"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5898.png",
+            "sentence": "Do not enter!"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1323.png",
+            "sentence": "Please come in."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1806.png",
+            "sentence": "Carry the baby on your back."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5728.png",
+            "sentence": "Yesterday's weather was good for climbing."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/6800.png",
+            "sentence": "My husband wants to have a daughter."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1984.png",
+            "sentence": "This toothpaste is strawberry-flavored."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1293.png",
+            "sentence": "Who does this land belong to?"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5554.png",
+            "sentence": "She said she liked him the first time she met him."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/9927.png",
+            "sentence": "Were you late for school again?"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/1860.png",
+            "sentence": "Please give me some hot water."
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/5335.png",
+            "sentence": "Can I get you something to drink?"
+        },
+        {
+            "image": "https://cdn.dagpi.xyz/typeracer/7920.png",
+            "sentence": "I am going to Russia to learn ballet next year."
+        }
+    ]
+}

@@ -12,7 +12,6 @@ import pathlib
 import platform
 from datetime import datetime as dt
 from datetime import timezone
-from pathlib import Path
 from re import match
 from textwrap import dedent
 from typing import Tuple, List
@@ -33,6 +32,7 @@ from discord.ext.commands import (
 from discord.ext.menus import ListPageSource
 from googletrans import Translator
 from humanize import precisedelta, naturaltime as nt
+from pkg_resources import get_distribution
 from textblob import TextBlob
 
 from utils.apis.mojang.mojang import MojangAPI as MoI
@@ -41,11 +41,10 @@ from utils.converters import UrlSafe, MemberConverter
 from utils.curse import ProfanitiesFilter
 from utils.default import *
 from utils.formmating import hyperlink
-from utils.funcs import custom_cooldown
 from utils.http import get
 from utils.info import fetch_info
 from utils.vars import *
-from utils.views import IndexedListSource, CatchAllMenu
+from utils.views import IndexedListSource, CatchAllMenu, MathView
 
 
 class Menu(ListPageSource):
@@ -97,11 +96,11 @@ class Info(Cog, description="Informational and useful commands"):
         self.pf = ProfanitiesFilter()
         self.pf.inside_words = True
         self.dict = PyDictionary()
-        self.db = self.bot.pool
+        #self.db = self.bot.pool
 
     async def get_word(self, ctx, word: UrlSafe):
         async with ctx.session.get(
-            f"https://some-random-api.ml/dictionary?word={word}"
+                f"https://some-random-api.ml/dictionary?word={word}"
         ) as ses:
             if ses.status != 200:
                 if ses.status == 404:
@@ -111,6 +110,12 @@ class Info(Cog, description="Informational and useful commands"):
                         f"Too many requests, please try again later."
                     )
         return await ses.json()
+
+    @cooldown(3, 40, commands.BucketType.user)
+    @command(help="calculate what you want!", aliases=['calc', 'math', 'maths'])
+    async def calculate(self, ctx):
+        view = MathView(ctx)
+        await ctx.send("```py\n> ```", view=view)
 
     @command(aliases=["McUser", "MCI"], brief="Gets info about a minecraft user")
     async def mcinfo(self, ctx, user: str):
@@ -193,8 +198,8 @@ class Info(Cog, description="Informational and useful commands"):
                 colour=spotify.colour,
                 url=f"https://open.spotify.com/track/{spotify.track_id}",
             )
-            .set_author(name="Spotify", icon_url="https://i.imgur.com/PA3vvdN.png")
-            .set_thumbnail(url=spotify.album_cover_url)
+                .set_author(name="Spotify", icon_url="https://i.imgur.com/PA3vvdN.png")
+                .set_thumbnail(url=spotify.album_cover_url)
         )
 
         # duration
@@ -220,10 +225,10 @@ class Info(Cog, description="Informational and useful commands"):
         e.add_field(
             name="Duration",
             value=(
-                f"{cur.seconds // 60:02}:{cur.seconds % 60:02}"
-                + f" {bar} "
-                + f"{dur.seconds // 60:02}:"
-                + f"{dur.seconds % 60:02}"
+                    f"{cur.seconds // 60:02}:{cur.seconds % 60:02}"
+                    + f" {bar} "
+                    + f"{dur.seconds // 60:02}:"
+                    + f"{dur.seconds % 60:02}"
             ),
             inline=False,
         )
@@ -315,7 +320,7 @@ class Info(Cog, description="Informational and useful commands"):
                 content="Are you sure you want to submit your report?", embed=em
             )
             for emoji in (
-                emojis := [self.bot.icons["greenTick"], self.bot.icons["redTick"]]
+                    emojis := [self.bot.icons["greenTick"], self.bot.icons["redTick"]]
             ):
                 await msg.add_reaction(emoji)
             try:
@@ -323,7 +328,7 @@ class Info(Cog, description="Informational and useful commands"):
                     "reaction_add",
                     timeout=45,
                     check=lambda reaction, m: m == ctx.author
-                    and str(reaction.emoji) in emojis,
+                                              and str(reaction.emoji) in emojis,
                 )
                 if str(reaction) == self.bot.icons["greenTick"]:
                     channel = self.bot.get_channel(877724111420391515)
@@ -541,9 +546,6 @@ class Info(Cog, description="Informational and useful commands"):
             + "\n".join(message)
         )
 
-    @commands.dynamic_cooldown(
-        custom_cooldown(rate=1, per=6, premrate=2), commands.BucketType.user
-    )
     @todo.command()
     async def list(self, ctx):
         """Shows your todo list"""
@@ -623,15 +625,15 @@ class Info(Cog, description="Informational and useful commands"):
             emby.add_field(
                 name="Top 10 commands ran",
                 value=f"🥇:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n"
-                f"🥈:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n"
-                f"🥉:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n"
-                f"🏅:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n"
-                f"🏅:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n"
-                f"🏅:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n"
-                f"🏅:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n"
-                f"🏅:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n"
-                f"🏅:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n"
-                f"🏅:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n",
+                      f"🥈:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n"
+                      f"🥉:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n"
+                      f"🏅:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n"
+                      f"🏅:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n"
+                      f"🏅:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n"
+                      f"🏅:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n"
+                      f"🏅:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n"
+                      f"🏅:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n"
+                      f"🏅:{p}{next(key_iterator)} ({next(value_iterator)} use{char_if_multi(next(value_iterator))})\n",
             )
 
             emby.set_author(
@@ -727,6 +729,8 @@ class Info(Cog, description="Informational and useful commands"):
         tlines = lines.get("total_lines")
         files = lines.get("file_amount")
         pyfiles = lines.get("python_file_amount")
+        chars = lines.get("total_characters")
+
         lang = "ahk"
         ramUsage = self.process.memory_full_info().rss / 1024 ** 2
         prefix = "~"  # self.db.fetch("SELECT Prefix FROM guilds WHERE ID = ?",
@@ -753,13 +757,14 @@ class Info(Cog, description="Informational and useful commands"):
         infos[
             "Lines"
         ] = f"""{lang}\n
-Python Files: {pyfiles}
-Files: {files}
-Lines: {tlines}
-Classes: {clas}
-Functions: {func}
-Coroutines: {coro}
-Comments: {comments}"""
+Python Files: {pyfiles:,}
+Files: {files:,}
+Lines: {tlines:,}
+Characters: {chars:,}
+Classes: {clas:,}
+Functions: {func:,}
+Coroutines: {coro:,}
+Comments: {comments:,}"""
         infos["Latest changes"] = version_info["info"].title()
         infemb = discord.Embed(color=invis, description="")
         async with ctx.channel.typing():
@@ -773,7 +778,7 @@ Comments: {comments}"""
                 infemb.add_field(name=k, value=f"```{v}```", inline=False)
             infemb.add_field(
                 name="<:dpy:596577034537402378> Discord.py version",
-                value=f"```{discord.__version__}```",
+                value=f"```v{discord.__version__}```",
             )
             infemb.add_field(
                 name="<:python:868285625877557379> Python Version",
@@ -839,7 +844,7 @@ Comments: {comments}"""
 
             @discord.ui.button(emoji="<:trashcan:882779835737460846>")
             async def delete(
-                self, button: discord.ui.Button, interaction: discord.Interaction
+                    self, button: discord.ui.Button, interaction: discord.Interaction
             ):
                 if interaction.user != self.ctx.author:
                     return await interaction.response.send_message(
@@ -851,7 +856,7 @@ Comments: {comments}"""
 
             @discord.ui.button(label="Source File")
             async def send_file(
-                self, button: discord.ui.Button, interaction: discord.Interaction
+                    self, button: discord.ui.Button, interaction: discord.Interaction
             ):
                 if interaction.user != self.ctx.author:
                     return await interaction.response.send_message(
@@ -903,31 +908,7 @@ Comments: {comments}"""
 
     @command()
     async def lines(self, ctx):
-        """gets all lines"""
-        global color
-        p = Path("./")
-        cm = cr = fn = cl = ls = fc = 0
-        for f in p.rglob("*.py"):
-            if str(f).startswith("venv"):
-                continue
-            elif str(f).startswith("node_modules"):
-                continue
-            elif str(f).startswith("ffmpeg"):
-                continue
-            fc += 1
-            with open(f, "rb") as of:
-                for l in of.read().decode().splitlines():
-                    l = l.strip()
-                    if l.startswith("class"):
-                        cl += 1
-                    if l.startswith("def"):
-                        fn += 1
-                    if l.startswith("async def"):
-                        cr += 1
-                    if "#" in l:
-                        cm += 1
-                    ls += 1
-
+        """gets all lines and more"""
         infos = fetch_info()
         l = infos.get("total_lines")
         cl = infos.get("total_python_class")
@@ -936,6 +917,7 @@ Comments: {comments}"""
         com = infos.get("total_python_comments")
         fc = infos.get("file_amount")
         pyfc = infos.get("python_file_amount")
+        chars = infos.get("total_characters")
 
         lang = choice(["ahk", "apache", "prolog"])
         if lang == "apache":
@@ -944,8 +926,9 @@ Comments: {comments}"""
             color = blue
         elif lang == "prolog":
             color = 0x7E2225
+
         e = discord.Embed(title="Lines", color=color, timestamp=ctx.message.created_at)
-        e.description = f"```{lang}\nPython Files: {pyfc}\nFiles: {fc}\nLines: {l:,}\nClasses: {cl}\nFunctions: {func}\nCoroutines: {coru}\nComments: {com:,}```"
+        e.description = f"```{lang}\nPyFiles: {pyfc:,}\nFiles: {fc}\nLines: {l:,}\nCharacters: {chars:,}\nClasses: {cl:,}\nFunctions: {func:,}\nCoroutines: {coru:,}\nComments: {com:,}```"
         e.set_footer(text=f"Requested by {ctx.author.name}\n{embedfooter}")
         await ctx.send(embed=e)
 
@@ -977,8 +960,8 @@ Comments: {comments}"""
     async def botserver(self, ctx):
         """Get an invite to our support server!"""
         if (
-            isinstance(ctx.channel, discord.DMChannel)
-            or ctx.guild.id != 819282410213605406
+                isinstance(ctx.channel, discord.DMChannel)
+                or ctx.guild.id != 819282410213605406
         ):
             return await ctx.send(
                 f"**Here you go {ctx.author.name} 🍻\n<{self.config['botserver']}>**"
@@ -1037,7 +1020,7 @@ Comments: {comments}"""
             description="",
         )
         info = {}
-        info["Discord.py version"] = discord.__version__
+        info["Discord.py version"] = get_distribution('discord.py').version
         info["Python Version"] = f"{platform.python_version()}"
         info["Avg users/server"] = f"{avgmembers:,.2f}"
         info["Bot owners"] = len(self.config["owners"])

@@ -25,7 +25,7 @@ from discord.utils import find
 from cogs.Discordinfo import format_relative, plural
 # from lib.db import db
 from utils.checks import check_priv
-from utils.converters import MemberConverter
+from utils.converters import MemberConverter, ActionReason
 from utils.default import mod_or_permissions, actionmessage, responsible, prettyResults
 from utils.vars import *
 
@@ -67,18 +67,6 @@ class MemberID(commands.Converter):
                 ) from None
         else:
             return m.id
-
-
-class ActionReason(commands.Converter):
-    async def convert(self, ctx, argument):
-        ret = argument
-
-        if len(ret) > 512:
-            reason_max = 512 - len(ret) - len(argument)
-            raise commands.BadArgument(
-                f"reason is too long ({len(argument)}/{reason_max})"
-            )
-        return ret
 
 
 BannedUsers = {}
@@ -170,12 +158,10 @@ class Mod(commands.Cog, description="Moderator go brrrrrrrr ~ban"):
             if msg.author == ctx.me and not (msg.mentions or msg.role_mentions):
                 await msg.delete()
                 count += 1
-        return {"Bot": count}
+        return { 'Bot': count }
 
     async def _complex_cleanup_strategy(self, ctx, search):
-        prefixes = tuple(
-            self.bot.get_guild_prefixes(ctx.guild)
-        )  # thanks startswith todo update this bc it wont work rn
+        prefixes = tuple(self.bot.get_guild_prefixes(ctx.guild)) # thanks startswith
 
         def check(m):
             return m.author == ctx.me or m.content.startswith(prefixes)
@@ -187,9 +173,7 @@ class Mod(commands.Cog, description="Moderator go brrrrrrrr ~ban"):
         prefixes = tuple(self.bot.get_guild_prefixes(ctx.guild))
 
         def check(m):
-            return (m.author == ctx.me or m.content.startswith(prefixes)) and not (
-                m.mentions or m.role_mentions
-            )
+            return (m.author == ctx.me or m.content.startswith(prefixes)) and not (m.mentions or m.role_mentions)
 
         deleted = await ctx.channel.purge(limit=search, check=check, before=ctx.message)
         return Counter(m.author.display_name for m in deleted)

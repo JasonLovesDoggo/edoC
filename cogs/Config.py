@@ -12,6 +12,7 @@ import discord
 from discord.ext import commands, menus
 
 from utils import cache, db
+from utils.Context import edoCContext
 from utils.default import is_mod
 from utils.views import edoCPages
 
@@ -232,7 +233,7 @@ class Config(commands.Cog):
 
         return row is not None
 
-    async def bot_check_once(self, ctx):
+    async def bot_check_once(self, ctx: edoCContext):
         if ctx.guild is None:
             return True
 
