@@ -3,7 +3,7 @@
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/JakeWasChosen/edoC/graphs/commit-activity) [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/JakeWasChosen/edoC/blob/master/LICENSE.txt) [![Support Server](https://img.shields.io/discord/591914197219016707.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/6EFAqm5aSG)
 [![Code Style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 ![](https://img.shields.io/github/repo-size/JakeWasChosen/edoC)
-![](https://img.shields.io/tokei/lines/github/JakeWasChosen/edoC?color=00ffff&style=plastic)
+![](https://img.shields.io/tokei/lines/github/JakeWasChosen/edoC?color=00ffff)
 
 [![ForTheBadge powered-by-electricity](http://ForTheBadge.com/images/badges/powered-by-electricity.svg)](https://en.wikipedia.org/wiki/Electricity)
 
